@@ -1,0 +1,396 @@
+/**
+ * All-in-One SEO Fixer & Auditor — Admin Stylesheet
+ * Author: Abid Ali Dev | https://abidalidev.com
+ * Version: 2.1.0
+ */
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+.asf-wrap { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif; color: #1e293b; max-width: 1200px; }
+.asf-wrap * { box-sizing: border-box; }
+.asf-wrap a { text-decoration: none; }
+
+/* ============================================================
+   HERO BANNER
+   ============================================================ */
+.asf-hero {
+	background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #1d4ed8 100%);
+	color: #fff;
+	padding: 30px 36px;
+	border-radius: 14px;
+	margin: 16px 0 24px;
+	position: relative;
+	overflow: hidden;
+}
+.asf-hero::before {
+	content: '';
+	position: absolute;
+	top: -50px; right: -50px;
+	width: 250px; height: 250px;
+	border-radius: 50%;
+	background: rgba(255,255,255,0.04);
+	pointer-events: none;
+}
+.asf-hero::after {
+	content: '';
+	position: absolute;
+	bottom: -70px; right: 90px;
+	width: 180px; height: 180px;
+	border-radius: 50%;
+	background: rgba(99, 102, 241, 0.12);
+	pointer-events: none;
+}
+.asf-hero h1 { margin: 0 0 8px; font-size: 26px; color: #fff; font-weight: 800; letter-spacing: -0.4px; line-height: 1.2; }
+.asf-hero p  { margin: 0 0 18px; opacity: 0.82; font-size: 14px; line-height: 1.7; max-width: 680px; }
+.asf-hero-meta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.asf-hero-meta a { color: #93c5fd; font-size: 13px; text-decoration: none; font-weight: 500; transition: color 0.2s; }
+.asf-hero-meta a:hover { color: #fff; text-decoration: underline; }
+.asf-hero-badge {
+	background: rgba(255,255,255,0.12);
+	border: 1px solid rgba(255,255,255,0.2);
+	border-radius: 20px;
+	padding: 2px 12px;
+	font-size: 12px;
+	color: #e0f2fe;
+	font-weight: 500;
+}
+
+/* ============================================================
+   STAT CARDS GRID
+   ============================================================ */
+.asf-stats-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: 14px;
+	margin-bottom: 22px;
+}
+.asf-stat-card {
+	background: #fff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 20px 16px;
+	text-align: center;
+	box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	cursor: default;
+}
+.asf-stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.10); }
+.asf-stat-icon  { font-size: 30px; margin-bottom: 8px; line-height: 1; }
+.asf-stat-value { font-size: 28px; font-weight: 800; color: #1d4ed8; margin: 2px 0 4px; line-height: 1; }
+.asf-stat-label { font-size: 12px; color: #64748b; font-weight: 500; }
+
+/* ============================================================
+   MAIN CARD
+   ============================================================ */
+.asf-card {
+	background: #fff;
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 24px 28px;
+	margin-bottom: 18px;
+	box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.asf-card h2 { margin: 0 0 16px; font-size: 19px; color: #0f172a; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.asf-card h3 { margin: 0 0 12px; font-size: 15px; color: #334155; font-weight: 600; }
+.asf-card p   { color: #475569; line-height: 1.7; font-size: 14px; margin: 0 0 12px; }
+.asf-card-warn  { border-left: 4px solid #f59e0b; }
+.asf-card-error { border-left: 4px solid #ef4444; }
+.asf-card-ok    { border-left: 4px solid #22c55e; }
+.asf-card-info  { border-left: 4px solid #3b82f6; }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.asf-btn-primary {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: linear-gradient(135deg, #1d4ed8, #4f46e5);
+	color: #fff !important;
+	border: none;
+	padding: 11px 22px;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	text-decoration: none !important;
+	box-shadow: 0 2px 8px rgba(79,70,229,0.30);
+	line-height: 1.4;
+}
+.asf-btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 5px 16px rgba(79,70,229,0.38); color: #fff !important; }
+.asf-btn-primary:active { transform: translateY(0); }
+.asf-btn-primary:disabled { opacity: 0.50; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.asf-btn-secondary {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: #f8fafc;
+	color: #374151 !important;
+	border: 1px solid #d1d5db;
+	padding: 11px 20px;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	text-decoration: none !important;
+	line-height: 1.4;
+}
+.asf-btn-secondary:hover { background: #f1f5f9; border-color: #9ca3af; color: #1e293b !important; }
+
+.asf-btn-danger {
+	background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+	box-shadow: 0 2px 8px rgba(220,38,38,0.25) !important;
+}
+.asf-btn-danger:hover { box-shadow: 0 5px 16px rgba(220,38,38,0.35) !important; }
+
+.asf-btn-sm { padding: 7px 14px !important; font-size: 12px !important; border-radius: 6px !important; }
+.asf-btn-xs { padding: 4px 10px !important; font-size: 11px !important; border-radius: 5px !important; }
+
+.asf-action-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.asf-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 10px;
+	border-radius: 20px;
+	font-size: 11.5px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+.asf-badge-green  { background: #dcfce7; color: #15803d; }
+.asf-badge-red    { background: #fee2e2; color: #b91c1c; }
+.asf-badge-yellow { background: #fef3c7; color: #92400e; }
+.asf-badge-blue   { background: #dbeafe; color: #1d4ed8; }
+.asf-badge-purple { background: #f3e8ff; color: #7c3aed; }
+.asf-badge-gray   { background: #f1f5f9; color: #475569; }
+.asf-badge-orange { background: #fff7ed; color: #c2410c; }
+
+/* ============================================================
+   STATUS TEXT
+   ============================================================ */
+.asf-ok,   .asf-status-ok   { color: #15803d; font-weight: 700; }
+.asf-warn, .asf-status-warn { color: #a16207; font-weight: 700; }
+.asf-err,  .asf-status-err  { color: #b91c1c; font-weight: 700; }
+
+/* ============================================================
+   ACTION CHECKLIST
+   ============================================================ */
+.asf-action-list { list-style: none; margin: 0; padding: 0; }
+.asf-action-list li {
+	padding: 12px 16px;
+	border-left: 4px solid #4f46e5;
+	background: #f8faff;
+	margin-bottom: 8px;
+	border-radius: 0 8px 8px 0;
+	font-size: 13.5px;
+	line-height: 1.6;
+	transition: background 0.15s;
+}
+.asf-action-list li:hover { background: #f0f4ff; }
+.asf-action-list li.warn   { border-color: #f59e0b; background: #fffbeb; }
+.asf-action-list li.warn:hover   { background: #fff8e0; }
+.asf-action-list li.danger { border-color: #ef4444; background: #fff5f5; }
+.asf-action-list li.danger:hover { background: #feecec; }
+.asf-action-list li.ok     { border-color: #22c55e; background: #f0fdf4; }
+.asf-action-list li.ok:hover     { background: #e5fdf0; }
+
+/* ============================================================
+   SCORE / PROGRESS BAR
+   ============================================================ */
+.asf-score-bar-wrap { background: #f1f5f9; border-radius: 20px; height: 10px; overflow: hidden; margin-top: 6px; }
+.asf-score-bar { height: 10px; border-radius: 20px; transition: width 1.2s ease; }
+.asf-score-bar.green  { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.asf-score-bar.yellow { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.asf-score-bar.red    { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+/* ============================================================
+   SEO SCORE RING LABELS
+   ============================================================ */
+.asf-score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.asf-score-box { background: #f8fafc; border-radius: 10px; padding: 16px 12px; text-align: center; }
+.asf-score-num { font-size: 38px; font-weight: 800; line-height: 1; }
+.asf-score-num.green  { color: #15803d; }
+.asf-score-num.yellow { color: #a16207; }
+.asf-score-num.red    { color: #b91c1c; }
+.asf-score-label { font-size: 12px; color: #64748b; margin-top: 6px; font-weight: 500; }
+
+/* ============================================================
+   DATA TABLES
+   ============================================================ */
+.asf-table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+.asf-table th {
+	background: #f8fafc;
+	font-weight: 700;
+	color: #374151;
+	padding: 11px 14px;
+	border-bottom: 2px solid #e2e8f0;
+	text-align: left;
+	white-space: nowrap;
+}
+.asf-table td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #374151; }
+.asf-table tr:last-child td { border-bottom: none; }
+.asf-table tr:hover td { background: #fafbff; }
+.asf-table code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 12px; color: #7c3aed; }
+
+/* ============================================================
+   FORM ELEMENTS
+   ============================================================ */
+.asf-input {
+	width: 100%;
+	padding: 10px 14px;
+	border: 1px solid #d1d5db;
+	border-radius: 8px;
+	font-size: 14px;
+	color: #1e293b;
+	transition: border-color 0.2s, box-shadow 0.2s;
+	outline: none;
+}
+.asf-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+.asf-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px !important; }
+
+/* ============================================================
+   SPINNER / LOADING
+   ============================================================ */
+.asf-spinner {
+	display: inline-block;
+	width: 15px; height: 15px;
+	border: 2px solid #c7d2fe;
+	border-top-color: #4f46e5;
+	border-radius: 50%;
+	animation: asf-spin 0.65s linear infinite;
+	vertical-align: middle;
+	margin-right: 7px;
+}
+@keyframes asf-spin { to { transform: rotate(360deg); } }
+
+.asf-loading-bar {
+	height: 3px;
+	background: linear-gradient(90deg, #4f46e5, #1d4ed8, #4f46e5);
+	background-size: 200% 100%;
+	animation: asf-loading 1.4s infinite ease;
+	border-radius: 3px;
+	margin-bottom: 16px;
+}
+@keyframes asf-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ============================================================
+   NOTICE BOXES
+   ============================================================ */
+.asf-notice { padding: 14px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px; }
+.asf-notice-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+.asf-notice-error   { background: #fff5f5; border: 1px solid #fca5a5; color: #991b1b; }
+.asf-notice-warn    { background: #fffbeb; border: 1px solid #fcd34d; color: #78350f; }
+.asf-notice-info    { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
+.asf-notice strong  { font-weight: 700; }
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+.asf-divider { height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 22px 0; }
+
+/* ============================================================
+   CODE BLOCK
+   ============================================================ */
+.asf-code-block { background: #0f172a; color: #e2e8f0; padding: 16px 20px; border-radius: 10px; font-family: "Fira Code", "Cascadia Code", Consolas, monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; margin: 12px 0; }
+.asf-code-block .asf-code-green { color: #4ade80; }
+.asf-code-block .asf-code-blue  { color: #60a5fa; }
+.asf-code-block .asf-code-gray  { color: #94a3b8; }
+
+/* ============================================================
+   ISSUE COUNTER PILL
+   ============================================================ */
+.asf-count-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: #ef4444;
+	color: #fff;
+	font-size: 11px;
+	font-weight: 800;
+	min-width: 20px; height: 20px;
+	border-radius: 20px;
+	padding: 0 5px;
+	margin-left: 6px;
+}
+.asf-count-pill.yellow { background: #f59e0b; }
+.asf-count-pill.green  { background: #22c55e; }
+
+/* ============================================================
+   PROGRESS STEP INDICATOR
+   ============================================================ */
+.asf-steps { display: flex; gap: 0; margin-bottom: 24px; }
+.asf-step { flex: 1; text-align: center; position: relative; }
+.asf-step::before { content: ''; position: absolute; top: 16px; left: 50%; right: -50%; height: 2px; background: #e2e8f0; z-index: 0; }
+.asf-step:last-child::before { display: none; }
+.asf-step-circle { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-size: 13px; font-weight: 700; color: #94a3b8; position: relative; z-index: 1; transition: all 0.3s; }
+.asf-step.done .asf-step-circle { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+.asf-step.active .asf-step-circle { border-color: #4f46e5; color: #4f46e5; box-shadow: 0 0 0 4px rgba(79,70,229,0.15); }
+.asf-step-label { font-size: 11px; color: #64748b; font-weight: 500; }
+.asf-step.done .asf-step-label, .asf-step.active .asf-step-label { color: #4f46e5; font-weight: 600; }
+
+/* ============================================================
+   TOOLTIP
+   ============================================================ */
+.asf-tip { position: relative; cursor: help; border-bottom: 1px dashed #94a3b8; }
+.asf-tip::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #0f172a; color: #f1f5f9; font-size: 12px; padding: 6px 10px; border-radius: 6px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 999; font-weight: 400; }
+.asf-tip:hover::after { opacity: 1; }
+
+/* ============================================================
+   FOOTER CREDIT
+   ============================================================ */
+.asf-footer {
+	margin-top: 30px;
+	padding: 16px 22px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	font-size: 12.5px;
+	color: #64748b;
+	text-align: center;
+	line-height: 1.7;
+}
+.asf-footer a { color: #4f46e5; text-decoration: none; font-weight: 600; }
+.asf-footer a:hover { text-decoration: underline; color: #1d4ed8; }
+
+/* ============================================================
+   RESPONSIVE & TEXT WORD WRAPPING
+   ============================================================ */
+.asf-wrap, .asf-card, .asf-table, .asf-table td, .asf-table th, .asf-notice, .asf-action-list li, .asf-code-block, code, pre {
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+.asf-table td code, .asf-table th code {
+	white-space: normal;
+	word-break: break-all;
+}
+
+.asf-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 14px; }
+.asf-dashicon { vertical-align: middle; margin-right: 4px; font-size: 18px; width: 18px; height: 18px; }
+
+@media (max-width: 782px) {
+	.asf-hero { padding: 20px 18px; }
+	.asf-hero h1 { font-size: 20px; line-height: 1.3; }
+	.asf-hero p { font-size: 13px; line-height: 1.6; }
+	.asf-card { padding: 16px 18px; }
+	.asf-card h2 { font-size: 17px; }
+	.asf-stats-grid { grid-template-columns: repeat(2, 1fr); }
+	.asf-action-bar { flex-direction: column; align-items: stretch; gap: 10px; }
+	.asf-btn-primary, .asf-btn-secondary { justify-content: center; width: 100%; box-sizing: border-box; }
+	.asf-hero-meta { flex-direction: column; align-items: flex-start; gap: 8px; }
+	.asf-input, .asf-select { width: 100% !important; max-width: 100% !important; }
+}
+
+@media (max-width: 480px) {
+	.asf-stats-grid { grid-template-columns: 1fr; }
+	.asf-table td, .asf-table th { padding: 8px 10px; font-size: 13px; }
+}
+
+
