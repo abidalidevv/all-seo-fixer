@@ -63,40 +63,76 @@ class ASF_Performance {
 
 		global $wpdb;
 
-		// 1. Delete post revisions
-		$revisions = $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_type = 'revision'" );
+		// 1. Delete post revisions via wp_delete_post (Limit 50 per batch)
+		$revision_ids = $wpdb->get_col( "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'revision' LIMIT 50" );
+		$revisions = 0;
+		foreach ( $revision_ids as $rev_id ) {
+			if ( wp_delete_post( (int) $rev_id, true ) ) {
+				$revisions++;
+			}
+		}
 
-		// 2. Delete auto-drafts
-		$drafts = $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_status = 'auto-draft'" );
+		// 2. Delete auto-drafts via wp_delete_post (Limit 50 per batch)
+		$draft_ids = $wpdb->get_col( "SELECT ID FROM {$wpdb->posts} WHERE post_status = 'auto-draft' LIMIT 50" );
+		$drafts = 0;
+		foreach ( $draft_ids as $draft_id ) {
+			if ( wp_delete_post( (int) $draft_id, true ) ) {
+				$drafts++;
+			}
+		}
 
-		// 3. Delete trashed posts
-		$trashed_posts = $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_status = 'trash'" );
+		// 3. Delete trashed posts (Limit 50 per batch)
+		$trash_ids = $wpdb->get_col( "SELECT ID FROM {$wpdb->posts} WHERE post_status = 'trash' AND post_type != 'attachment' LIMIT 50" );
+		$trashed_posts = 0;
+		foreach ( $trash_ids as $t_id ) {
+			if ( wp_delete_post( (int) $t_id, true ) ) {
+				$trashed_posts++;
+			}
+		}
 
-		// 4. Delete spam & trashed comments
-		$spam_comments = $wpdb->query( "DELETE FROM {$wpdb->comments} WHERE comment_approved = 'spam' OR comment_approved = 'trash'" );
+		// 4. Delete spam & trashed comments (Limit 50 per batch)
+		$comment_ids = $wpdb->get_col( "SELECT comment_ID FROM {$wpdb->comments} WHERE comment_approved = 'spam' OR comment_approved = 'trash' LIMIT 50" );
+		$spam_comments = 0;
+		foreach ( $comment_ids as $c_id ) {
+			if ( wp_delete_comment( (int) $c_id, true ) ) {
+				$spam_comments++;
+			}
+		}
 
-		// 5. Delete expired transients
-		$time = time();
-		$expired_transients = $wpdb->query( $wpdb->prepare(
-			"DELETE a, b FROM {$wpdb->options} a, {$wpdb->options} b
-			 WHERE a.option_name LIKE %s
-			 AND a.option_name NOT LIKE %s
-			 AND b.option_name = CONCAT( '_transient_timeout_', SUBSTRING( a.option_name, 12 ) )
-			 AND b.option_value < %d",
-			'\_transient\_%',
-			'\_transient\_timeout\_%',
-			$time
-		) );
+		// Check if there are remaining items to process
+		$remaining_revisions = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'revision'" );
+		$remaining_drafts    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'auto-draft'" );
+		$remaining_trash     = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'trash' AND post_type != 'attachment'" );
+		$remaining_comments  = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->comments} WHERE comment_approved = 'spam' OR comment_approved = 'trash'" );
+		$has_more            = ( $remaining_revisions + $remaining_drafts + $remaining_trash + $remaining_comments ) > 0;
 
-		// 6. Optimize tables
-		$tables = $wpdb->get_col( 'SHOW TABLES' );
-		foreach ( $tables as $table ) {
-			$wpdb->query( "OPTIMIZE TABLE `{$table}`" );
+		// 5. Delete expired transients (Only on last batch)
+		$expired_transients = 0;
+		if ( ! $has_more ) {
+			$time = time();
+			$expired_transients = $wpdb->query( $wpdb->prepare(
+				"DELETE a, b FROM {$wpdb->options} a, {$wpdb->options} b
+				 WHERE a.option_name LIKE %s
+				 AND a.option_name NOT LIKE %s
+				 AND b.option_name = CONCAT( '_transient_timeout_', SUBSTRING( a.option_name, 12 ) )
+				 AND b.option_value < %d",
+				'\_transient\_%',
+				'\_transient\_timeout\_%',
+				$time
+			) );
+
+			// 6. Optimize tables on final batch
+			$tables = $wpdb->get_col( 'SHOW TABLES' );
+			foreach ( $tables as $table ) {
+				$wpdb->query( "OPTIMIZE TABLE `{$table}`" );
+			}
+		} else {
+			$tables = array();
 		}
 
 		wp_send_json( array(
 			'success' => true,
-			'message' => '🚀 Database Optimized Successfully!',
+			'message' => $has_more ? 'Processing database batch...' : '🚀 Database Optimized Successfully!',
 			'data'    => array(
 				'revisions'          => (int) $revisions,
 				'drafts'             => (int) $drafts,
@@ -104,6 +140,8 @@ class ASF_Performance {
 				'spam_comments'      => (int) $spam_comments,
 				'expired_transients' => (int) $expired_transients,
 				'tables_optimized'   => count( $tables ),
+				'has_more'           => $has_more,
+				'remaining_total'    => ( $remaining_revisions + $remaining_drafts + $remaining_trash + $remaining_comments ),
 			),
 		) );
 	}

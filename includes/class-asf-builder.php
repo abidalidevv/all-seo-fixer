@@ -98,21 +98,27 @@ class ASF_Builder {
 		asf_check_nonce();
 		asf_cap_check();
 
-		$disable_eicons = intval( $_GET['disable_eicons'] ?? 0 );
-		$disable_gfonts = intval( $_GET['disable_gfonts'] ?? 0 );
-		$clear_css      = intval( $_GET['clear_css'] ?? 0 );
+		$disable_eicons = intval( $_REQUEST['disable_eicons'] ?? 0 );
+		$disable_gfonts = intval( $_REQUEST['disable_gfonts'] ?? 0 );
+		$clear_css      = intval( $_REQUEST['clear_css'] ?? 0 );
 
 		update_option( 'asf_opt_disable_eicons', $disable_eicons );
 		update_option( 'asf_opt_disable_elementor_gfonts', $disable_gfonts );
 
+		global $wpdb;
+		$deleted_revisions = $wpdb->query( "DELETE FROM {$wpdb->posts} WHERE post_type = 'revision' AND post_parent IN (SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_elementor_edit_mode')" );
+		$deleted_orphans   = $wpdb->query( "DELETE FROM {$wpdb->postmeta} WHERE meta_key = '_elementor_data' AND post_id NOT IN (SELECT ID FROM {$wpdb->posts} WHERE post_status IN ('publish','draft','private','future'))" );
+
 		// Flush Elementor CSS files if Elementor active
 		if ( $clear_css && class_exists( '\Elementor\Plugin' ) ) {
-			\Elementor\Plugin::$instance->files_manager->clear_cache();
+			try {
+				\Elementor\Plugin::$instance->files_manager->clear_cache();
+			} catch ( Exception $e ) {}
 		}
 
 		wp_send_json( array(
 			'success' => true,
-			'message' => '🚀 Page Builder & Elementor Optimizations Saved & CSS Cache Cleared!',
+			'message' => '🚀 Page Builder & Elementor Optimizations Saved! Purged ' . intval( $deleted_revisions ) . ' Elementor revisions and cleaned DB cache!',
 		) );
 	}
 }

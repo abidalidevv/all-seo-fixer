@@ -45,26 +45,27 @@ class ASF_Admin {
 			'manage_options',
 			self::SLUG,
 			array( __CLASS__, 'dispatch' ),
-			'dashicons-superhero',
+			'dashicons-chart-bar',
 			58
 		);
 
 		$pages = array(
-			array( 'asf-panel',            '🛡️ 360° SEO Audit' ),
-			array( 'asf-pagespeed',        '⚡ PageSpeed Insights' ),
-			array( 'asf-performance',      '🚀 Speed & DB Optimizer' ),
-			array( 'asf-builder-analyzer', '🧱 Page Builder Optimizer' ),
-			array( 'asf-onpage',           '🔧 On-Page Checker' ),
-			array( 'asf-gsc-inspector',    '🔍 Google Search Console' ),
-			array( 'asf-w3c-validator',    '✅ W3C HTML Validator' ),
-			array( 'asf-keyword-analyzer', '🔤 Keyword Density' ),
-			array( 'asf-authority',        '📈 Domain Rating (DA)' ),
-			array( 'asf-serp-preview',     '👁️ SERP & Social Simulator' ),
-			array( 'asf-security',         '🔒 Domain & Security Audit' ),
-			array( 'asf-link-cleaner',     '🔗 Broken Link Cleaner' ),
-			array( 'asf-media',            '🖼️ Media Scanner' ),
-			array( 'asf-redirects',        '🔀 301 Redirects' ),
-			array( 'asf-settings',         '⚙️ Settings' ),
+			array( 'asf-panel',            '360° SEO Audit' ),
+			array( 'asf-onpage',           'On-Page Checker' ),
+			array( 'asf-pagespeed',        'PageSpeed Insights' ),
+			array( 'asf-lazy-load',        'Lazy Load Images' ),
+			array( 'asf-media',            'Media Scanner' ),
+			array( 'asf-performance',      'Speed & DB Optimizer' ),
+			array( 'asf-builder-analyzer', 'Page Builder Optimizer' ),
+			array( 'asf-gsc-inspector',    'Google Search Console' ),
+			array( 'asf-w3c-validator',    'W3C HTML Validator' ),
+			array( 'asf-keyword-analyzer', 'Keyword Density' ),
+			array( 'asf-authority',        'On-Page SEO Health' ),
+			array( 'asf-serp-preview',     'SERP Simulator' ),
+			array( 'asf-security',         'Security & Headers' ),
+			array( 'asf-link-cleaner',     'Broken Link Cleaner' ),
+			array( 'asf-redirects',        '301 Redirects' ),
+			array( 'asf-settings',         'Settings' ),
 		);
 
 		foreach ( $pages as $page ) {
@@ -91,6 +92,7 @@ class ASF_Admin {
 			'asf-security'         => 'domain-security',
 			'asf-link-cleaner'     => 'link-cleaner',
 			'asf-media'            => 'media-scanner',
+			'asf-lazy-load'        => 'lazy-load',
 			'asf-redirects'        => 'redirects',
 			'asf-settings'         => 'settings',
 		);
@@ -114,7 +116,7 @@ class ASF_Admin {
 
 		if ( ! $is_our_page ) return;
 
-		$ver = ASF_VERSION . '.' . time();
+		$ver = ASF_VERSION;
 
 		// Admin CSS
 		wp_enqueue_style(
@@ -142,6 +144,8 @@ class ASF_Admin {
 			true
 		);
 
+		$last_audit = get_option( 'asf_last_audit_data', false );
+
 		// Localize all dynamic data for JS
 		wp_localize_script( 'asf-admin', 'asfData', array(
 			'ajax'      => admin_url( 'admin-ajax.php' ),
@@ -150,6 +154,7 @@ class ASF_Admin {
 			'siteUrl'   => home_url(),
 			'hasPsiKey' => get_option( ASF_OPT_PSI_KEY, '' ) ? '1' : '0',
 			'version'   => ASF_VERSION,
+			'lastAudit' => $last_audit ? $last_audit : null,
 		) );
 	}
 }

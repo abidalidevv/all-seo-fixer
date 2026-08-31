@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>All-in-One SEO Fixer & Auditor — Official Documentation</title>
+	<style>
+		:root {
+			--doc-bg: #f0f0f1;
+			--doc-surface: #ffffff;
+			--doc-border: #c3c4c7;
+			--doc-text-main: #1d2327;
+			--doc-text-muted: #646970;
+			--doc-primary: #2271b1;
+			--doc-primary-hover: #135e96;
+			--doc-sidebar-bg: #1d2327;
+			--doc-sidebar-text: #f0f6fc;
+			--doc-sidebar-hover: #2c3338;
+			--doc-code-bg: #f6f7f7;
+			--doc-badge-green-bg: #edfaef;
+			--doc-badge-green-text: #117b34;
+			--doc-badge-blue-bg: #e5f5fa;
+			--doc-badge-blue-text: #0073aa;
+			--doc-badge-warn-bg: #fff8e5;
+			--doc-badge-warn-text: #b26200;
+			--doc-badge-err-bg: #fcf0f1;
+			--doc-badge-err-text: #d63638;
+		}
+
+		* { box-sizing: border-box; margin: 0; padding: 0; }
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+			background-color: var(--doc-bg);
+			color: var(--doc-text-main);
+			line-height: 1.6;
+			font-size: 14px;
+		}
+
+		/* LAYOUT */
+		.doc-container {
+			display: flex;
+			min-height: 100vh;
+		}
+
+		/* SIDEBAR */
+		.doc-sidebar {
+			width: 280px;
+			background-color: var(--doc-sidebar-bg);
+			color: var(--doc-sidebar-text);
+			position: fixed;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			overflow-y: auto;
+			z-index: 100;
+			padding: 24px 16px;
+		}
+
+		.doc-brand {
+			font-size: 18px;
+			font-weight: 700;
+			color: #ffffff;
+			margin-bottom: 8px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.doc-version {
+			font-size: 11px;
+			background: var(--doc-primary);
+			color: #fff;
+			padding: 2px 6px;
+			border-radius: 4px;
+			display: inline-block;
+			margin-bottom: 24px;
+		}
+
+		.doc-nav-section {
+			font-size: 11px;
+			text-transform: uppercase;
+			letter-spacing: 0.8px;
+			color: #8c8f94;
+			margin: 20px 0 8px;
+			font-weight: 700;
+		}
+
+		.doc-nav {
+			list-style: none;
+		}
+
+		.doc-nav li a {
+			display: block;
+			padding: 8px 12px;
+			color: #c3c4c7;
+			text-decoration: none;
+			border-radius: 4px;
+			font-size: 13px;
+			transition: all 0.15s ease;
+		}
+
+		.doc-nav li a:hover,
+		.doc-nav li a.active {
+			background: var(--doc-sidebar-hover);
+			color: #ffffff;
+		}
+
+		/* MAIN CONTENT */
+		.doc-content {
+			margin-left: 280px;
+			flex: 1;
+			padding: 40px;
+			max-width: 1000px;
+		}
+
+		/* HEADER */
+		.doc-header {
+			background: var(--doc-surface);
+			border: 1px solid var(--doc-border);
+			border-radius: 6px;
+			padding: 24px;
+			margin-bottom: 32px;
+			box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+		}
+
+		.doc-title {
+			font-size: 26px;
+			font-weight: 700;
+			color: #1d2327;
+			margin-bottom: 8px;
+		}
+
+		.doc-subtitle {
+			font-size: 14px;
+			color: var(--doc-text-muted);
+		}
+
+		/* SECTIONS & CARDS */
+		.doc-section {
+			background: var(--doc-surface);
+			border: 1px solid var(--doc-border);
+			border-radius: 6px;
+			padding: 28px;
+			margin-bottom: 28px;
+			box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+		}
+
+		.doc-section h2 {
+			font-size: 20px;
+			font-weight: 600;
+			color: #1d2327;
+			margin-bottom: 16px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid #f0f0f1;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.doc-section h3 {
+			font-size: 16px;
+			font-weight: 600;
+			color: #1d2327;
+			margin: 24px 0 12px;
+		}
+
+		.doc-section p {
+			margin-bottom: 14px;
+			color: var(--doc-text-main);
+		}
+
+		/* TABLES */
+		.doc-table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 16px 0;
+			font-size: 13px;
+		}
+
+		.doc-table th,
+		.doc-table td {
+			padding: 10px 14px;
+			text-align: left;
+			border-bottom: 1px solid var(--doc-border);
+		}
+
+		.doc-table th {
+			background: #f6f7f7;
+			font-weight: 600;
+			color: #1d2327;
+		}
+
+		.doc-table tbody tr:nth-child(even) {
+			background: #fcfcfc;
+		}
+
+		/* CODE BLOCKS */
+		pre, code {
+			font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+		}
+
+		code {
+			background: var(--doc-code-bg);
+			padding: 2px 6px;
+			border-radius: 4px;
+			font-size: 12px;
+			color: #d63638;
+		}
+
+		pre {
+			background: #1d2327;
+			color: #f0f6fc;
+			padding: 16px;
+			border-radius: 6px;
+			overflow-x: auto;
+			margin: 16px 0;
+			font-size: 12px;
+			line-height: 1.5;
+		}
+
+		/* BADGES */
+		.badge {
+			display: inline-block;
+			padding: 2px 8px;
+			border-radius: 4px;
+			font-size: 11px;
+			font-weight: 600;
+		}
+		.badge-green { background: var(--doc-badge-green-bg); color: var(--doc-badge-green-text); }
+		.badge-blue  { background: var(--doc-badge-blue-bg); color: var(--doc-badge-blue-text); }
+		.badge-warn  { background: var(--doc-badge-warn-bg); color: var(--doc-badge-warn-text); }
+		.badge-err   { background: var(--doc-badge-err-bg); color: var(--doc-badge-err-text); }
+
+		/* FOOTER */
+		.doc-footer {
+			margin-top: 40px;
+			padding-top: 20px;
+			border-top: 1px solid var(--doc-border);
+			font-size: 12px;
+			color: var(--doc-text-muted);
+			text-align: center;
+		}
+
+		/* RESPONSIVE */
+		@media (max-width: 900px) {
+			.doc-sidebar { width: 100%; position: relative; height: auto; }
+			.doc-content { margin-left: 0; padding: 20px; }
+			.doc-container { flex-direction: column; }
+		}
+	</style>
+</head>
+<body>
+
+<div class="doc-container">
+
+	<!-- SIDEBAR NAVIGATION -->
+	<aside class="doc-sidebar">
+		<div class="doc-brand">
+			<span>🛡️ All-in-One SEO Fixer</span>
+		</div>
+		<div class="doc-version">v2.1.0 · Open Source GPL-2.0</div>
+
+		<div class="doc-nav-section">Getting Started</div>
+		<ul class="doc-nav">
+			<li><a href="#overview">Overview & Purpose</a></li>
+			<li><a href="#key-features">Key Features Index</a></li>
+			<li><a href="#installation">Installation Guide</a></li>
+		</ul>
+
+		<div class="doc-nav-section">User Manual</div>
+		<ul class="doc-nav">
+			<li><a href="#dashboard">360° Audit Dashboard & PDF Reports</a></li>
+			<li><a href="#ai-assistant">AI SEO Assistant & Copilot</a></li>
+			<li><a href="#lazy-load">Lazy Load Images & Media</a></li>
+			<li><a href="#gsc-indexing">GSC & Indexing API</a></li>
+			<li><a href="#pagespeed">PageSpeed Insights</a></li>
+			<li><a href="#db-optimizer">Speed & DB Optimizer</a></li>
+			<li><a href="#redirects-404">301 Redirects & 404 Monitor</a></li>
+			<li><a href="#security-headers">Security & Headers Audit</a></li>
+			<li><a href="#builder-optimizer">Page Builder Optimizer</a></li>
+			<li><a href="#keyword-density">Keyword Density Analyzer</a></li>
+			<li><a href="#serp-simulator">SERP & Social Simulator</a></li>
+		</ul>
+
+		<div class="doc-nav-section">Developer & APIs</div>
+		<ul class="doc-nav">
+			<li><a href="#architecture">File Architecture</a></li>
+			<li><a href="#security-standards">Security & Nonce Standards</a></li>
+			<li><a href="#free-apis">Integrated Free APIs</a></li>
+			<li><a href="#license-author">License & Credits</a></li>
+		</ul>
+	</aside>
+
+	<!-- MAIN DOCUMENTATION CONTENT -->
+	<main class="doc-content">
+
+		<!-- PAGE HEADER -->
+		<div class="doc-header">
+			<h1 class="doc-title">All-in-One SEO Fixer & Auditor — User & Developer Manual</h1>
+			<p class="doc-subtitle">Complete, production-ready documentation for WordPress site owners, SEO managers, and developers.</p>
+		</div>
+
+		<!-- SECTION 1: OVERVIEW -->
+		<section id="overview" class="doc-section">
+			<h2>🚀 Overview & Purpose</h2>
+			<p><strong>All-in-One SEO Fixer & Auditor</strong> is a comprehensive, professional-grade WordPress SEO diagnostic, speed optimization, and security plugin. Built specifically to eliminate expensive monthly subscription paywalls, it provides 100% free access to enterprise SEO diagnostics under the open-source GPL-2.0 license.</p>
+			<p>It combines 360° site audits, real-time 404 URL monitoring, Google Indexing API v3 direct submissions, Google Search Console keyword rank tracking, PageSpeed Insights v5 integration, Page Builder bloat reduction, and 1-click automatic fixers into a unified WordPress Admin Native interface.</p>
+		</section>
+
+		<!-- SECTION 2: KEY FEATURES INDEX -->
+		<section id="key-features" class="doc-section">
+			<h2>🌟 Key Features Index</h2>
+			<table class="doc-table">
+				<thead>
+					<tr>
+						<th>Module</th>
+						<th>Description</th>
+						<th>Automated Fixer Support</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><strong>360° SEO Audit</strong></td>
+						<td>Performs a full site diagnostic across titles, metas, headings, media alt text, schema, and security.</td>
+						<td><span class="badge badge-green">1-Click Auto-Fixers</span></td>
+					</tr>
+					<tr>
+						<td><strong>GSC Rank Tracker</strong></td>
+						<td>Queries Google Search Console Search Analytics API for top 50 search keywords and average rank (#1–100).</td>
+						<td><span class="badge badge-blue">Real-Time API Sync</span></td>
+					</tr>
+					<tr>
+						<td><strong>Google Indexing API v3</strong></td>
+						<td>Submits published URLs directly to Google for instant crawling using RS256 signed OAuth 2.0 JWT bearer tokens.</td>
+						<td><span class="badge badge-blue">Instant Google Push</span></td>
+					</tr>
+					<tr>
+						<td><strong>PageSpeed Insights v5</strong></td>
+						<td>Queries Google PageSpeed API to generate Lighthouse scores (0–100) and Core Web Vitals (LCP, TBT, CLS, FCP).</td>
+						<td><span class="badge badge-blue">Official Google API</span></td>
+					</tr>
+					<tr>
+						<td><strong>Real-Time 404 Monitor</strong></td>
+						<td>Logs missing page hits in custom database table <code>wp_asf_404_logs</code> with hit counters and timestamps.</td>
+						<td><span class="badge badge-green">1-Click 301 Creator</span></td>
+					</tr>
+					<tr>
+						<td><strong>DB Performance Cleaner</strong></td>
+						<td>Batch-cleans revisions, auto-drafts, trashed posts, spam comments, and transients in 50-item loops.</td>
+						<td><span class="badge badge-green">Batched DB Optimizer</span></td>
+					</tr>
+					<tr>
+						<td><strong>Security & HSTS Fixer</strong></td>
+						<td>Inspects SSL encryption, HSTS, X-Frame-Options, CDN headers, server compression, and DNSBL blacklists.</td>
+						<td><span class="badge badge-green">1-Click Header Auto-Fix</span></td>
+					</tr>
+					<tr>
+						<td><strong>Local SEO & NAP Schema</strong></td>
+						<td>Configures Business Name, Address, Phone and auto-injects <code>LocalBusiness</code> JSON-LD schema on homepage.</td>
+						<td><span class="badge badge-green">Auto JSON-LD Injector</span></td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<!-- SECTION 3: INSTALLATION -->
+		<section id="installation" class="doc-section">
+			<h2>📥 Installation & API Setup Guide</h2>
+			<h3>1. Plugin Activation</h3>
+			<p>Upload or clone the plugin repository into your WordPress installation directory:</p>
+			<pre>wp-content/plugins/all-seo-fixer/</pre>
+			<p>Activate the plugin via <strong>WordPress Admin → Plugins → Installed Plugins</strong>.</p>
+
+			<h3>2. Google PageSpeed Insights API Key</h3>
+			<ol style="padding-left: 20px; margin-bottom: 16px;">
+				<li>Visit the <a href="https://console.developers.google.com/apis/credentials" target="_blank">Google Cloud Console Credentials Page</a>.</li>
+				<li>Create an API Key and restrict it to "PageSpeed Insights API".</li>
+				<li>Paste the API key in <strong>All SEO Fixer → Settings</strong>.</li>
+			</ol>
+
+			<h3>3. Google Search Console Service Account JSON Key</h3>
+			<ol style="padding-left: 20px;">
+				<li>Open <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> and create a project.</li>
+				<li>Enable both <strong>"Indexing API"</strong> and <strong>"Web Search Inspection API"</strong>.</li>
+				<li>Go to <strong>IAM & Admin → Service Accounts</strong> → Create a Service Account with Owner role.</li>
+				<li>Keys tab → <strong>Add Key → Create New Key (JSON)</strong> and download the JSON file.</li>
+				<li>In <a href="https://search.google.com/search-console" target="_blank">Google Search Console</a> → Settings → Users & Permissions, add the Service Account email address as an <strong>Owner</strong>.</li>
+				<li>Paste the entire JSON key text in <strong>All SEO Fixer → Settings</strong>.</li>
+			</ol>
+		</section>
+
+		<!-- SECTION 4: USER MANUAL -->
+		<section id="dashboard" class="doc-section">
+			<h2>⚙️ User Manual & Module Guide</h2>
+
+			<h3>360° Audit Dashboard</h3>
+			<p>Click <strong>Run Full 360° SEO Audit</strong> to scan published pages. The engine generates a clean <em>Live SEO Health Status</em> table and an <em>Action Plan & Recommended Fixes</em> list with 1-click resolution buttons.</p>
+
+			<h3>Google Indexing & Live Rank Tracker</h3>
+			<p>Use the Instant Indexing input to push newly published or updated URLs directly to Google's indexing queue. Use <strong>Fetch Live Keyword Ranks</strong> to inspect search terms, impressions, and average rank positions.</p>
+
+			<h3>PageSpeed Insights & Core Web Vitals</h3>
+			<p>Test any published page URL for Mobile or Desktop strategies. Displays 0–100 category scores and exact Core Web Vitals timings (LCP in seconds, TBT in milliseconds, CLS score).</p>
+
+			<h3>301 Redirect Manager & 404 Monitor</h3>
+			<p>Manage permanent 301 redirects without editing server <code>.htaccess</code> files. The Real-Time 404 Monitor displays logged missing URLs; click <strong>⚡ Create 301 Redirect</strong> to pre-fill redirect rules instantly.</p>
+		</section>
+
+		<!-- SECTION 5: DEVELOPER ARCHITECTURE -->
+		<section id="architecture" class="doc-section">
+			<h2>💻 Developer Architecture & Security Standards</h2>
+			<h3>File Structure</h3>
+			<pre>
+all-seo-fixer/
+├── all-seo-fixer.php           # Main bootstrap file & DB creation
+├── README.md                   # Single Master Documentation
+├── documentation.html          # HTML User & Developer Manual
+├── assets/
+│   ├── css/admin.css           # WordPress Admin Native CSS
+│   └── js/admin.js             # Central AJAX & Modal JavaScript Engine
+├── includes/
+│   ├── class-asf-core.php      # 404 logger, duplicate guard & Schema/OG injector
+│   ├── class-asf-audit.php     # 360° SEO audit & E-E-A-T inspector
+│   ├── class-asf-pagespeed.php # PageSpeed Insights API v5 controller
+│   ├── class-asf-security.php  # Security headers & DNSBL lookup controller
+│   ├── class-asf-performance.php # Batched DB optimizer
+│   ├── class-asf-gsc.php       # GSC OAuth RS256 JWT assertion controller
+│   └── class-asf-handlers.php  # OnPage, LinkCleaner & AutoFixer handlers
+└── admin/
+    ├── class-asf-admin.php     # Menu registration & asset loader
+    └── views/                  # 15 HTML view templates
+			</pre>
+
+			<h3 id="security-standards">Security & Sanitization Protocols</h3>
+			<ul>
+				<li><strong>Capability Check</strong>: Every AJAX action executes <code>asf_cap_check()</code> checking <code>manage_options</code>.</li>
+				<li><strong>CSRF Nonce Check</strong>: Every request executes <code>asf_check_nonce()</code> validating <code>asf_admin_nonce</code>.</li>
+				<li><strong>SQL Security</strong>: Custom queries use <code>$wpdb->prepare()</code> with strict type placeholders (`%s`, `%d`).</li>
+				<li><strong>Batched DB Execution</strong>: Deletions run in 50-item loops via core <code>wp_delete_post()</code> APIs to respect PHP memory limits.</li>
+			</ul>
+		</section>
+
+		<!-- SECTION 6: FREE APIS INTEGRATED -->
+		<section id="free-apis" class="doc-section">
+			<h2>🌐 Integrated Free APIs</h2>
+			<table class="doc-table">
+				<thead>
+					<tr>
+						<th>Service / API</th>
+						<th>Provider</th>
+						<th>Usage & Quota</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><strong>Indexing API v3</strong></td>
+						<td>Google Cloud / Search Console</td>
+						<td>Free (200 URLs/day quota)</td>
+					</tr>
+					<tr>
+						<td><strong>Search Analytics API</strong></td>
+						<td>Google Search Console</td>
+						<td>Free (Unlimited via OAuth)</td>
+					</tr>
+					<tr>
+						<td><strong>PageSpeed Insights v5</strong></td>
+						<td>Google Developers</td>
+						<td>Free (25,000 requests/day quota)</td>
+					</tr>
+					<tr>
+						<td><strong>W3C Nu HTML Checker API</strong></td>
+						<td>W3C Organization</td>
+						<td>Free open API</td>
+					</tr>
+					<tr>
+						<td><strong>IndexNow Protocol</strong></td>
+						<td>Bing, Yandex, Seznam, Naver</td>
+						<td>Free open protocol</td>
+					</tr>
+				</tbody>
+			</table>
+		</section>
+
+		<!-- SECTION 7: LICENSE & AUTHOR -->
+		<section id="license-author" class="doc-section">
+			<h2>📜 License & Author Credits</h2>
+			<p><strong>All-in-One SEO Fixer & Auditor</strong> is licensed under the <a href="https://www.gnu.org/licenses/gpl-2.0.html" target="_blank">GPL-2.0-or-later</a> license.</p>
+			<p>Built with ❤️ by <strong>Abid Ali Dev</strong></p>
+			<ul>
+				<li>Website: <a href="https://abidalidev.com" target="_blank">https://abidalidev.com</a></li>
+				<li>GitHub Repository: <a href="https://github.com/abidalidevv/all-seo-fixer" target="_blank">@abidalidevv/all-seo-fixer</a></li>
+			</ul>
+		</section>
+
+		<!-- FOOTER -->
+		<footer class="doc-footer">
+			All-in-One SEO Fixer v2.1.0 · Official User & Developer Documentation · GPL-2.0 License
+		</footer>
+
+	</main>
+
+</div>
+
+</body>
+</html>

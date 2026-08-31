@@ -1,396 +1,649 @@
 /**
- * All-in-One SEO Fixer & Auditor — Admin Stylesheet
+ * All-in-One SEO Fixer & Auditor — Professional WordPress Admin Stylesheet
+ * Native WordPress Design System (Restrained, Usable & Accessible)
  * Author: Abid Ali Dev | https://abidalidev.com
  * Version: 2.1.0
  */
 
 /* ============================================================
-   RESET & BASE
+   1. VARIABLES & DESIGN TOKENS
    ============================================================ */
-.asf-wrap { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif; color: #1e293b; max-width: 1200px; }
-.asf-wrap * { box-sizing: border-box; }
-.asf-wrap a { text-decoration: none; }
+:root {
+	--asf-wp-blue: #2271b1;
+	--asf-wp-blue-hover: #135e96;
+	--asf-wp-bg: #f0f0f1;
+	--asf-card-bg: #ffffff;
+	--asf-border: #c3c4c7;
+	--asf-border-subtle: #dcdcde;
+	--asf-text-dark: #1d2327;
+	--asf-text-body: #2c3338;
+	--asf-text-muted: #646970;
+	--asf-radius-sm: 4px;
+	--asf-radius-md: 6px;
+	--asf-shadow-sm: 0 1px 1px rgba(0, 0, 0, 0.04);
+	--asf-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+
+	/* Semantic Colors */
+	--asf-success: #00a32a;
+	--asf-success-bg: #edfaef;
+	--asf-success-border: #4ab866;
+
+	--asf-warning: #dba617;
+	--asf-warning-bg: #fff8e5;
+	--asf-warning-border: #dba617;
+
+	--asf-error: #d63638;
+	--asf-error-bg: #fcf0f1;
+	--asf-error-border: #d63638;
+
+	--asf-info: #2271b1;
+	--asf-info-bg: #f0f6fc;
+	--asf-info-border: #72aee6;
+}
 
 /* ============================================================
-   HERO BANNER
+   2. RESET & BASE WRAPPER
    ============================================================ */
-.asf-hero {
-	background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #1d4ed8 100%);
-	color: #fff;
-	padding: 30px 36px;
-	border-radius: 14px;
-	margin: 16px 0 24px;
-	position: relative;
-	overflow: hidden;
+.asf-wrap {
+	font-family: var(--asf-font);
+	color: var(--asf-text-body);
+	max-width: 1240px;
+	margin: 20px 20px 0 0;
+	font-size: 13px;
+	line-height: 1.5;
 }
-.asf-hero::before {
-	content: '';
-	position: absolute;
-	top: -50px; right: -50px;
-	width: 250px; height: 250px;
-	border-radius: 50%;
-	background: rgba(255,255,255,0.04);
-	pointer-events: none;
+.asf-wrap * {
+	box-sizing: border-box;
 }
-.asf-hero::after {
-	content: '';
-	position: absolute;
-	bottom: -70px; right: 90px;
-	width: 180px; height: 180px;
-	border-radius: 50%;
-	background: rgba(99, 102, 241, 0.12);
-	pointer-events: none;
+.asf-wrap a {
+	color: var(--asf-wp-blue);
+	text-decoration: none;
 }
-.asf-hero h1 { margin: 0 0 8px; font-size: 26px; color: #fff; font-weight: 800; letter-spacing: -0.4px; line-height: 1.2; }
-.asf-hero p  { margin: 0 0 18px; opacity: 0.82; font-size: 14px; line-height: 1.7; max-width: 680px; }
-.asf-hero-meta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
-.asf-hero-meta a { color: #93c5fd; font-size: 13px; text-decoration: none; font-weight: 500; transition: color 0.2s; }
-.asf-hero-meta a:hover { color: #fff; text-decoration: underline; }
-.asf-hero-badge {
-	background: rgba(255,255,255,0.12);
-	border: 1px solid rgba(255,255,255,0.2);
-	border-radius: 20px;
-	padding: 2px 12px;
+.asf-wrap a:hover {
+	color: var(--asf-wp-blue-hover);
+	text-decoration: underline;
+}
+.asf-wrap code {
+	background: #f6f7f7;
+	color: #0a4b78;
+	padding: 2px 6px;
+	border-radius: 3px;
+	font-family: Consolas, Monaco, monospace;
 	font-size: 12px;
-	color: #e0f2fe;
+	border: 1px solid #dcdcde;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   3. PAGE HEADER & HERO COMPONENT
+   ============================================================ */
+.asf-header,
+.asf-hero {
+	background: var(--asf-card-bg);
+	border: 1px solid var(--asf-border);
+	border-radius: var(--asf-radius-md);
+	padding: 20px 24px;
+	margin-bottom: 20px;
+	box-shadow: var(--asf-shadow-sm);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 16px;
+}
+.asf-header-title h1,
+.asf-hero h1 {
+	margin: 0 0 4px;
+	font-size: 22px;
+	font-weight: 600;
+	color: var(--asf-text-dark);
+	line-height: 1.3;
+}
+.asf-header-desc,
+.asf-hero p {
+	margin: 0;
+	font-size: 13px;
+	color: var(--asf-text-muted);
+	max-width: 760px;
+}
+.asf-header-actions,
+.asf-hero-actions {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+}
+
+/* ============================================================
+   STATS GRID COMPONENT
+   ============================================================ */
+.asf-stats-grid {
+	display: grid !important;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+	gap: 16px !important;
+	margin-bottom: 24px !important;
+}
+.asf-stat-box {
+	background: #ffffff !important;
+	border: 1px solid #c3c4c7 !important;
+	border-radius: 6px !important;
+	padding: 16px 14px !important;
+	text-align: center !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+	transition: all 0.2s ease-in-out !important;
+}
+.asf-stat-box:hover {
+	border-color: #2271b1 !important;
+	transform: translateY(-2px) !important;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+}
+.asf-stat-num {
+	font-size: 26px !important;
+	font-weight: 700 !important;
+	color: #1d2327 !important;
+	margin-bottom: 4px !important;
+	line-height: 1.2 !important;
+}
+.asf-stat-num-sm {
+	font-size: 18px !important;
+	line-height: 1.4 !important;
+}
+.asf-stat-num-domain {
+	font-size: 15px !important;
+	line-height: 1.4 !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+}
+.asf-stat-label {
+	font-size: 11px !important;
+	font-weight: 600 !important;
+	color: #646970 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.5px !important;
+}
+.asf-ok { color: #00a32a !important; font-weight: 600 !important; }
+.asf-warn { color: #d63638 !important; font-weight: 600 !important; }
+
+.asf-header-actions,
+.asf-hero-meta {
+	display: flex;
+	gap: 12px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+.asf-hero-meta a {
+	font-size: 12px;
+	color: var(--asf-text-muted);
 	font-weight: 500;
 }
+.asf-hero-meta a:hover {
+	color: var(--asf-wp-blue);
+}
+.asf-hero-badge {
+	background: #f0f0f1;
+	border: 1px solid var(--asf-border-subtle);
+	border-radius: 12px;
+	padding: 2px 10px;
+	font-size: 11px;
+	color: var(--asf-text-dark);
+	font-weight: 600;
+}
 
 /* ============================================================
-   STAT CARDS GRID
+   4. NAVIGATION TABS (.nav-tab-wrapper)
+   ============================================================ */
+.asf-nav-tabs {
+	border-bottom: 1px solid var(--asf-border);
+	margin-bottom: 20px;
+	display: flex;
+	gap: 4px;
+	flex-wrap: wrap;
+}
+.asf-nav-tab {
+	display: inline-block;
+	padding: 8px 16px;
+	font-size: 13px;
+	font-weight: 600;
+	color: #50575e;
+	background: #e5e5e5;
+	border: 1px solid var(--asf-border);
+	border-bottom: none;
+	border-radius: 4px 4px 0 0;
+	text-decoration: none !important;
+	transition: background 0.15s, color 0.15s;
+}
+.asf-nav-tab:hover {
+	background: #f6f7f7;
+	color: var(--asf-wp-blue);
+}
+.asf-nav-tab.active,
+.asf-nav-tab.nav-tab-active {
+	background: var(--asf-card-bg);
+	color: var(--asf-text-dark);
+	border-bottom: 1px solid var(--asf-card-bg);
+	margin-bottom: -1px;
+}
+
+/* ============================================================
+   5. STATS GRID & COMPACT METRIC CARDS
    ============================================================ */
 .asf-stats-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-	gap: 14px;
-	margin-bottom: 22px;
+	gap: 12px;
+	margin-bottom: 20px;
 }
-.asf-stat-card {
-	background: #fff;
-	border: 1px solid #e2e8f0;
-	border-radius: 12px;
-	padding: 20px 16px;
+.asf-stat-card,
+.asf-stat-box {
+	background: var(--asf-card-bg);
+	border: 1px solid var(--asf-border);
+	border-radius: var(--asf-radius-md);
+	padding: 16px 14px;
 	text-align: center;
-	box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
-	cursor: default;
+	box-shadow: var(--asf-shadow-sm);
 }
-.asf-stat-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.10); }
-.asf-stat-icon  { font-size: 30px; margin-bottom: 8px; line-height: 1; }
-.asf-stat-value { font-size: 28px; font-weight: 800; color: #1d4ed8; margin: 2px 0 4px; line-height: 1; }
-.asf-stat-label { font-size: 12px; color: #64748b; font-weight: 500; }
+.asf-stat-num,
+.asf-stat-value {
+	font-size: 26px;
+	font-weight: 700;
+	color: var(--asf-wp-blue);
+	line-height: 1.1;
+	margin-bottom: 4px;
+}
+.asf-stat-label {
+	font-size: 12px;
+	color: var(--asf-text-muted);
+	font-weight: 500;
+}
 
 /* ============================================================
-   MAIN CARD
+   6. CARDS & CONTAINERS
    ============================================================ */
 .asf-card {
-	background: #fff;
-	border: 1px solid #e2e8f0;
-	border-radius: 12px;
-	padding: 24px 28px;
-	margin-bottom: 18px;
-	box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+	background: var(--asf-card-bg);
+	border: 1px solid var(--asf-border);
+	border-radius: var(--asf-radius-md);
+	padding: 20px 24px;
+	margin-bottom: 20px;
+	box-shadow: var(--asf-shadow-sm);
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
-.asf-card h2 { margin: 0 0 16px; font-size: 19px; color: #0f172a; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-.asf-card h3 { margin: 0 0 12px; font-size: 15px; color: #334155; font-weight: 600; }
-.asf-card p   { color: #475569; line-height: 1.7; font-size: 14px; margin: 0 0 12px; }
-.asf-card-warn  { border-left: 4px solid #f59e0b; }
-.asf-card-error { border-left: 4px solid #ef4444; }
-.asf-card-ok    { border-left: 4px solid #22c55e; }
-.asf-card-info  { border-left: 4px solid #3b82f6; }
+.asf-card h2 {
+	margin: 0 0 14px;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--asf-text-dark);
+	line-height: 1.4;
+	border-bottom: 1px solid var(--asf-border-subtle);
+	padding-bottom: 10px;
+}
+.asf-card h3 {
+	margin: 16px 0 10px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--asf-text-dark);
+}
+.asf-card p {
+	margin: 0 0 12px;
+	font-size: 13px;
+	color: var(--asf-text-body);
+}
+
+/* Semantic Card Variant Left Borders */
+.asf-card-ok    { border-left: 4px solid var(--asf-success); }
+.asf-card-warn  { border-left: 4px solid var(--asf-warning); }
+.asf-card-error { border-left: 4px solid var(--asf-error); }
+.asf-card-info  { border-left: 4px solid var(--asf-info); }
+
+/* Grid Layout Helpers */
+.asf-grid-2 {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 16px;
+}
+.asf-grid-3 {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 16px;
+}
 
 /* ============================================================
-   BUTTONS
+   7. BUTTONS SYSTEM (WordPress Standard Overrides)
    ============================================================ */
-.asf-btn-primary {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	background: linear-gradient(135deg, #1d4ed8, #4f46e5);
-	color: #fff !important;
-	border: none;
-	padding: 11px 22px;
-	border-radius: 8px;
-	font-size: 14px;
-	font-weight: 600;
+.asf-btn-primary,
+.asf-wrap .button-primary,
+.asf-wrap input[type="submit"] {
+	background: var(--asf-wp-blue) !important;
+	border-color: var(--asf-wp-blue) !important;
+	color: #ffffff !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	height: auto !important;
+	padding: 6px 14px !important;
+	border-radius: var(--asf-radius-sm) !important;
 	cursor: pointer;
-	transition: all 0.2s ease;
-	text-decoration: none !important;
-	box-shadow: 0 2px 8px rgba(79,70,229,0.30);
-	line-height: 1.4;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	transition: background 0.15s, border-color 0.15s;
 }
-.asf-btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 5px 16px rgba(79,70,229,0.38); color: #fff !important; }
-.asf-btn-primary:active { transform: translateY(0); }
-.asf-btn-primary:disabled { opacity: 0.50; cursor: not-allowed; transform: none; box-shadow: none; }
+.asf-btn-primary:hover,
+.asf-wrap .button-primary:hover,
+.asf-wrap input[type="submit"]:hover {
+	background: var(--asf-wp-blue-hover) !important;
+	border-color: var(--asf-wp-blue-hover) !important;
+}
 
-.asf-btn-secondary {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	background: #f8fafc;
-	color: #374151 !important;
-	border: 1px solid #d1d5db;
-	padding: 11px 20px;
-	border-radius: 8px;
-	font-size: 14px;
-	font-weight: 600;
+.asf-btn-secondary,
+.asf-wrap .button-secondary {
+	background: #f6f7f7 !important;
+	border: 1px solid var(--asf-border) !important;
+	color: var(--asf-text-dark) !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	padding: 6px 14px !important;
+	border-radius: var(--asf-radius-sm) !important;
 	cursor: pointer;
-	transition: all 0.2s ease;
-	text-decoration: none !important;
-	line-height: 1.4;
+	box-shadow: none !important;
 }
-.asf-btn-secondary:hover { background: #f1f5f9; border-color: #9ca3af; color: #1e293b !important; }
+.asf-btn-secondary:hover,
+.asf-wrap .button-secondary:hover {
+	background: #f0f0f1 !important;
+	border-color: #8c8f94 !important;
+}
 
 .asf-btn-danger {
-	background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-	box-shadow: 0 2px 8px rgba(220,38,38,0.25) !important;
+	background: var(--asf-error-bg) !important;
+	border: 1px solid var(--asf-error-border) !important;
+	color: var(--asf-error) !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	padding: 4px 10px !important;
+	border-radius: var(--asf-radius-sm) !important;
+	cursor: pointer;
 }
-.asf-btn-danger:hover { box-shadow: 0 5px 16px rgba(220,38,38,0.35) !important; }
+.asf-btn-danger:hover {
+	background: var(--asf-error) !important;
+	color: #ffffff !important;
+}
 
-.asf-btn-sm { padding: 7px 14px !important; font-size: 12px !important; border-radius: 6px !important; }
-.asf-btn-xs { padding: 4px 10px !important; font-size: 11px !important; border-radius: 5px !important; }
-
-.asf-action-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.asf-btn-xs {
+	padding: 3px 8px !important;
+	font-size: 11px !important;
+	line-height: 1.4 !important;
+}
 
 /* ============================================================
-   BADGES
+   8. STATUS BADGES & PILLS
    ============================================================ */
 .asf-badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 10px;
-	border-radius: 20px;
-	font-size: 11.5px;
-	font-weight: 700;
-	white-space: nowrap;
-}
-.asf-badge-green  { background: #dcfce7; color: #15803d; }
-.asf-badge-red    { background: #fee2e2; color: #b91c1c; }
-.asf-badge-yellow { background: #fef3c7; color: #92400e; }
-.asf-badge-blue   { background: #dbeafe; color: #1d4ed8; }
-.asf-badge-purple { background: #f3e8ff; color: #7c3aed; }
-.asf-badge-gray   { background: #f1f5f9; color: #475569; }
-.asf-badge-orange { background: #fff7ed; color: #c2410c; }
-
-/* ============================================================
-   STATUS TEXT
-   ============================================================ */
-.asf-ok,   .asf-status-ok   { color: #15803d; font-weight: 700; }
-.asf-warn, .asf-status-warn { color: #a16207; font-weight: 700; }
-.asf-err,  .asf-status-err  { color: #b91c1c; font-weight: 700; }
-
-/* ============================================================
-   ACTION CHECKLIST
-   ============================================================ */
-.asf-action-list { list-style: none; margin: 0; padding: 0; }
-.asf-action-list li {
-	padding: 12px 16px;
-	border-left: 4px solid #4f46e5;
-	background: #f8faff;
-	margin-bottom: 8px;
-	border-radius: 0 8px 8px 0;
-	font-size: 13.5px;
-	line-height: 1.6;
-	transition: background 0.15s;
-}
-.asf-action-list li:hover { background: #f0f4ff; }
-.asf-action-list li.warn   { border-color: #f59e0b; background: #fffbeb; }
-.asf-action-list li.warn:hover   { background: #fff8e0; }
-.asf-action-list li.danger { border-color: #ef4444; background: #fff5f5; }
-.asf-action-list li.danger:hover { background: #feecec; }
-.asf-action-list li.ok     { border-color: #22c55e; background: #f0fdf4; }
-.asf-action-list li.ok:hover     { background: #e5fdf0; }
-
-/* ============================================================
-   SCORE / PROGRESS BAR
-   ============================================================ */
-.asf-score-bar-wrap { background: #f1f5f9; border-radius: 20px; height: 10px; overflow: hidden; margin-top: 6px; }
-.asf-score-bar { height: 10px; border-radius: 20px; transition: width 1.2s ease; }
-.asf-score-bar.green  { background: linear-gradient(90deg, #22c55e, #16a34a); }
-.asf-score-bar.yellow { background: linear-gradient(90deg, #f59e0b, #d97706); }
-.asf-score-bar.red    { background: linear-gradient(90deg, #ef4444, #dc2626); }
-
-/* ============================================================
-   SEO SCORE RING LABELS
-   ============================================================ */
-.asf-score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; margin-bottom: 20px; }
-.asf-score-box { background: #f8fafc; border-radius: 10px; padding: 16px 12px; text-align: center; }
-.asf-score-num { font-size: 38px; font-weight: 800; line-height: 1; }
-.asf-score-num.green  { color: #15803d; }
-.asf-score-num.yellow { color: #a16207; }
-.asf-score-num.red    { color: #b91c1c; }
-.asf-score-label { font-size: 12px; color: #64748b; margin-top: 6px; font-weight: 500; }
-
-/* ============================================================
-   DATA TABLES
-   ============================================================ */
-.asf-table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
-.asf-table th {
-	background: #f8fafc;
-	font-weight: 700;
-	color: #374151;
-	padding: 11px 14px;
-	border-bottom: 2px solid #e2e8f0;
-	text-align: left;
-	white-space: nowrap;
-}
-.asf-table td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #374151; }
-.asf-table tr:last-child td { border-bottom: none; }
-.asf-table tr:hover td { background: #fafbff; }
-.asf-table code { background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-size: 12px; color: #7c3aed; }
-
-/* ============================================================
-   FORM ELEMENTS
-   ============================================================ */
-.asf-input {
-	width: 100%;
-	padding: 10px 14px;
-	border: 1px solid #d1d5db;
-	border-radius: 8px;
-	font-size: 14px;
-	color: #1e293b;
-	transition: border-color 0.2s, box-shadow 0.2s;
-	outline: none;
-}
-.asf-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
-.asf-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px !important; }
-
-/* ============================================================
-   SPINNER / LOADING
-   ============================================================ */
-.asf-spinner {
 	display: inline-block;
-	width: 15px; height: 15px;
-	border: 2px solid #c7d2fe;
-	border-top-color: #4f46e5;
-	border-radius: 50%;
-	animation: asf-spin 0.65s linear infinite;
-	vertical-align: middle;
-	margin-right: 7px;
-}
-@keyframes asf-spin { to { transform: rotate(360deg); } }
-
-.asf-loading-bar {
-	height: 3px;
-	background: linear-gradient(90deg, #4f46e5, #1d4ed8, #4f46e5);
-	background-size: 200% 100%;
-	animation: asf-loading 1.4s infinite ease;
-	border-radius: 3px;
-	margin-bottom: 16px;
-}
-@keyframes asf-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-/* ============================================================
-   NOTICE BOXES
-   ============================================================ */
-.asf-notice { padding: 14px 18px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px; }
-.asf-notice-success { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
-.asf-notice-error   { background: #fff5f5; border: 1px solid #fca5a5; color: #991b1b; }
-.asf-notice-warn    { background: #fffbeb; border: 1px solid #fcd34d; color: #78350f; }
-.asf-notice-info    { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
-.asf-notice strong  { font-weight: 700; }
-
-/* ============================================================
-   DIVIDER
-   ============================================================ */
-.asf-divider { height: 1px; background: linear-gradient(90deg, transparent, #e2e8f0, transparent); margin: 22px 0; }
-
-/* ============================================================
-   CODE BLOCK
-   ============================================================ */
-.asf-code-block { background: #0f172a; color: #e2e8f0; padding: 16px 20px; border-radius: 10px; font-family: "Fira Code", "Cascadia Code", Consolas, monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; margin: 12px 0; }
-.asf-code-block .asf-code-green { color: #4ade80; }
-.asf-code-block .asf-code-blue  { color: #60a5fa; }
-.asf-code-block .asf-code-gray  { color: #94a3b8; }
-
-/* ============================================================
-   ISSUE COUNTER PILL
-   ============================================================ */
-.asf-count-pill {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	background: #ef4444;
-	color: #fff;
+	padding: 2px 8px;
 	font-size: 11px;
-	font-weight: 800;
-	min-width: 20px; height: 20px;
-	border-radius: 20px;
-	padding: 0 5px;
-	margin-left: 6px;
+	font-weight: 600;
+	border-radius: 3px;
+	line-height: 1.4;
+	border: 1px solid transparent;
 }
-.asf-count-pill.yellow { background: #f59e0b; }
-.asf-count-pill.green  { background: #22c55e; }
+.asf-badge-green,
+.asf-badge-success {
+	background: var(--asf-success-bg);
+	color: #00701c;
+	border-color: var(--asf-success-border);
+}
+.asf-badge-yellow,
+.asf-badge-warn {
+	background: var(--asf-warning-bg);
+	color: #996800;
+	border-color: var(--asf-warning-border);
+}
+.asf-badge-red,
+.asf-badge-error {
+	background: var(--asf-error-bg);
+	color: var(--asf-error);
+	border-color: var(--asf-error-border);
+}
+.asf-badge-blue,
+.asf-badge-info {
+	background: var(--asf-info-bg);
+	color: var(--asf-info);
+	border-color: var(--asf-info-border);
+}
+.asf-badge-gray {
+	background: #f0f0f1;
+	color: var(--asf-text-muted);
+	border-color: var(--asf-border);
+}
 
-/* ============================================================
-   PROGRESS STEP INDICATOR
-   ============================================================ */
-.asf-steps { display: flex; gap: 0; margin-bottom: 24px; }
-.asf-step { flex: 1; text-align: center; position: relative; }
-.asf-step::before { content: ''; position: absolute; top: 16px; left: 50%; right: -50%; height: 2px; background: #e2e8f0; z-index: 0; }
-.asf-step:last-child::before { display: none; }
-.asf-step-circle { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #e2e8f0; background: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-size: 13px; font-weight: 700; color: #94a3b8; position: relative; z-index: 1; transition: all 0.3s; }
-.asf-step.done .asf-step-circle { background: #4f46e5; border-color: #4f46e5; color: #fff; }
-.asf-step.active .asf-step-circle { border-color: #4f46e5; color: #4f46e5; box-shadow: 0 0 0 4px rgba(79,70,229,0.15); }
-.asf-step-label { font-size: 11px; color: #64748b; font-weight: 500; }
-.asf-step.done .asf-step-label, .asf-step.active .asf-step-label { color: #4f46e5; font-weight: 600; }
-
-/* ============================================================
-   TOOLTIP
-   ============================================================ */
-.asf-tip { position: relative; cursor: help; border-bottom: 1px dashed #94a3b8; }
-.asf-tip::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #0f172a; color: #f1f5f9; font-size: 12px; padding: 6px 10px; border-radius: 6px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 999; font-weight: 400; }
-.asf-tip:hover::after { opacity: 1; }
-
-/* ============================================================
-   FOOTER CREDIT
-   ============================================================ */
-.asf-footer {
-	margin-top: 30px;
-	padding: 16px 22px;
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
+.asf-count-pill {
+	display: inline-block;
+	background: #646970;
+	color: #ffffff;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 1px 7px;
 	border-radius: 10px;
-	font-size: 12.5px;
-	color: #64748b;
-	text-align: center;
-	line-height: 1.7;
+	margin-left: 6px;
+	vertical-align: middle;
 }
-.asf-footer a { color: #4f46e5; text-decoration: none; font-weight: 600; }
-.asf-footer a:hover { text-decoration: underline; color: #1d4ed8; }
+.asf-count-pill.red   { background: var(--asf-error); }
+.asf-count-pill.green { background: var(--asf-success); }
+.asf-count-pill.blue  { background: var(--asf-wp-blue); }
 
 /* ============================================================
-   RESPONSIVE & TEXT WORD WRAPPING
+   9. TABLES (WordPress .widefat Overrides)
    ============================================================ */
-.asf-wrap, .asf-card, .asf-table, .asf-table td, .asf-table th, .asf-notice, .asf-action-list li, .asf-code-block, code, pre {
+.asf-wrap table.widefat {
+	border: 1px solid var(--asf-border);
+	box-shadow: none;
+	border-radius: var(--asf-radius-sm);
+	overflow: hidden;
+	margin-top: 8px;
+}
+.asf-wrap table.widefat th {
+	background: #f6f7f7;
+	color: var(--asf-text-dark);
+	font-weight: 600;
+	font-size: 12px;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--asf-border);
+}
+.asf-wrap table.widefat td {
+	padding: 10px 12px;
+	font-size: 13px;
+	color: var(--asf-text-body);
+	vertical-align: middle;
+	border-bottom: 1px solid var(--asf-border-subtle);
 	word-break: break-word;
 	overflow-wrap: anywhere;
 }
-.asf-table td code, .asf-table th code {
-	white-space: normal;
-	word-break: break-all;
+.asf-wrap table.widefat tr:last-child td {
+	border-bottom: none;
 }
 
-.asf-table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 14px; }
-.asf-dashicon { vertical-align: middle; margin-right: 4px; font-size: 18px; width: 18px; height: 18px; }
+/* ============================================================
+   10. FORMS & INPUTS
+   ============================================================ */
+.asf-input,
+.asf-wrap input[type="text"],
+.asf-wrap input[type="url"],
+.asf-wrap select,
+.asf-wrap textarea {
+	background: #ffffff;
+	border: 1px solid var(--asf-border);
+	border-radius: var(--asf-radius-sm);
+	padding: 6px 10px;
+	font-size: 13px;
+	color: var(--asf-text-dark);
+	box-shadow: none;
+	transition: border-color 0.15s;
+}
+.asf-input:focus,
+.asf-wrap input[type="text"]:focus,
+.asf-wrap input[type="url"]:focus,
+.asf-wrap select:focus,
+.asf-wrap textarea:focus {
+	border-color: var(--asf-wp-blue);
+	outline: 2px solid #72aee6;
+	outline-offset: 0;
+}
 
+/* Action Bar Container */
+.asf-action-bar {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	flex-wrap: wrap;
+	margin-top: 14px;
+}
+
+/* ============================================================
+   11. NOTICES & ALERTS
+   ============================================================ */
+.asf-notice {
+	padding: 12px 16px;
+	border-radius: var(--asf-radius-sm);
+	margin-bottom: 16px;
+	font-size: 13px;
+	border-left: 4px solid var(--asf-border);
+	background: var(--asf-card-bg);
+}
+.asf-notice-success {
+	background: var(--asf-success-bg);
+	border-left-color: var(--asf-success);
+	color: #00701c;
+}
+.asf-notice-warn {
+	background: var(--asf-warning-bg);
+	border-left-color: var(--asf-warning);
+	color: #8a5d00;
+}
+.asf-notice-error {
+	background: var(--asf-error-bg);
+	border-left-color: var(--asf-error);
+	color: var(--asf-error);
+}
+.asf-notice-info {
+	background: var(--asf-info-bg);
+	border-left-color: var(--asf-info);
+	color: var(--asf-info);
+}
+
+/* ============================================================
+   12. CODE BLOCKS & PREVIEW BOXES
+   ============================================================ */
+.asf-code-block {
+	background: #1e293b;
+	color: #e2e8f0;
+	padding: 14px 18px;
+	border-radius: var(--asf-radius-sm);
+	font-family: Consolas, Monaco, monospace;
+	font-size: 12px;
+	line-height: 1.6;
+	overflow-x: auto;
+	margin-top: 10px;
+}
+.asf-code-blue  { color: #38bdf8; }
+.asf-code-green { color: #4ade80; }
+.asf-code-gray  { color: #94a3b8; }
+
+/* Status Text Tokens */
+.asf-ok   { color: var(--asf-success); font-weight: 600; }
+.asf-warn { color: var(--asf-warning); font-weight: 600; }
+.asf-err  { color: var(--asf-error); font-weight: 600; }
+
+/* ============================================================
+   13. MODAL OVERLAY DIALOGS
+   ============================================================ */
+.asf-modal-overlay {
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(0, 0, 0, 0.45);
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+.asf-modal {
+	background: #ffffff;
+	border-radius: var(--asf-radius-md);
+	border: 1px solid var(--asf-border);
+	width: 100%;
+	max-width: 620px;
+	max-height: 90vh;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+.asf-modal-header {
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--asf-border-subtle);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.asf-modal-header h3 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--asf-text-dark);
+}
+.asf-modal-close-btn {
+	background: none;
+	border: none;
+	font-size: 18px;
+	color: var(--asf-text-muted);
+	cursor: pointer;
+}
+.asf-modal-body {
+	padding: 20px;
+	overflow-y: auto;
+}
+.asf-modal-footer {
+	padding: 14px 20px;
+	border-top: 1px solid var(--asf-border-subtle);
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	background: #f6f7f7;
+	border-radius: 0 0 var(--asf-radius-md) var(--asf-radius-md);
+}
+
+/* Loading Spinner */
+.asf-spinner {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border: 2px solid rgba(0,0,0,0.15);
+	border-radius: 50%;
+	border-top-color: var(--asf-wp-blue);
+	animation: asf-spin 0.6s linear infinite;
+	vertical-align: middle;
+	margin-right: 6px;
+}
+@keyframes asf-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   14. FOOTER & CREDITS
+   ============================================================ */
+.asf-footer {
+	margin-top: 30px;
+	padding-top: 14px;
+	border-top: 1px solid var(--asf-border-subtle);
+	color: var(--asf-text-muted);
+	font-size: 12px;
+	text-align: center;
+}
+
+/* ============================================================
+   15. RESPONSIVE BREAKPOINTS
+   ============================================================ */
 @media (max-width: 782px) {
-	.asf-hero { padding: 20px 18px; }
-	.asf-hero h1 { font-size: 20px; line-height: 1.3; }
-	.asf-hero p { font-size: 13px; line-height: 1.6; }
-	.asf-card { padding: 16px 18px; }
-	.asf-card h2 { font-size: 17px; }
+	.asf-header, .asf-hero { flex-direction: column; align-items: flex-start; }
+	.asf-grid-2, .asf-grid-3 { grid-template-columns: 1fr; }
 	.asf-stats-grid { grid-template-columns: repeat(2, 1fr); }
-	.asf-action-bar { flex-direction: column; align-items: stretch; gap: 10px; }
-	.asf-btn-primary, .asf-btn-secondary { justify-content: center; width: 100%; box-sizing: border-box; }
-	.asf-hero-meta { flex-direction: column; align-items: flex-start; gap: 8px; }
-	.asf-input, .asf-select { width: 100% !important; max-width: 100% !important; }
 }
-
-@media (max-width: 480px) {
-	.asf-stats-grid { grid-template-columns: 1fr; }
-	.asf-table td, .asf-table th { padding: 8px 10px; font-size: 13px; }
-}
-
-

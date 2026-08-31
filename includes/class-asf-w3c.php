@@ -26,9 +26,9 @@ class ASF_W3C {
 		asf_check_nonce();
 		asf_cap_check();
 
-		$url = esc_url_raw( $_GET['url'] ?? '' );
+		$url = esc_url_raw( $_REQUEST['url'] ?? '' );
 		if ( ! $url ) {
-			wp_send_json( array( 'success' => false, 'message' => 'No URL provided.' ) );
+			$url = home_url( '/' );
 		}
 
 		$api_url = add_query_arg( array(

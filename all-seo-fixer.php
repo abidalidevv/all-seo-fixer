@@ -84,6 +84,24 @@ function asf_activate() {
 	if ( get_option( ASF_OPT_REDIRECTS ) === false ) {
 		add_option( ASF_OPT_REDIRECTS, array() );
 	}
+
+	// Create custom DB table for 404 URL Hit Logger with index
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'asf_404_logs';
+	$charset_collate = $wpdb->get_charset_collate();
+
+	$sql = "CREATE TABLE $table_name (
+		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		url varchar(255) NOT NULL,
+		hits bigint(20) unsigned NOT NULL DEFAULT 1,
+		last_seen int(11) NOT NULL,
+		created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		PRIMARY KEY  (id),
+		UNIQUE KEY url_idx (url(191))
+	) $charset_collate;";
+
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
 }
 
 register_deactivation_hook( __FILE__, 'asf_deactivate' );

@@ -1,7 +1,7 @@
 <?php
 /**
  * View: Performance, Caching & Database Optimizer
- * (WP Rocket + Smush Pro style)
+ * WordPress Admin Native Design System
  *
  * @package All_SEO_Fixer
  */
@@ -10,36 +10,37 @@ if ( ! current_user_can( 'manage_options' ) ) return;
 ?>
 <div class="wrap asf-wrap">
 
-	<div class="asf-hero">
-		<h1>⚡ Performance, Caching & Database Optimizer</h1>
-		<p>Optimize speed without paid plugins like WP Rocket or Smush Pro. Native image & iframe lazy loading, 1-click database cleanup, and speed configuration snippets.</p>
-		<div class="asf-hero-meta">
-			<a href="https://abidalidev.com" target="_blank">🌐 abidalidev.com</a>
-			<a href="https://github.com/abidalidevv/all-seo-fixer" target="_blank">⭐ @abidalidevv</a>
+	<!-- PAGE HEADER -->
+	<div class="asf-header">
+		<div class="asf-header-title">
+			<h1>Speed & Database Optimizer</h1>
+			<p class="asf-header-desc">Native image lazy loading, 50-item batched database cleaner, and Apache/Nginx speed configuration snippets.</p>
 		</div>
 	</div>
 
-	<!-- NATIVE LAZY LOADING BADGE -->
-	<div class="asf-card asf-card-ok">
-		<h3>🚀 Native Image & Iframe Lazy Loading: <span class="asf-badge asf-badge-green">ACTIVE & ENABLED</span></h3>
-		<p style="margin:0;">All images and iframe embeds in your post and page content are automatically served with <code>loading="lazy"</code> to improve Largest Contentful Paint (LCP) and initial page load time.</p>
+	<!-- LAZY LOADING STATUS -->
+	<div class="asf-notice asf-notice-success">
+		<strong>Native Lazy Loading Active:</strong> All images and iframe embeds in post/page content automatically render with <code>loading="lazy"</code> to optimize initial render and LCP.
 	</div>
 
 	<!-- DATABASE CLEANER & OPTIMIZER -->
 	<div class="asf-card">
-		<h2>🧹 Database Cleanup & Table Optimization</h2>
-		<p>Safely delete post revisions, auto-drafts, trashed posts, spam comments, and expired transients to reduce database size and speed up MySQL queries.</p>
+		<h2>Database Cleanup & Table Optimization</h2>
+		<div class="asf-notice asf-notice-warn" style="margin-bottom:14px;">
+			<strong>Backup Recommendation:</strong> It is good practice to take a database backup (via UpdraftPlus or hosting cPanel) before executing database optimizations.
+		</div>
+		<p>Deletes post revisions, auto-drafts, trashed posts, spam comments, and expired transients in 50-item batches via WordPress native cleanup APIs without PHP timeouts.</p>
 
 		<div class="asf-action-bar">
-			<button class="asf-btn-primary" id="asf-db-opt-btn">🧹 Run 1-Click Database Optimization</button>
+			<button class="button button-primary" id="asf-db-opt-btn">Run 1-Click Database Optimization</button>
 		</div>
 		<div id="asf-db-opt-status" style="margin-top:16px;"></div>
 	</div>
 
-	<!-- HTACCESS SPEED SNIPPET -->
+	<!-- SPEED SNIPPETS: APACHE & NGINX -->
 	<div class="asf-card">
-		<h2>⚡ Recommended .htaccess Speed Snippet (Apache / Litespeed)</h2>
-		<p>Copy and paste this snippet into the top of your <code>.htaccess</code> file to enable Gzip compression and Browser Caching headers:</p>
+		<h2>Apache / LiteSpeed .htaccess Speed Rules</h2>
+		<p>Copy and paste this snippet at the top of your <code>.htaccess</code> file to enable Gzip compression and Browser Caching headers:</p>
 		<div class="asf-code-block">
 			<span class="asf-code-gray"># All-in-One SEO Fixer — Speed & Caching Rules</span><br>
 			&lt;IfModule mod_deflate.c&gt;<br>
@@ -59,7 +60,24 @@ if ( ! current_user_can( 'manage_options' ) ) return;
 		</div>
 	</div>
 
+	<div class="asf-card">
+		<h2>Nginx Server Speed Configuration</h2>
+		<p>Add this snippet inside your Nginx server block (<code>nginx.conf</code>) to enable Gzip compression and static asset caching:</p>
+		<div class="asf-code-block">
+			<span class="asf-code-gray"># All-in-One SEO Fixer — Nginx Compression & Static Cache</span><br>
+			gzip on;<br>
+			gzip_comp_level 5;<br>
+			gzip_min_length 256;<br>
+			gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;<br>
+			<br>
+			location ~* \.(jpg|jpeg|png|gif|ico|css|js|webp|svg)$ {<br>
+			&nbsp;&nbsp;expires 365d;<br>
+			&nbsp;&nbsp;add_header Cache-Control "public, no-transform";<br>
+			}
+		</div>
+	</div>
+
 	<div class="asf-footer">
-		Built by <a href="https://abidalidev.com" target="_blank">Abid Ali Dev</a> · <a href="https://github.com/abidalidevv/all-seo-fixer" target="_blank">GitHub @abidalidevv</a>
+		All-in-One SEO Fixer v<?php echo esc_html( ASF_VERSION ); ?> · Built by <a href="https://abidalidev.com" target="_blank">Abid Ali Dev</a>
 	</div>
 </div>

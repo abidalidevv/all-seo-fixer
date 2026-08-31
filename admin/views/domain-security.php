@@ -1,6 +1,7 @@
 <?php
 /**
- * View: Domain Security, Spam Reputation & Security Headers Audit
+ * View: Security, CDN, Header & Domain Reputation Audit
+ * WordPress Admin Native Design System
  *
  * @package All_SEO_Fixer
  */
@@ -9,19 +10,18 @@ if ( ! current_user_can( 'manage_options' ) ) return;
 ?>
 <div class="wrap asf-wrap">
 
-	<div class="asf-hero">
-		<h1>🛡️ Domain Security, Spam & Header Audit</h1>
-		<p>Check HTTPS SSL encryption, HTTP Security Headers, CDN & WAF detection, server compression, and domain blacklist / spam reputation (Spamhaus, SpamCop, Barracuda).</p>
-		<div class="asf-hero-meta">
-			<a href="https://abidalidev.com" target="_blank">🌐 abidalidev.com</a>
-			<a href="https://github.com/abidalidevv/all-seo-fixer" target="_blank">⭐ @abidalidevv</a>
+	<!-- PAGE HEADER -->
+	<div class="asf-header">
+		<div class="asf-header-title">
+			<h1>Security, Headers & Domain Audit</h1>
+			<p class="asf-header-desc">Inspect SSL encryption status, HTTP Security Headers (HSTS, CSP), CDN detection, server compression, and live DNSBL email/domain blacklists.</p>
 		</div>
 	</div>
 
 	<div class="asf-card">
-		<h2>🔍 Run Domain & Security Audit</h2>
-		<div class="asf-action-bar">
-			<button class="asf-btn-primary" id="asf-security-btn">🛡️ Run Security & Spam Audit</button>
+		<h2>Security Audit</h2>
+		<div class="asf-action-bar" style="margin-top:0;">
+			<button class="button button-primary" id="asf-security-btn">Audit Security Headers & DNSBL Blacklists</button>
 		</div>
 		<div id="asf-sec-status" style="margin-top:16px;"></div>
 	</div>
@@ -29,6 +29,6 @@ if ( ! current_user_can( 'manage_options' ) ) return;
 	<div id="asf-sec-results"></div>
 
 	<div class="asf-footer">
-		Built by <a href="https://abidalidev.com" target="_blank">Abid Ali Dev</a> · <a href="https://github.com/abidalidevv/all-seo-fixer" target="_blank">GitHub @abidalidevv</a>
+		All-in-One SEO Fixer v<?php echo esc_html( ASF_VERSION ); ?> · Built by <a href="https://abidalidev.com" target="_blank">Abid Ali Dev</a>
 	</div>
 </div>

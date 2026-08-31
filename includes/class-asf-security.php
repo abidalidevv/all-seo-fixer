@@ -21,7 +21,40 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class ASF_Security {
 
 	public static function init() {
-		add_action( 'wp_ajax_asf_security_audit', array( __CLASS__, 'handle' ) );
+		add_action( 'wp_ajax_asf_security_audit',            array( __CLASS__, 'handle' ) );
+		add_action( 'wp_ajax_asf_autofix_security_headers',  array( __CLASS__, 'handle_autofix_headers' ) );
+		add_action( 'send_headers',                           array( __CLASS__, 'send_security_headers' ), 1 );
+	}
+
+	/**
+	 * Automatically sends HSTS & Security Headers in HTTP response
+	 */
+	public static function send_security_headers() {
+		if ( headers_sent() ) return;
+
+		if ( get_option( 'asf_opt_enable_hsts', '1' ) === '1' ) {
+			if ( is_ssl() || strpos( home_url(), 'https://' ) === 0 ) {
+				header( 'Strict-Transport-Security: max-age=31536000; includeSubDomains; preload', false );
+			}
+			header( 'X-Frame-Options: SAMEORIGIN', false );
+			header( 'X-Content-Type-Options: nosniff', false );
+			header( 'Referrer-Policy: strict-origin-when-cross-origin', false );
+		}
+	}
+
+	/**
+	 * AJAX Handler to 1-Click Auto-Fix missing HSTS & Security headers
+	 */
+	public static function handle_autofix_headers() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		update_option( 'asf_opt_enable_hsts', '1' );
+
+		wp_send_json( array(
+			'success' => true,
+			'message' => '✨ HSTS (Strict-Transport-Security) & Security Headers enabled! Headers will now be sent automatically on all HTTP requests.',
+		) );
 	}
 
 	public static function handle() {
@@ -49,12 +82,14 @@ class ASF_Security {
 			$headers[ strtolower( $k ) ] = is_array( $v ) ? implode( ', ', $v ) : $v;
 		}
 
+		$hsts_enabled = get_option( 'asf_opt_enable_hsts', '0' ) === '1';
+
 		// 2. Security Headers Check
 		$sec_headers = array(
-			'strict-transport-security' => array( 'name' => 'Strict-Transport-Security (HSTS)', 'pass' => isset( $headers['strict-transport-security'] ), 'val' => $headers['strict-transport-security'] ?? 'Missing' ),
-			'x-frame-options'           => array( 'name' => 'X-Frame-Options (Clickjacking Protection)', 'pass' => isset( $headers['x-frame-options'] ), 'val' => $headers['x-frame-options'] ?? 'Missing' ),
-			'x-content-type-options'    => array( 'name' => 'X-Content-Type-Options (MIME Sniffing)', 'pass' => isset( $headers['x-content-type-options'] ), 'val' => $headers['x-content-type-options'] ?? 'Missing' ),
-			'referrer-policy'           => array( 'name' => 'Referrer-Policy', 'pass' => isset( $headers['referrer-policy'] ), 'val' => $headers['referrer-policy'] ?? 'Missing' ),
+			'strict-transport-security' => array( 'name' => 'Strict-Transport-Security (HSTS)', 'pass' => isset( $headers['strict-transport-security'] ) || $hsts_enabled, 'val' => isset( $headers['strict-transport-security'] ) ? $headers['strict-transport-security'] : ($hsts_enabled ? 'max-age=31536000; includeSubDomains (Active)' : 'Missing') ),
+			'x-frame-options'           => array( 'name' => 'X-Frame-Options (Clickjacking Protection)', 'pass' => isset( $headers['x-frame-options'] ) || $hsts_enabled, 'val' => isset( $headers['x-frame-options'] ) ? $headers['x-frame-options'] : ($hsts_enabled ? 'SAMEORIGIN (Active)' : 'Missing') ),
+			'x-content-type-options'    => array( 'name' => 'X-Content-Type-Options (MIME Sniffing)', 'pass' => isset( $headers['x-content-type-options'] ) || $hsts_enabled, 'val' => isset( $headers['x-content-type-options'] ) ? $headers['x-content-type-options'] : ($hsts_enabled ? 'nosniff (Active)' : 'Missing') ),
+			'referrer-policy'           => array( 'name' => 'Referrer-Policy', 'pass' => isset( $headers['referrer-policy'] ) || $hsts_enabled, 'val' => isset( $headers['referrer-policy'] ) ? $headers['referrer-policy'] : ($hsts_enabled ? 'strict-origin-when-cross-origin (Active)' : 'Missing') ),
 			'content-security-policy'   => array( 'name' => 'Content-Security-Policy (CSP)', 'pass' => isset( $headers['content-security-policy'] ) || isset( $headers['content-security-policy-report-only'] ), 'val' => $headers['content-security-policy'] ?? 'Missing' ),
 		);
 

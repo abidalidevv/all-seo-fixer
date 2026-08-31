@@ -15,6 +15,7 @@ class ASF_Core {
 	public static function init() {
 		add_action( 'template_redirect', array( __CLASS__, 'run_redirects_and_feed_protection' ) );
 		add_action( 'wp_head',           array( __CLASS__, 'inject_auto_schema_and_og_tags' ), 1 );
+		add_filter( 'the_content',         array( __CLASS__, 'filter_lazy_load_content' ), 99 );
 		add_filter( 'rank_math/sitemap/exclude_post_type', array( __CLASS__, 'exclude_builder_cpts_from_sitemap' ), 10, 2 );
 		add_filter( 'wpseo_sitemap_exclude_post_type',     array( __CLASS__, 'exclude_builder_cpts_from_sitemap' ), 10, 2 );
 	}
@@ -33,16 +34,41 @@ class ASF_Core {
 
 		// 2. Custom 301 Redirect Engine (from DB option)
 		$redirects = get_option( ASF_OPT_REDIRECTS, array() );
-		if ( empty( $redirects ) || ! is_array( $redirects ) ) return;
+		if ( ! empty( $redirects ) && is_array( $redirects ) ) {
+			$path = strtok( $_SERVER['REQUEST_URI'] ?? '', '?' );
+			foreach ( $redirects as $src => $tgt ) {
+				if ( empty( $src ) || empty( $tgt ) ) continue;
+				$clean_src = '/' . ltrim( trim( $src ), '/' );
+				if ( rtrim( $path, '/' ) === rtrim( $clean_src, '/' ) ) {
+					wp_redirect( esc_url_raw( $tgt ), 301 );
+					exit;
+				}
+			}
+		}
 
-		$path = strtok( $_SERVER['REQUEST_URI'] ?? '', '?' );
+		// 3. 404 URL Hit Monitor Logger (Dedicated DB Table with Index)
+		if ( is_404() ) {
+			$uri = strtok( $_SERVER['REQUEST_URI'] ?? '', '?' );
+			if ( $uri && strpos( $uri, '/wp-content/' ) === false && strpos( $uri, '/wp-includes/' ) === false && strpos( $uri, 'favicon' ) === false && strpos( $uri, '.php' ) === false && strpos( $uri, '.xml' ) === false && strpos( $uri, 'xmlrpc' ) === false ) {
+				global $wpdb;
+				$table_name = $wpdb->prefix . 'asf_404_logs';
+				$clean_uri  = sanitize_text_field( $uri );
+				$time       = time();
 
-		foreach ( $redirects as $src => $tgt ) {
-			if ( empty( $src ) || empty( $tgt ) ) continue;
-			$clean_src = '/' . ltrim( trim( $src ), '/' );
-			if ( rtrim( $path, '/' ) === rtrim( $clean_src, '/' ) ) {
-				wp_redirect( esc_url_raw( $tgt ), 301 );
-				exit;
+				// Fast INSERT or UPDATE hits count
+				$wpdb->query( $wpdb->prepare(
+					"INSERT INTO {$table_name} (url, hits, last_seen) VALUES (%s, 1, %d)
+					 ON DUPLICATE KEY UPDATE hits = hits + 1, last_seen = %d",
+					$clean_uri,
+					$time,
+					$time
+				) );
+
+				// Auto-purge old entries (older than 30 days) when table size > 500
+				if ( rand( 1, 50 ) === 1 ) {
+					$cutoff = $time - ( 30 * DAY_IN_SECONDS );
+					$wpdb->query( $wpdb->prepare( "DELETE FROM {$table_name} WHERE last_seen < %d AND hits < 3", $cutoff ) );
+				}
 			}
 		}
 	}
@@ -76,6 +102,11 @@ class ASF_Core {
 	 */
 	public static function inject_auto_schema_and_og_tags() {
 		if ( is_admin() || is_feed() ) return;
+
+		// Guard: Do NOT output duplicate OG or Schema tags if Rank Math, Yoast, AIOSEO, or SEOPress is active!
+		if ( defined( 'WPSEO_VERSION' ) || class_exists( 'RankMath' ) || defined( 'AIOSEO_VERSION' ) || class_exists( 'All_in_One_SEO_Pack' ) || defined( 'SEOPRESS_VERSION' ) ) {
+			return;
+		}
 
 		$site_name = get_bloginfo( 'name' );
 		$site_desc = get_bloginfo( 'description' );
@@ -170,7 +201,63 @@ class ASF_Core {
 			),
 		);
 
+		// LocalBusiness Schema Node
+		$biz_name    = get_option( 'asf_local_biz_name', $site_name );
+		$biz_phone   = get_option( 'asf_local_biz_phone', '' );
+		$biz_address = get_option( 'asf_local_biz_address', '' );
+
+		if ( $biz_phone || $biz_address ) {
+			$schema['@graph'][] = array(
+				'@type'     => 'LocalBusiness',
+				'@id'       => $site_url . '#localbusiness',
+				'name'      => $biz_name,
+				'url'       => $site_url,
+				'telephone' => $biz_phone ?: null,
+				'address'   => array(
+					'@type'         => 'PostalAddress',
+					'streetAddress' => $biz_address,
+				),
+			);
+		}
+
 		echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT ) . "</script>\n";
 		echo "<!-- / All-in-One SEO Fixer -->\n\n";
+	}
+
+	/**
+	 * Enforces native HTML5 loading="lazy" on all <img> and <iframe> tags in post_content on front-end.
+	 * Includes LCP Hero Guard (skips 1st image so LCP metric remains fast).
+	 */
+	public static function filter_lazy_load_content( $content ) {
+		if ( empty( $content ) || is_admin() || is_feed() ) return $content;
+
+		$enable_img    = get_option( 'asf_opt_enable_lazy', '1' );
+		$enable_iframe = get_option( 'asf_opt_enable_iframe_lazy', '1' );
+		$exclude_first = get_option( 'asf_opt_exclude_first_lazy', '1' );
+
+		if ( $enable_img === '1' ) {
+			$count = 0;
+			$content = preg_replace_callback( '/<img\s+([^>]+)>/i', function( $matches ) use ( &$count, $exclude_first ) {
+				$count++;
+				$img_html = $matches[0];
+				if ( strpos( $img_html, 'loading=' ) !== false ) return $img_html;
+
+				if ( $count === 1 && $exclude_first === '1' ) {
+					return str_replace( '<img ', '<img loading="eager" fetchpriority="high" ', $img_html );
+				}
+
+				return str_replace( '<img ', '<img loading="lazy" ', $img_html );
+			}, $content );
+		}
+
+		if ( $enable_iframe === '1' ) {
+			$content = preg_replace_callback( '/<iframe\s+([^>]+)>/i', function( $matches ) {
+				$iframe_html = $matches[0];
+				if ( strpos( $iframe_html, 'loading=' ) !== false ) return $iframe_html;
+				return str_replace( '<iframe ', '<iframe loading="lazy" ', $iframe_html );
+			}, $content );
+		}
+
+		return $content;
 	}
 }

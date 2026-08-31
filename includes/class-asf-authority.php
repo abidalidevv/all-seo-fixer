@@ -94,7 +94,7 @@ class ASF_Authority {
 		$score = min( 100, max( 0, $score ) );
 
 		// Rating grade
-		$rating = $score >= 80 ? 'A+ (High Authority)' : ( $score >= 60 ? 'B (Good)' : ( $score >= 40 ? 'C (Average)' : 'D (Needs Work)' ) );
+		$rating = $score >= 80 ? 'A+ (Excellent Health)' : ( $score >= 60 ? 'B (Good Health)' : ( $score >= 40 ? 'C (Average Health)' : 'D (Needs Work)' ) );
 
 		wp_send_json( array(
 			'success' => true,

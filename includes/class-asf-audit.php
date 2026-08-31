@@ -43,16 +43,20 @@ class ASF_Audit {
 		$total = count( $posts );
 
 		// ── 2. Per-page checks ────────────────────────────────────────────
-		$missing_titles  = 0;
-		$bad_metas       = 0;
-		$missing_h1      = 0;
-		$missing_alts    = 0;
-		$schema_count    = 0;
-		$og_count        = 0;
-		$seen_titles     = array();
-		$seen_metas      = array();
-		$dup_titles      = 0;
-		$dup_metas       = 0;
+		$missing_titles       = 0;
+		$bad_metas            = 0;
+		$missing_h1           = 0;
+		$missing_alts         = 0;
+		$schema_count         = 0;
+		$og_count             = 0;
+		$seen_titles          = array();
+		$seen_metas           = array();
+		$dup_titles           = 0;
+		$dup_metas            = 0;
+		$eeat_author_missing  = 0;
+		$eeat_citations_count = 0;
+		$aria_missing         = 0;
+		$intrusive_popups     = 0;
 
 		foreach ( $posts as $post ) {
 			$content = $post->post_content;
@@ -115,6 +119,29 @@ class ASF_Audit {
 			if ( ! empty( $og ) ) {
 				$og_count++;
 			}
+
+			// --- E-E-A-T Signals (Author bio & Authoritative citations) ---
+			$has_author_bio = strpos( strtolower( $content ), 'author-bio' ) !== false || strpos( strtolower( $content ), 'about the author' ) !== false || get_the_author_meta( 'description', $post->post_author );
+			if ( ! $has_author_bio ) {
+				$eeat_author_missing++;
+			}
+			if ( preg_match( '/href=["\'][^"\']*\.(gov|edu|wikipedia\.org|webmd\.com)/i', $content ) ) {
+				$eeat_citations_count++;
+			}
+
+			// --- Accessibility & ARIA Attributes ---
+			if ( preg_match_all( '/<(button|input)\s+([^>]+)>/i', $content, $interactive_els ) ) {
+				foreach ( $interactive_els[0] as $el ) {
+					if ( strpos( $el, 'aria-label' ) === false && strpos( $el, 'aria-labelledby' ) === false && strpos( $el, 'value=' ) === false && strpos( $el, 'type="hidden"' ) === false ) {
+						$aria_missing++;
+					}
+				}
+			}
+
+			// --- Intrusive Pop-up / Overlay Detection ---
+			if ( preg_match( '/style=["\'][^"\']*position\s*:\s*fixed[^"\']*z-index\s*:\s*(9999|99999|100000)/i', $content ) ) {
+				$intrusive_popups++;
+			}
 		}
 
 		// ── 3. DB-level checks ────────────────────────────────────────────
@@ -167,25 +194,33 @@ class ASF_Audit {
 		$robots_ok  = ! is_wp_error( $robots_resp )  && wp_remote_retrieve_response_code( $robots_resp )  === 200;
 		$sitemap_ok = ! is_wp_error( $sitemap_resp ) && wp_remote_retrieve_response_code( $sitemap_resp ) === 200;
 
-		// ── 6. Return results ─────────────────────────────────────────────
+		// ── 6. Return results & save cache ──────────────────────────────────
+		$audit_data = array(
+			'posts'                => $total,
+			'missing_titles'       => $missing_titles,
+			'bad_metas'            => $bad_metas,
+			'missing_h1'           => $missing_h1,
+			'missing_alts'         => $missing_alts,
+			'dup_titles'           => $dup_titles,
+			'dup_metas'            => $dup_metas,
+			'schema_count'         => $schema_count,
+			'og_count'             => $og_count,
+			'comhttps'             => $comhttps,
+			'orphans'              => $orphans,
+			'robots_ok'            => $robots_ok,
+			'sitemap_ok'           => $sitemap_ok,
+			'redirects'            => count( get_option( ASF_OPT_REDIRECTS, array() ) ),
+			'eeat_author_missing'  => $eeat_author_missing,
+			'eeat_citations_count' => $eeat_citations_count,
+			'aria_missing'         => $aria_missing,
+			'intrusive_popups'     => $intrusive_popups,
+		);
+
+		update_option( 'asf_last_audit_data', $audit_data );
+
 		wp_send_json( array(
 			'success' => true,
-			'data'    => array(
-				'posts'          => $total,
-				'missing_titles' => $missing_titles,
-				'bad_metas'      => $bad_metas,
-				'missing_h1'     => $missing_h1,
-				'missing_alts'   => $missing_alts,
-				'dup_titles'     => $dup_titles,
-				'dup_metas'      => $dup_metas,
-				'schema_count'   => $schema_count,
-				'og_count'       => $og_count,
-				'comhttps'       => $comhttps,
-				'orphans'        => $orphans,
-				'robots_ok'      => $robots_ok,
-				'sitemap_ok'     => $sitemap_ok,
-				'redirects'      => count( get_option( ASF_OPT_REDIRECTS, array() ) ),
-			),
+			'data'    => $audit_data,
 		) );
 	}
 }

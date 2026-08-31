@@ -1,6 +1,6 @@
 === All-in-One SEO Fixer & Auditor ===
 Contributors: abidalidev
-Tags: seo, seo audit, pagespeed, broken links, redirect manager, on-page seo, core web vitals, orphan media, schema, sitemap
+Tags: seo, seo audit, pagespeed, broken links, redirect manager, on-page seo, core web vitals, orphan media, schema, sitemap, lazy load, pdf audit report, ai assistant
 Requires at least: 5.8
 Tested up to: 6.7
 Stable tag: 2.1.0
@@ -8,35 +8,40 @@ Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Free, open-source 360° SEO Diagnostic & Auto-Fixer. PageSpeed Insights, On-Page Checker, Broken Link Cleaner, 301 Redirects, IndexNow. No upsells.
+Free, open-source 360° SEO Diagnostic & Auto-Fixer. PageSpeed Insights, On-Page Checker, Broken Link Cleaner, 301 Redirects, Lazy Loading, PDF Reports & AI Copilot. No upsells.
 
 == Description ==
 
 **All-in-One SEO Fixer & Auditor** is a completely free, open-source WordPress SEO plugin built for developers and site owners who want a real, comprehensive SEO toolkit — without monthly fees, artificial limitations, or premium upsells.
 
-= 🛡️ 360° SEO Dashboard =
-One-click full audit covering 24+ SEO factors: missing titles, meta descriptions, H1 headings, alt texts, duplicate content, schema markup, open graph tags, robots.txt, sitemap, broken links, and orphan media — with a clear action plan for every issue.
+= 🛡️ 360° SEO Dashboard & Executive PDF Reports =
+One-click full audit covering 24+ SEO factors: missing titles, meta descriptions, H1 headings, alt texts, duplicate content, schema markup, open graph tags, robots.txt, sitemap, broken links, and orphan media — with 1-click **Download Executive Audit PDF Report** for clients.
+
+= 🖼️ Lazy Load Images & Media Speed Optimizer =
+Enforces native HTML5 `loading="lazy"` on all content images (`<img>`) and video embeds (`<iframe>`), with LCP Hero Guard to preserve above-the-fold PageSpeed scores.
+
+= 🤖 AI SEO Assistant & Copilot =
+Integrated Groq AI & Google Gemini AI chatbot assistant providing instant custom SEO recommendations, meta tag optimization, and Core Web Vitals diagnostic guides.
 
 = ⚡ Google PageSpeed Insights & Core Web Vitals =
 Integrated with the free Google PageSpeed Insights API v5. Test any URL for Performance, Accessibility, Best Practices, and SEO scores (0–100) plus LCP, TBT, CLS, FCP, and Speed Index.
 
 = 🔧 On-Page SEO Checker =
 Scans every published post and page for:
-* Title tag (missing, too short, too long)
+* Title tag (missing, too short, too long, duplicate deduplication)
 * Meta description (missing, too short, too long)
 * Missing H1 heading / multiple H1 detection
-* Missing H2 on long-form content
-* Image alt text (per image)
+* Image alt text (per image with intelligent thumbnail lightbox preview)
 * Thin content detection (< 300 words)
 * Schema JSON-LD presence
 * NOINDEX flag warnings
 * Internal link count
 
 = 🔗 Broken Link & Typo Cleaner =
-Detects and auto-fixes double-domain URL typos (e.g. `domain.comhttps://domain.com/`) in Elementor, Gutenberg, and Classic Editor content and postmeta.
+Detects and auto-fixes double-domain URL typos (e.g. `domain.comhttps://domain.com/`) in Elementor, Gutenberg, and Classic Editor content and postmeta across `.com`, `.org`, `.net`, and `.ae` domains.
 
-= 🖼️ Orphan Media Scanner =
-Cross-references every image against post content, Elementor JSON, featured images, and site logos. Safely trash unused images in one click (fully reversible).
+= 🖼️ Media Scanner & Auto-Alt Generator =
+Cross-references every image against post content, Elementor JSON, featured images, and site logos. Auto-generates clean Alt text for numeric filenames and safely trashes unused images.
 
 = 🔀 301 Redirect Manager =
 Manage permanent 301 redirects for old URLs, renamed slugs, or Google Search Console 404 errors — no .htaccess editing required.
@@ -102,15 +107,15 @@ Yes. Images are moved to WordPress Trash, not permanently deleted. You can resto
 == Changelog ==
 
 = 2.1.0 =
-* Complete plugin restructure: proper MVC separation with includes/ and admin/views/
-* Dedicated assets/css/admin.css — premium design system
-* Dedicated assets/js/admin.js — all JavaScript centralized with jQuery + Chart.js
-* Added duplicate title & duplicate meta detection to 360° audit
-* Added H2 heading check and content length (thin content) detection to On-Page Checker
-* Added internal link count check
-* Added NOINDEX flag detection per page
-* Premium UI overhaul: animated stat cards, score bars, tooltips, score rings via Chart.js
-* Author: Abid Ali Dev (https://abidalidev.com / @abidalidevv)
+* Added Lazy Load Images & Media Speed Optimizer module (asf-lazy-load) with LCP Hero Guard
+* Added 1-Click Executive Audit PDF Report Generator for client presentations
+* Added AI SEO Assistant & Copilot powered by Groq AI and Google Gemini AI
+* Added Native WordPress Dashicons Design System across all 13+ admin module cards
+* Upgraded Media Scanner with 48x48 thumbnail image lightbox preview & intelligent fallback Alt text generator for numeric filenames
+* Upgraded Double-Domain Link Typo Cleaner to scan both wp_posts and wp_postmeta across .com, .org, .net, and .ae TLDs
+* Fixed core wp_update_post title tag synchronization alongside Rank Math and Yoast
+* Fixed parameter compatibility on ASF_W3C HTML Validator
+* Product Hunt Launch Ready — 100% Free Open Source WordPress SEO Engine
 
 = 2.0.0 =
 * Generalized from Orbix-specific plugin to universal WordPress plugin
