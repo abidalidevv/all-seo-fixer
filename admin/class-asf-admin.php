@@ -17,8 +17,8 @@ class ASF_Admin {
 
 	public static function init() {
 		add_action( 'admin_menu',            array( __CLASS__, 'register_menu' ) );
-		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ), 1 );
-		add_action( 'admin_head',            array( __CLASS__, 'print_inline_asf_data' ), 1 );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ), 20 );
+		add_action( 'admin_head',            array( __CLASS__, 'print_inline_asf_data' ), 5 );
 		add_action( 'admin_footer',          array( __CLASS__, 'render_floating_ai_widget' ) );
 	}
 
@@ -27,15 +27,22 @@ class ASF_Admin {
 		$page = sanitize_text_field( $_GET['page'] ?? '' );
 		if ( strpos( $page, 'asf' ) === false ) return;
 
+		$nonce = wp_create_nonce( 'asf_nonce' );
+		$ajax_url = admin_url( 'admin-ajax.php' );
 		$data = array(
-			'ajax'      => admin_url( 'admin-ajax.php' ),
-			'nonce'     => wp_create_nonce( 'asf_nonce' ),
+			'ajax'      => $ajax_url,
+			'nonce'     => $nonce,
 			'adminUrl'  => admin_url(),
 			'siteUrl'   => home_url(),
 			'hasPsiKey' => get_option( ASF_OPT_PSI_KEY, '' ) ? '1' : '0',
 			'version'   => ASF_VERSION,
+			'lastAudit' => get_option( 'asf_last_audit_data', null ),
 		);
-		echo '<script type="text/javascript">window.asfData = ' . wp_json_encode( $data ) . ';</script>' . "\n";
+		echo '<script type="text/javascript">'
+			. 'window.asfData = ' . wp_json_encode( $data ) . ';'
+			. 'window.asfNonce = ' . wp_json_encode( $nonce ) . ';'
+			. 'window.asfAjax = ' . wp_json_encode( $ajax_url ) . ';'
+			. '</script>' . "\n";
 	}
 
 	/** Register all admin menu pages */
@@ -121,13 +128,23 @@ class ASF_Admin {
 	/** Enqueue CSS + JS only on our plugin pages */
 	public static function enqueue_assets( $hook ) {
 
-		// Robust check: load assets if hook contains asf OR $_GET['page'] contains asf
-		$page = sanitize_text_field( $_GET['page'] ?? '' );
-		$is_our_page = ( strpos( (string) $hook, 'asf' ) !== false || strpos( $page, 'asf' ) !== false );
+		// Robust check: load assets if hook or $_GET['page'] contains asf or plugin identifier
+		$page     = isset( $_GET['page'] ) ? strtolower( trim( sanitize_text_field( $_GET['page'] ) ) ) : '';
+		$hook_str = strtolower( (string) $hook );
+		$is_our_page = (
+			strpos( $hook_str, 'asf' ) !== false ||
+			strpos( $page, 'asf' ) !== false ||
+			strpos( $hook_str, 'all-seo' ) !== false ||
+			strpos( $hook_str, 'all-in-one-seo' ) !== false
+		);
 
 		if ( ! $is_our_page ) return;
 
-		$ver = ASF_VERSION;
+		// Dynamic cache-busting timestamp version to prevent stale browser caching
+		$js_file  = ASF_PLUGIN_DIR . 'assets/js/admin.js';
+		$css_file = ASF_PLUGIN_DIR . 'assets/css/admin.css';
+		$js_ver   = ASF_VERSION . '.' . ( file_exists( $js_file ) ? filemtime( $js_file ) : time() );
+		$css_ver  = ASF_VERSION . '.' . ( file_exists( $css_file ) ? filemtime( $css_file ) : time() );
 
 		// Ensure WordPress core Dashicons stylesheet is always loaded
 		wp_enqueue_style( 'dashicons' );
@@ -137,33 +154,26 @@ class ASF_Admin {
 			'asf-admin',
 			ASF_PLUGIN_URL . 'assets/css/admin.css',
 			array( 'dashicons' ),
-			$ver
+			$css_ver
 		);
 
-		// Chart.js from jsDelivr CDN
-		wp_enqueue_script(
-			'chartjs',
-			'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
-			array(),
-			'4.4.0',
-			true
-		);
-
-		// Admin JS
+		// Admin JS (depends on core jQuery)
 		wp_enqueue_script(
 			'asf-admin',
 			ASF_PLUGIN_URL . 'assets/js/admin.js',
 			array( 'jquery' ),
-			$ver,
+			$js_ver,
 			true
 		);
 
-		$last_audit = get_option( 'asf_last_audit_data', false );
+		$last_audit = get_option( 'asf_last_audit_data', null );
+		$nonce      = wp_create_nonce( 'asf_nonce' );
+		$ajax_url   = admin_url( 'admin-ajax.php' );
 
 		// Localize all dynamic data for JS
 		wp_localize_script( 'asf-admin', 'asfData', array(
-			'ajax'      => admin_url( 'admin-ajax.php' ),
-			'nonce'     => wp_create_nonce( 'asf_nonce' ),
+			'ajax'      => $ajax_url,
+			'nonce'     => $nonce,
 			'adminUrl'  => admin_url(),
 			'siteUrl'   => home_url(),
 			'hasPsiKey' => get_option( ASF_OPT_PSI_KEY, '' ) ? '1' : '0',

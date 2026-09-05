@@ -126,27 +126,61 @@ $active_tab = sanitize_text_field( $_POST['asf_active_tab'] ?? 'general' );
 
 	<?php echo $save_notice; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
+	<!-- INLINE ZERO-DEPENDENCY TAB SWITCHER (INSTANT & BULLETPROOF) -->
+	<script type="text/javascript">
+	function asfSwitchTab(tabName, el) {
+		if (!tabName) return;
+		var navs = document.querySelectorAll('.asf-tab-nav');
+		for (var i = 0; i < navs.length; i++) {
+			navs[i].classList.remove('nav-tab-active');
+		}
+		if (el) {
+			el.classList.add('nav-tab-active');
+		} else {
+			var matchingNav = document.querySelector('.asf-tab-nav[data-tab="' + tabName + '"]');
+			if (matchingNav) matchingNav.classList.add('nav-tab-active');
+		}
+		var panels = document.querySelectorAll('.asf-tab-panel');
+		for (var j = 0; j < panels.length; j++) {
+			panels[j].style.display = 'none';
+		}
+		var target = document.querySelector('.asf-tab-panel[data-panel="' + tabName + '"]');
+		if (target) target.style.display = 'block';
+		var activeInput = document.getElementById('asf_active_tab');
+		if (activeInput) activeInput.value = tabName;
+		if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+			try { window.history.replaceState(null, null, '#tab-' + tabName); } catch (e) {}
+		}
+	}
+	document.addEventListener('DOMContentLoaded', function () {
+		if (window.location.hash) {
+			var hash = window.location.hash.replace('#tab-', '').replace('#', '');
+			if (hash) asfSwitchTab(hash);
+		}
+	});
+	</script>
+
 	<!-- HORIZONTAL TABS NAVIGATION (WORDPRESS NATIVE DESIGN SYSTEM) -->
 	<nav class="nav-tab-wrapper wp-clearfix" id="asf-settings-tab-bar" style="margin-bottom:20px;border-bottom:1px solid #c3c4c7;">
-		<a href="#tab-general" class="nav-tab asf-tab-nav <?php echo $active_tab === 'general' ? 'nav-tab-active' : ''; ?>" data-tab="general">
+		<a href="#tab-general" class="nav-tab asf-tab-nav <?php echo $active_tab === 'general' ? 'nav-tab-active' : ''; ?>" data-tab="general" onclick="asfSwitchTab('general', this); return false;">
 			<span class="dashicons dashicons-admin-settings" style="font-size:16px;vertical-align:middle;margin-right:3px;"></span> General &amp; APIs
 		</a>
-		<a href="#tab-ai" class="nav-tab asf-tab-nav <?php echo $active_tab === 'ai' ? 'nav-tab-active' : ''; ?>" data-tab="ai">
+		<a href="#tab-ai" class="nav-tab asf-tab-nav <?php echo $active_tab === 'ai' ? 'nav-tab-active' : ''; ?>" data-tab="ai" onclick="asfSwitchTab('ai', this); return false;">
 			<span class="dashicons dashicons-rest-api" style="font-size:16px;vertical-align:middle;margin-right:3px;"></span> AI Engine &amp; Keys
 		</a>
-		<a href="#tab-geo" class="nav-tab asf-tab-nav <?php echo $active_tab === 'geo' ? 'nav-tab-active' : ''; ?>" data-tab="geo">
+		<a href="#tab-geo" class="nav-tab asf-tab-nav <?php echo $active_tab === 'geo' ? 'nav-tab-active' : ''; ?>" data-tab="geo" onclick="asfSwitchTab('geo', this); return false;">
 			<span class="dashicons dashicons-location" style="font-size:16px;vertical-align:middle;margin-right:3px;"></span> Local &amp; GEO SEO
 		</a>
-		<a href="#tab-crawlers" class="nav-tab asf-tab-nav <?php echo $active_tab === 'crawlers' ? 'nav-tab-active' : ''; ?>" data-tab="crawlers">
+		<a href="#tab-crawlers" class="nav-tab asf-tab-nav <?php echo $active_tab === 'crawlers' ? 'nav-tab-active' : ''; ?>" data-tab="crawlers" onclick="asfSwitchTab('crawlers', this); return false;">
 			<span class="dashicons dashicons-search" style="font-size:16px;vertical-align:middle;margin-right:3px;"></span> Robots &amp; LLMs.txt
 		</a>
-		<a href="#tab-diagnostics" class="nav-tab asf-tab-nav <?php echo $active_tab === 'diagnostics' ? 'nav-tab-active' : ''; ?>" data-tab="diagnostics">
+		<a href="#tab-diagnostics" class="nav-tab asf-tab-nav <?php echo $active_tab === 'diagnostics' ? 'nav-tab-active' : ''; ?>" data-tab="diagnostics" onclick="asfSwitchTab('diagnostics', this); return false;">
 			<span class="dashicons dashicons-heart" style="font-size:16px;vertical-align:middle;margin-right:3px;"></span> System Diagnostics &amp; Logs
 		</a>
-		<a href="#tab-license" class="nav-tab asf-tab-nav <?php echo $active_tab === 'license' ? 'nav-tab-active' : ''; ?>" data-tab="license">
+		<a href="#tab-license" class="nav-tab asf-tab-nav <?php echo $active_tab === 'license' ? 'nav-tab-active' : ''; ?>" data-tab="license" onclick="asfSwitchTab('license', this); return false;">
 			<span class="dashicons dashicons-awards" style="font-size:16px;vertical-align:middle;margin-right:3px;"></span> Pro License &amp; Plans
 		</a>
-		<a href="#tab-developer" class="nav-tab asf-tab-nav <?php echo $active_tab === 'developer' ? 'nav-tab-active' : ''; ?>" data-tab="developer">
+		<a href="#tab-developer" class="nav-tab asf-tab-nav <?php echo $active_tab === 'developer' ? 'nav-tab-active' : ''; ?>" data-tab="developer" onclick="asfSwitchTab('developer', this); return false;">
 			<span class="dashicons dashicons-id-alt" style="font-size:16px;vertical-align:middle;margin-right:3px;"></span> About Developer
 		</a>
 	</nav>

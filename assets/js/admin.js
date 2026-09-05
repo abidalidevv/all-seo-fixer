@@ -11,18 +11,16 @@
 	   UTILITY HELPERS
 	   ============================================================= */
 	var getAsfData = function () {
-		if (typeof window.asfData !== 'undefined' && window.asfData.ajax) {
-			return window.asfData;
-		}
-		if (typeof asfData !== 'undefined' && asfData.ajax) {
-			return asfData;
-		}
+		var raw = (typeof window.asfData !== 'undefined' && window.asfData) ? window.asfData : ((typeof asfData !== 'undefined' && asfData) ? asfData : {});
+		var adminAjax = (typeof window.ajaxurl !== 'undefined' && window.ajaxurl) ? window.ajaxurl : (raw.ajax || (typeof window.asfAjax !== 'undefined' ? window.asfAjax : (window.location.origin + '/wp-admin/admin-ajax.php')));
+		var nonce = raw.nonce || (typeof window.asfNonce !== 'undefined' ? window.asfNonce : '') || $('input[name="asf_settings_nonce"]').val() || $('input[name="_wpnonce"]').val() || '';
 		return {
-			ajax: window.location.origin + '/wp-admin/admin-ajax.php',
-			nonce: '',
-			adminUrl: window.location.origin + '/wp-admin/',
-			siteUrl: window.location.origin,
-			hasPsiKey: '0'
+			ajax: adminAjax,
+			nonce: nonce,
+			adminUrl: raw.adminUrl || (window.location.origin + '/wp-admin/'),
+			siteUrl: raw.siteUrl || window.location.origin,
+			hasPsiKey: raw.hasPsiKey || '0',
+			lastAudit: raw.lastAudit || null
 		};
 	};
 
@@ -64,15 +62,20 @@
 		spinning: function (el, text) {
 			if (!el) return;
 			el.disabled = true;
+			el._origHtml = el.innerHTML;
 			el._origText = el.textContent || el.innerText;
-			el.innerHTML = '<span class="asf-spinner"></span>' + (text || 'Loading…');
+			el.innerHTML = '<span class="asf-spinner"></span> ' + (text || 'Loading…');
 		},
 
 		/** Restore button */
 		done: function (el) {
 			if (!el) return;
 			el.disabled = false;
-			el.textContent = el._origText || 'Run';
+			if (el._origHtml) {
+				el.innerHTML = el._origHtml;
+			} else {
+				el.textContent = el._origText || 'Run';
+			}
 		},
 
 		/** Open Quick-Fix Assistant Modal */
@@ -3582,9 +3585,11 @@
 			$('.asf-tab-panel[data-panel="' + tab + '"]').show();
 
 			$('#asf_active_tab').val(tab);
-			if (history.replaceState) {
-				history.replaceState(null, null, '#tab-' + tab);
-			} else {
+			if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+				try {
+					window.history.replaceState(null, null, '#tab-' + tab);
+				} catch (histErr) {}
+			} else if (typeof window !== 'undefined') {
 				window.location.hash = 'tab-' + tab;
 			}
 		});
@@ -3800,9 +3805,6 @@
 			});
 		});
 
-		if ($('#asf-geo-audit-btn').length) {
-			$('#asf-geo-audit-btn').trigger('click');
-		}
 
 	});
 
