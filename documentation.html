@@ -3,964 +3,1237 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>All-in-One SEO Fixer & Auditor — Master User Manual & Technical Docs</title>
+	<title>All-in-One SEO Fixer & Auditor — Master Technical Documentation & User Manual</title>
+	<meta name="description" content="Complete enterprise-grade technical SEO, AI Copilot, performance acceleration, structured schema graphs, and site diagnostics for WordPress.">
 	<style>
-		:root {
-			--doc-bg: #f0f2f5;
-			--doc-surface: #ffffff;
-			--doc-border: #d0d7de;
-			--doc-text: #1f2328;
-			--doc-text-muted: #656d76;
-			--doc-primary: #2271b1;
-			--doc-primary-hover: #135e96;
-			--doc-sidebar-bg: #1e293b;
-			--doc-sidebar-text: #e2e8f0;
-			--doc-sidebar-hover: #334155;
-			--doc-accent: #0284c7;
-			--doc-code-bg: #f6f8fa;
-			--badge-green-bg: #dcfce7;
-			--badge-green-text: #166534;
-			--badge-blue-bg: #e0f2fe;
-			--badge-blue-text: #0369a1;
-			--badge-warn-bg: #fef3c7;
-			--badge-warn-text: #92400e;
-			--badge-err-bg: #fee2e2;
-			--badge-err-text: #991b1b;
-		}
 
-		* { box-sizing: border-box; margin: 0; padding: 0; }
-		body {
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-			background-color: var(--doc-bg);
-			color: var(--doc-text);
-			line-height: 1.6;
-			font-size: 14px;
-		}
+:root {
+	--bg: #f8fafc;
+	--surface: #ffffff;
+	--border: #e2e8f0;
+	--border-light: #edf2f7;
+	--text-main: #0f172a;
+	--text-body: #334155;
+	--text-muted: #64748b;
+	--sidebar-bg: #0f172a;
+	--sidebar-text: #94a3b8;
+	--sidebar-text-hover: #ffffff;
+	--sidebar-hover-bg: #1e293b;
+	--sidebar-active-bg: #1e293b;
+	--sidebar-border: #1e293b;
+	--accent: #0f172a;
+	--accent-subtle: #f1f5f9;
+	--badge-green-bg: #ecfdf5;
+	--badge-green-text: #065f46;
+	--badge-blue-bg: #f1f5f9;
+	--badge-blue-text: #0f172a;
+	--badge-warn-bg: #fffbeb;
+	--badge-warn-text: #92400e;
+	--badge-err-bg: #fef2f2;
+	--badge-err-text: #991b1b;
+	--code-bg: #0f172a;
+	--inline-code-bg: #f1f5f9;
+	--inline-code-border: #e2e8f0;
+	--inline-code-text: #0f172a;
+}
 
-		.doc-layout {
-			display: flex;
-			min-height: 100vh;
-		}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-		/* SIDEBAR */
-		.doc-sidebar {
-			width: 300px;
-			background-color: var(--doc-sidebar-bg);
-			color: var(--doc-sidebar-text);
-			position: fixed;
-			top: 0;
-			bottom: 0;
-			left: 0;
-			overflow-y: auto;
-			z-index: 1000;
-			padding: 24px 16px;
-			box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-		}
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	background-color: var(--bg);
+	color: var(--text-body);
+	line-height: 1.65;
+	font-size: 14.5px;
+	-webkit-font-smoothing: antialiased;
+}
 
-		.doc-brand {
-			font-size: 18px;
-			font-weight: 700;
-			color: #ffffff;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			margin-bottom: 4px;
-		}
+.layout {
+	display: flex;
+	min-height: 100vh;
+}
 
-		.doc-version {
-			display: inline-block;
-			font-size: 11px;
-			font-weight: 700;
-			background: #2563eb;
-			color: #ffffff;
-			padding: 2px 8px;
-			border-radius: 12px;
-			margin-bottom: 20px;
-		}
+/* SIDEBAR */
+.sidebar {
+	width: 290px;
+	background-color: var(--sidebar-bg);
+	color: var(--sidebar-text);
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	overflow-y: auto;
+	padding: 24px 16px;
+	display: flex;
+	flex-direction: column;
+	border-right: 1px solid var(--sidebar-border);
+	z-index: 100;
+}
 
-		.doc-nav-group {
-			margin-bottom: 20px;
-		}
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 16px;
+	font-weight: 700;
+	color: #ffffff;
+	letter-spacing: -0.3px;
+	margin-bottom: 4px;
+}
 
-		.doc-nav-title {
-			font-size: 11px;
-			text-transform: uppercase;
-			letter-spacing: 0.8px;
-			color: #94a3b8;
-			font-weight: 700;
-			margin-bottom: 6px;
-			padding-left: 8px;
-		}
+.brand-icon {
+	font-size: 20px;
+}
 
-		.doc-nav {
-			list-style: none;
-		}
+.brand-meta {
+	font-size: 11px;
+	color: #64748b;
+	margin-bottom: 16px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
 
-		.doc-nav li a {
-			display: block;
-			padding: 7px 10px;
-			color: #cbd5e1;
-			text-decoration: none;
-			border-radius: 6px;
-			font-size: 13px;
-			transition: all 0.15s ease;
-		}
+.brand-tag {
+	background: #1e293b;
+	color: #94a3b8;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-weight: 600;
+}
 
-		.doc-nav li a:hover {
-			background: var(--doc-sidebar-hover);
-			color: #ffffff;
-		}
+.search-box {
+	margin-bottom: 16px;
+}
 
-		/* CONTENT */
-		.doc-main {
-			margin-left: 300px;
-			flex: 1;
-			padding: 40px;
-			max-width: 1080px;
-		}
+.search-input {
+	width: 100%;
+	padding: 8px 12px;
+	background: #1e293b;
+	border: 1px solid #334155;
+	border-radius: 6px;
+	color: #ffffff;
+	font-size: 13px;
+	outline: none;
+	transition: border-color 0.15s ease;
+}
 
-		.doc-hero {
-			background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-			color: #ffffff;
-			border-radius: 12px;
-			padding: 32px;
-			margin-bottom: 32px;
-			box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-		}
+.search-input:focus {
+	border-color: #64748b;
+}
 
-		.doc-hero h1 {
-			font-size: 28px;
-			font-weight: 800;
-			margin-bottom: 8px;
-			display: flex;
-			align-items: center;
-			gap: 12px;
-		}
+.nav-section-title {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	color: #64748b;
+	margin: 18px 0 6px 8px;
+}
 
-		.doc-hero p {
-			font-size: 15px;
-			color: #94a3b8;
-			line-height: 1.5;
-		}
+.nav-list {
+	list-style: none;
+}
 
-		.doc-meta-pills {
-			display: flex;
-			gap: 10px;
-			margin-top: 16px;
-			flex-wrap: wrap;
-		}
+.nav-list li a {
+	display: block;
+	padding: 7px 10px;
+	color: var(--sidebar-text);
+	text-decoration: none;
+	font-size: 13px;
+	border-radius: 5px;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 
-		.doc-pill {
-			background: rgba(255,255,255,0.1);
-			padding: 4px 12px;
-			border-radius: 16px;
-			font-size: 12px;
-			font-weight: 600;
-			color: #e2e8f0;
-		}
+.nav-list li a:hover,
+.nav-list li a.active {
+	background: var(--sidebar-hover-bg);
+	color: var(--sidebar-text-hover);
+}
 
-		.doc-card {
-			background: var(--doc-surface);
-			border: 1px solid var(--doc-border);
-			border-radius: 8px;
-			padding: 28px;
-			margin-bottom: 28px;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-		}
+/* MAIN CONTENT */
+.main-content {
+	margin-left: 290px;
+	flex: 1;
+	padding: 48px 56px;
+	max-width: 1040px;
+}
 
-		.doc-card h2 {
-			font-size: 20px;
-			font-weight: 700;
-			color: #0f172a;
-			margin-bottom: 12px;
-			border-bottom: 2px solid #f1f5f9;
-			padding-bottom: 8px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
+/* HEADER CARD */
+.hero-card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	padding: 36px 40px;
+	margin-bottom: 36px;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
 
-		.doc-card h3 {
-			font-size: 16px;
-			font-weight: 600;
-			color: #1e293b;
-			margin: 20px 0 8px;
-		}
+.hero-title {
+	font-size: 28px;
+	font-weight: 800;
+	color: var(--text-main);
+	letter-spacing: -0.5px;
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
 
-		.doc-card p {
-			margin-bottom: 14px;
-			line-height: 1.6;
-		}
+.hero-desc {
+	font-size: 15px;
+	color: var(--text-muted);
+	line-height: 1.6;
+	margin-bottom: 20px;
+}
 
-		.doc-card ol, .doc-card ul {
-			margin-left: 20px;
-			margin-bottom: 16px;
-		}
+.hero-meta-row {
+	display: flex;
+	gap: 12px;
+	flex-wrap: wrap;
+}
 
-		.doc-card li {
-			margin-bottom: 6px;
-		}
+.hero-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 12px;
+	background: var(--accent-subtle);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-main);
+}
 
-		/* TABLES */
-		table.doc-table {
-			width: 100%;
-			border-collapse: collapse;
-			margin: 16px 0 20px;
-			font-size: 13px;
-		}
+/* SECTION CARDS */
+.doc-card {
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 32px 36px;
+	margin-bottom: 32px;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
 
-		table.doc-table th, table.doc-table td {
-			padding: 10px 14px;
-			border: 1px solid var(--doc-border);
-			text-align: left;
-		}
+.doc-card h2 {
+	font-size: 21px;
+	font-weight: 700;
+	color: var(--text-main);
+	letter-spacing: -0.3px;
+	margin-bottom: 12px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--border-light);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
 
-		table.doc-table th {
-			background: #f8fafc;
-			font-weight: 600;
-			color: #0f172a;
-		}
+.doc-card h3 {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-main);
+	margin: 22px 0 8px;
+}
 
-		table.doc-table tr:nth-child(even) td {
-			background: #fafbfc;
-		}
+.doc-card h4 {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-main);
+	margin: 16px 0 6px;
+}
 
-		/* BADGES */
-		.badge {
-			display: inline-block;
-			padding: 2px 8px;
-			border-radius: 4px;
-			font-size: 11px;
-			font-weight: 600;
-		}
-		.badge-green { background: var(--badge-green-bg); color: var(--badge-green-text); }
-		.badge-blue  { background: var(--badge-blue-bg);  color: var(--badge-blue-text); }
-		.badge-warn  { background: var(--badge-warn-bg);  color: var(--badge-warn-text); }
-		.badge-err   { background: var(--badge-err-bg);   color: var(--badge-err-text); }
+.doc-card p {
+	margin-bottom: 14px;
+	line-height: 1.65;
+}
 
-		/* CALLOUTS */
-		.callout {
-			background: #f0f9ff;
-			border-left: 4px solid #0284c7;
-			padding: 14px 18px;
-			border-radius: 0 6px 6px 0;
-			margin: 16px 0;
-			font-size: 13px;
-		}
+.doc-card ul, .doc-card ol {
+	margin-left: 22px;
+	margin-bottom: 16px;
+}
 
-		.callout-title {
-			font-weight: 700;
-			color: #0369a1;
-			margin-bottom: 4px;
-		}
+.doc-card li {
+	margin-bottom: 6px;
+}
 
-		/* CODE */
-		code {
-			background: var(--doc-code-bg);
-			border: 1px solid #e1e4e8;
-			padding: 2px 6px;
-			border-radius: 4px;
-			font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-			font-size: 12px;
-			color: #0969da;
-		}
+/* CALLOUTS */
+.callout {
+	background: #f8fafc;
+	border: 1px solid var(--border);
+	border-left: 4px solid var(--text-main);
+	border-radius: 0 6px 6px 0;
+	padding: 16px 20px;
+	margin: 18px 0;
+}
 
-		pre {
-			background: #1e293b;
-			color: #f8fafc;
-			padding: 16px;
-			border-radius: 6px;
-			overflow-x: auto;
-			font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-			font-size: 12px;
-			margin: 14px 0;
-			line-height: 1.5;
-		}
+.callout-title {
+	font-size: 13.5px;
+	font-weight: 700;
+	color: var(--text-main);
+	margin-bottom: 4px;
+}
 
-		pre code {
-			background: transparent;
-			border: none;
-			padding: 0;
-			color: inherit;
-		}
+/* TABLES */
+table.clean-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 18px 0 22px;
+	font-size: 13.5px;
+}
 
-		.doc-footer {
-			text-align: center;
-			padding: 30px 0;
-			color: var(--doc-text-muted);
-			font-size: 13px;
-			border-top: 1px solid var(--doc-border);
-			margin-top: 40px;
-		}
+table.clean-table th, table.clean-table td {
+	padding: 10px 14px;
+	border: 1px solid var(--border);
+	text-align: left;
+}
 
-		.doc-footer a {
-			color: var(--doc-primary);
-			text-decoration: none;
-			font-weight: 600;
-		}
+table.clean-table th {
+	background: #f8fafc;
+	font-weight: 600;
+	color: var(--text-main);
+}
+
+table.clean-table tr:nth-child(even) td {
+	background: #fafbfc;
+}
+
+/* CODE & BADGES */
+code {
+	background: var(--inline-code-bg);
+	border: 1px solid var(--inline-code-border);
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 12.5px;
+	color: var(--inline-code-text);
+}
+
+pre {
+	background: var(--code-bg);
+	color: #f8fafc;
+	padding: 18px 20px;
+	border-radius: 6px;
+	overflow-x: auto;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 13px;
+	line-height: 1.5;
+	margin: 16px 0;
+	border: 1px solid #1e293b;
+	position: relative;
+}
+
+pre code {
+	background: transparent;
+	border: none;
+	padding: 0;
+	color: inherit;
+}
+
+.badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 4px;
+	font-size: 11.5px;
+	font-weight: 600;
+}
+
+.badge-green { background: var(--badge-green-bg); color: var(--badge-green-text); }
+.badge-slate { background: var(--badge-blue-bg); color: var(--badge-blue-text); border: 1px solid var(--border); }
+.badge-warn  { background: var(--badge-warn-bg); color: var(--badge-warn-text); }
+.badge-err   { background: var(--badge-err-bg); color: var(--badge-err-text); }
+
+/* FOOTER */
+.doc-footer {
+	text-align: center;
+	padding: 36px 0 20px;
+	font-size: 13px;
+	color: var(--text-muted);
+	border-top: 1px solid var(--border);
+	margin-top: 48px;
+}
+
+.doc-footer a {
+	color: var(--text-main);
+	text-decoration: underline;
+	font-weight: 600;
+}
+
+/* FLOATING TOP BUTTON */
+.back-top {
+	position: fixed;
+	bottom: 24px;
+	right: 24px;
+	background: var(--text-main);
+	color: #ffffff;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	border: none;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+	font-size: 16px;
+	opacity: 0.85;
+	transition: opacity 0.15s ease;
+	text-decoration: none;
+}
+
+.back-top:hover {
+	opacity: 1;
+}
+
+@media print {
+	.sidebar, .back-top, .search-box { display: none !important; }
+	.main-content { margin-left: 0 !important; padding: 0 !important; max-width: 100% !important; }
+	.doc-card { box-shadow: none !important; border: 1px solid #ccc !important; page-break-inside: avoid; }
+}
+
+@media (max-width: 900px) {
+	.sidebar { display: none; }
+	.main-content { margin-left: 0; padding: 24px; }
+}
+
 	</style>
 </head>
 <body>
 
-<div class="doc-layout">
+<div class="layout">
 
 	<!-- SIDEBAR -->
-	<aside class="doc-sidebar">
-		<div class="doc-brand">🛡️ All-in-One SEO Fixer</div>
-		<div class="doc-version">v2.3.0 Release</div>
-
-		<div class="doc-nav-group">
-			<div class="doc-nav-title">Overview</div>
-			<ul class="doc-nav">
-				<li><a href="#overview">Plugin Philosophy</a></li>
-				<li><a href="#modules-index">20-Module Directory</a></li>
-				<li><a href="#state-persistence">Database State Persistence</a></li>
-				<li><a href="#disk-permissions">Dual-Engine File Access</a></li>
-			</ul>
+	<aside class="sidebar">
+		<div class="brand">
+			<span class="brand-icon">🛡️</span> All-in-One SEO Fixer
+		</div>
+		<div class="brand-meta">
+			<span class="brand-tag">v2.3.0</span>
+			<span>Executive Documentation</span>
 		</div>
 
-		<div class="doc-nav-group">
-			<div class="doc-nav-title">Core SEO & Auditing</div>
-			<ul class="doc-nav">
-				<li><a href="#asf-panel">360° SEO Audit Dashboard</a></li>
-				<li><a href="#asf-ai-assistant">🤖 AI SEO Assistant & Copilot</a></li>
-				<li><a href="#floating-widget">💬 Floating AI Copilot Widget</a></li>
-				<li><a href="#asf-onpage">On-Page Tag Checker</a></li>
-				<li><a href="#asf-serp-preview">Live SERP & Social Simulator</a></li>
-				<li><a href="#asf-authority">On-Page Authority & E-E-A-T</a></li>
-				<li><a href="#asf-keyword-analyzer">Keyword Density & N-Gram</a></li>
-			</ul>
+		<div class="search-box">
+			<input type="text" id="doc-search" class="search-input" placeholder="Quick search modules..." autocomplete="off" />
 		</div>
 
-		<div class="doc-nav-group">
-			<div class="doc-nav-title">Speed, Media & Builders</div>
-			<ul class="doc-nav">
-				<li><a href="#asf-pagespeed">PageSpeed Insights & CWV</a></li>
-				<li><a href="#asf-lazy-load">Lazy Load & LCP Guard</a></li>
-				<li><a href="#asf-media">Media Scanner & Alt-Text</a></li>
-				<li><a href="#asf-performance">Speed & Database Optimizer</a></li>
-				<li><a href="#asf-builder-analyzer">Page Builder & Elementor</a></li>
-			</ul>
-		</div>
+		<div id="nav-container">
+<div class="nav-section-title">Overview & Core</div>
+<ul class="nav-list">
+<li><a href="#overview">Plugin Philosophy</a></li>
+<li><a href="#module-index">20-Module Directory</a></li>
+<li><a href="#state-persistence">Data Persistence Architecture</a></li>
+<li><a href="#disk-permissions">Dual-Engine File Access</a></li>
+</ul>
+<div class="nav-section-title">Core SEO & Auditing</div>
+<ul class="nav-list">
+<li><a href="#asf-panel">360° SEO Audit Dashboard</a></li>
+<li><a href="#asf-ai-assistant">AI SEO Assistant & Copilot</a></li>
+<li><a href="#floating-widget">Floating Copilot Widget</a></li>
+<li><a href="#asf-onpage">On-Page Tag Checker</a></li>
+<li><a href="#asf-serp-preview">Live SERP & Social Simulator</a></li>
+<li><a href="#asf-authority">On-Page Authority & E-E-A-T</a></li>
+<li><a href="#asf-keyword-analyzer">Keyword Density & N-Gram</a></li>
+</ul>
+<div class="nav-section-title">Speed, Media & Builders</div>
+<ul class="nav-list">
+<li><a href="#asf-pagespeed">Google PageSpeed Insights</a></li>
+<li><a href="#asf-lazy-load">Lazy Load & LCP Guard</a></li>
+<li><a href="#asf-media">Media Scanner & Alt-Text</a></li>
+<li><a href="#asf-performance">Speed & Database Optimizer</a></li>
+<li><a href="#asf-builder-analyzer">Page Builder & Elementor</a></li>
+</ul>
+<div class="nav-section-title">Technical, GEO & Security</div>
+<ul class="nav-list">
+<li><a href="#asf-schema">Schema JSON-LD Studio</a></li>
+<li><a href="#asf-geo">GEO & AI Search Hub (/llms.txt)</a></li>
+<li><a href="#asf-redirects">301 Redirects & 404 Monitor</a></li>
+<li><a href="#asf-link-cleaner">Broken Link Cleaner</a></li>
+<li><a href="#asf-security">Domain Security & Headers</a></li>
+<li><a href="#asf-error-doctor">Console & Error Doctor</a></li>
+<li><a href="#asf-w3c-validator">W3C HTML Validator</a></li>
+<li><a href="#asf-gsc-inspector">Google Search Console</a></li>
+</ul>
+<div class="nav-section-title">Tools & Settings</div>
+<ul class="nav-list">
+<li><a href="#asf-swiss-tools">Swiss-Knife 19-in-1 Suite</a></li>
+<li><a href="#asf-settings">Settings Hub (7 Tabs)</a></li>
+<li><a href="#toast-alerts">Modern Toast System</a></li>
+<li><a href="#developer-api">Developer API & Endpoints</a></li>
+</ul>
 
-		<div class="doc-nav-group">
-			<div class="doc-nav-title">Technical, GEO & Security</div>
-			<ul class="doc-nav">
-				<li><a href="#asf-schema">Schema JSON-LD Studio</a></li>
-				<li><a href="#asf-geo">GEO & AI Search Hub (/llms.txt)</a></li>
-				<li><a href="#asf-redirects">301 Redirects & 404 Monitor</a></li>
-				<li><a href="#asf-link-cleaner">Broken Link Cleaner</a></li>
-				<li><a href="#asf-security">Domain Security & Headers</a></li>
-				<li><a href="#asf-error-doctor">Console & Error Doctor</a></li>
-				<li><a href="#asf-w3c-validator">W3C Nu HTML Validator</a></li>
-				<li><a href="#asf-gsc-inspector">Google Search Console</a></li>
-			</ul>
-		</div>
-
-		<div class="doc-nav-group">
-			<div class="doc-nav-title">Tools & Settings</div>
-			<ul class="doc-nav">
-				<li><a href="#asf-swiss-tools">🛠️ Swiss-Knife 19-in-1 Suite</a></li>
-				<li><a href="#asf-settings">⚙️ Settings Hub (7 Tabs)</a></li>
-				<li><a href="#diagnostics">🩺 System Diagnostics</a></li>
-				<li><a href="#toast-alerts">Modern Toast Notifications</a></li>
-				<li><a href="#developer-api">Developer API & Hooks</a></li>
-			</ul>
 		</div>
 	</aside>
 
-	<!-- MAIN CONTENT -->
-	<main class="doc-main">
+	<!-- MAIN -->
+	<main class="main-content">
 
 		<!-- HERO -->
-		<div class="doc-hero">
-			<h1>🛡️ All-in-One SEO Fixer & Auditor</h1>
-			<p>Complete enterprise-grade technical SEO, AI Copilot, performance acceleration, structured schema graphs, and site diagnostics for WordPress.</p>
-			<div class="doc-meta-pills">
-				<span class="doc-pill">Version: 2.3.0</span>
-				<span class="doc-pill">Author: Abid Ali</span>
-				<span class="doc-pill">License: GPL-2.0</span>
-				<span class="doc-pill">Zero Bloat / Native WP</span>
+		<div class="hero-card" id="top">
+			<div class="hero-title">
+				<span>🛡️</span> All-in-One SEO Fixer & Auditor
+			</div>
+			<div class="hero-desc">
+				Official Master Technical Architecture &amp; Complete Page-by-Page User Manual for WordPress. Built for developers, digital agencies, and high-performance site owners.
+			</div>
+			<div class="hero-meta-row">
+				<div class="hero-chip"><strong>Version:</strong> 2.3.0</div>
+				<div class="hero-chip"><strong>Author:</strong> Abid Ali (<a href="https://abidalidev.com" target="_blank" style="color:inherit;text-decoration:underline;">abidalidev.com</a>)</div>
+				<div class="hero-chip"><strong>License:</strong> GPL-2.0-or-later</div>
+				<div class="hero-chip"><strong>Design:</strong> Clean Executive Slate</div>
 			</div>
 		</div>
 
-		<!-- SECTION 1: PHILOSOPHY -->
-		<section class="doc-card" id="overview">
-			<h2>1. Plugin Overview & Philosophy</h2>
-			<p><strong>All-in-One SEO Fixer</strong> is built with high-performance native WordPress architecture. It avoids sluggish React or Vue bundles, delivering sub-50ms page renders and total theme/builder compatibility.</p>
-			<div class="callout">
-				<div class="callout-title">⚡ The Three Golden Architectural Principles:</div>
-				<ol>
-					<li><strong>100% Real Database Persistence</strong>: Every meta description, title tag, image alt attribute, redirect rule, and schema option writes directly to native WordPress database tables (<code>wp_postmeta</code>, <code>wp_options</code>, <code>wp_asf_404_logs</code>).</li>
-					<li><strong>Dual Physical & Virtual Fallback Engine</strong>: Writes physical static files (<code>robots.txt</code>, <code>llms.txt</code>) when server disk permissions allow, and automatically falls back to virtual WordPress query filters when hostings are read-only.</li>
-					<li><strong>Non-Destructive Safety</strong>: Safe chunked batch operations (50 records/batch), reversible media trash, and non-blocking toast notifications instead of jarring browser alert popups.</li>
-				</ol>
-			</div>
-		</section>
+		<!-- CONTENT CARDS -->
+		<div id="cards-container">
+<section class="doc-card" id="table-of-contents">
+<h2>📑 Table of Contents</h2>
+<ol>
+<li><a href="#1-plugin-overview--philosophy" target="_blank">Plugin Overview & Philosophy</a></li>
+<li><a href="#2-master-module-index--navigation-map" target="_blank">Master Module Index & Navigation Map</a></li>
+<li><a href="#3-page-by-page-complete-user-manual" target="_blank">Page-by-Page Complete User Manual</a></li>
+</ol>
+<ul>
+<li><a href="#31-360-seo-audit--health-dashboard-asf-panel" target="_blank">3.1 360° SEO Audit & Health Dashboard (<code>asf-panel</code>)</a></li>
+<li><a href="#32--ai-seo-assistant--copilot-hub-asf-ai-assistant" target="_blank">3.2 🤖 AI SEO Assistant & Copilot Hub (<code>asf-ai-assistant</code>)</a></li>
+<li><a href="#33--global-floating-ai-assistant-bubble-widget" target="_blank">3.3 💬 Global Floating AI Assistant Bubble (Widget)</a></li>
+<li><a href="#34-on-page-seo-checker--tag-auditor-asf-onpage" target="_blank">3.4 On-Page SEO Checker & Tag Auditor (<code>asf-onpage</code>)</a></li>
+<li><a href="#35-google-pagespeed--core-web-vitals-asf-pagespeed" target="_blank">3.5 Google PageSpeed & Core Web Vitals (<code>asf-pagespeed</code>)</a></li>
+<li><a href="#36-native-lazy-load-images--media-optimizer-asf-lazy-load" target="_blank">3.6 Native Lazy Load Images & Media Optimizer (<code>asf-lazy-load</code>)</a></li>
+<li><a href="#37-media-library-scanner--alt-text-generator-asf-media" target="_blank">3.7 Media Library Scanner & Alt-Text Generator (<code>asf-media</code>)</a></li>
+<li><a href="#38-speed--database-optimizer-asf-performance" target="_blank">3.8 Speed & Database Optimizer (<code>asf-performance</code>)</a></li>
+<li><a href="#39-page-builder--elementor-overhead-optimizer-asf-builder-analyzer" target="_blank">3.9 Page Builder & Elementor Overhead Optimizer (<code>asf-builder-analyzer</code>)</a></li>
+<li><a href="#310-google-search-console--instant-indexer-asf-gsc-inspector" target="_blank">3.10 Google Search Console & Instant Indexer (<code>asf-gsc-inspector</code>)</a></li>
+<li><a href="#311-w3c-nu-html-markup-validator-asf-w3c-validator" target="_blank">3.11 W3C Nu HTML Markup Validator (<code>asf-w3c-validator</code>)</a></li>
+<li><a href="#312-keyword-density--n-gram-analyzer-asf-keyword-analyzer" target="_blank">3.12 Keyword Density & N-Gram Analyzer (<code>asf-keyword-analyzer</code>)</a></li>
+<li><a href="#313-on-page-seo-health--authority-hub-asf-authority" target="_blank">3.13 On-Page SEO Health & Authority Hub (<code>asf-authority</code>)</a></li>
+<li><a href="#314-live-serp--social-card-simulator-asf-serp-preview" target="_blank">3.14 Live SERP & Social Card Simulator (<code>asf-serp-preview</code>)</a></li>
+<li><a href="#315-domain-security--http-headers-asf-security" target="_blank">3.15 Domain Security & HTTP Headers (<code>asf-security</code>)</a></li>
+<li><a href="#316-console--error-doctor-asf-error-doctor" target="_blank">3.16 Console & Error Doctor (<code>asf-error-doctor</code>)</a></li>
+<li><a href="#317-broken-link--typo-cleaner-asf-link-cleaner" target="_blank">3.17 Broken Link & Typo Cleaner (<code>asf-link-cleaner</code>)</a></li>
+<li><a href="#318-301-canonical-redirect-manager--404-monitor-asf-redirects" target="_blank">3.18 301 Canonical Redirect Manager & 404 Monitor (<code>asf-redirects</code>)</a></li>
+<li><a href="#319-schemaorg-json-ld-studio-asf-schema" target="_blank">3.19 Schema.org JSON-LD Studio (<code>asf-schema</code>)</a></li>
+<li><a href="#320-geo--ai-search-hub-asf-geo" target="_blank">3.20 GEO & AI Search Hub (<code>asf-geo</code>)</a></li>
+<li><a href="#321-️-swiss-knife-19-in-1-diagnostic-suite-asf-swiss-tools" target="_blank">3.21 🛠️ Swiss-Knife 19-in-1 Diagnostic Suite (<code>asf-swiss-tools</code>)</a></li>
+<li><a href="#322-️-settings-hub-with-horizontal-tabs-asf-settings" target="_blank">3.22 ⚙️ Settings Hub with Horizontal Tabs (<code>asf-settings</code>)</a></li>
+</ul>
+<ol>
+<li><a href="#4-data-persistence--state-management-architecture" target="_blank">Data Persistence & State Management Architecture</a></li>
+<li><a href="#5-file-manager--disk-permissions-dual-engine-architecture" target="_blank">File Manager & Disk Permissions (Dual-Engine Architecture)</a></li>
+<li><a href="#6-toast-notification-system-vs-browser-alerts" target="_blank">Toast Notification System vs Browser Alerts</a></li>
+<li><a href="#7-developer-api-ajax-endpoints--database-schema" target="_blank">Developer API, AJAX Endpoints & Database Schema</a></li>
+<li><a href="#8-credits--developer-support" target="_blank">Credits & Developer Support</a></li>
+</ol>
+<p>---</p>
 
-		<!-- SECTION 2: MODULE INDEX -->
-		<section class="doc-card" id="modules-index">
-			<h2>2. Master 20-Module System Index</h2>
-			<p>Access every module under the <strong>All SEO Fixer</strong> WordPress menu:</p>
-			<table class="doc-table">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Menu Item Title</th>
-						<th>Page Slug</th>
-						<th>Core Capabilities</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>1</td>
-						<td><strong>360° SEO Audit</strong></td>
-						<td><code>asf-panel</code></td>
-						<td>Site health score (0–100), issue audit, and 4-page branded PDF generator.</td>
-					</tr>
-					<tr>
-						<td>2</td>
-						<td><strong>🤖 AI Assistant</strong></td>
-						<td><code>asf-ai-assistant</code></td>
-						<td>Groq LLaMA-3.3 full-page copilot, prompt chips, Master JSON prompt exporter & importer.</td>
-					</tr>
-					<tr>
-						<td>3</td>
-						<td><strong>On-Page Checker</strong></td>
-						<td><code>asf-onpage</code></td>
-						<td>Per-page title/meta audit, H1 hierarchy, thin content check, 1-click bulk auto-fixer.</td>
-					</tr>
-					<tr>
-						<td>4</td>
-						<td><strong>PageSpeed Insights</strong></td>
-						<td><code>asf-pagespeed</code></td>
-						<td>Lighthouse API v5 metrics: Performance, Accessibility, SEO, and Core Web Vitals (LCP, CLS, TBT).</td>
-					</tr>
-					<tr>
-						<td>5</td>
-						<td><strong>Lazy Load Images</strong></td>
-						<td><code>asf-lazy-load</code></td>
-						<td>Native HTML5 lazy load with LCP Hero Guard (prevents 1st image deferral).</td>
-					</tr>
-					<tr>
-						<td>6</td>
-						<td><strong>Media Scanner</strong></td>
-						<td><code>asf-media</code></td>
-						<td>Missing image alt detector, 1-click intelligent alt generator & orphan file manager.</td>
-					</tr>
-					<tr>
-						<td>7</td>
-						<td><strong>Speed & DB Optimizer</strong></td>
-						<td><code>asf-performance</code></td>
-						<td>Safe 50-batch revision pruner, spam cleaner, transient purger, and MySQL table optimizer.</td>
-					</tr>
-					<tr>
-						<td>8</td>
-						<td><strong>Page Builder Optimizer</strong></td>
-						<td><code>asf-builder-analyzer</code></td>
-						<td>Elementor JSON footprint inspector, DOM depth reducer, unused font/icon dequeuer.</td>
-					</tr>
-					<tr>
-						<td>9</td>
-						<td><strong>Google Search Console</strong></td>
-						<td><code>asf-gsc-inspector</code></td>
-						<td>OAuth/Service Account ranking queries, CTR metrics, and Google Indexing API v3.</td>
-					</tr>
-					<tr>
-						<td>10</td>
-						<td><strong>W3C HTML Validator</strong></td>
-						<td><code>asf-w3c-validator</code></td>
-						<td>Official W3C Nu HTML Checker with line-by-line syntax error reports.</td>
-					</tr>
-					<tr>
-						<td>11</td>
-						<td><strong>Keyword Density</strong></td>
-						<td><code>asf-keyword-analyzer</code></td>
-						<td>N-gram 1, 2, and 3-word phrase frequency calculator with keyword stuffing alerts.</td>
-					</tr>
-					<tr>
-						<td>12</td>
-						<td><strong>On-Page SEO Health</strong></td>
-						<td><code>asf-authority</code></td>
-						<td>Flesch-Kincaid readability scoring, E-E-A-T signals, and heading hierarchy verification.</td>
-					</tr>
-					<tr>
-						<td>13</td>
-						<td><strong>SERP Simulator</strong></td>
-						<td><code>asf-serp-preview</code></td>
-						<td>Live Desktop/Mobile Google search snippet & Facebook OG card simulator with direct save.</td>
-					</tr>
-					<tr>
-						<td>14</td>
-						<td><strong>Security & Headers</strong></td>
-						<td><code>asf-security</code></td>
-						<td>HTTP security headers (HSTS, CSP, X-Frame-Options), SSL expiry & DNSBL check.</td>
-					</tr>
-					<tr>
-						<td>15</td>
-						<td><strong>Console & Error Doctor</strong></td>
-						<td><code>asf-error-doctor</code></td>
-						<td>Front-end JS crash detector, mixed content script rewriter, debug.log error analyzer.</td>
-					</tr>
-					<tr>
-						<td>16</td>
-						<td><strong>Broken Link Cleaner</strong></td>
-						<td><code>asf-link-cleaner</code></td>
-						<td>404 broken hyperlink finder & double-domain typo auto-cleaner.</td>
-					</tr>
-					<tr>
-						<td>17</td>
-						<td><strong>301 Redirects</strong></td>
-						<td><code>asf-redirects</code></td>
-						<td>Permanent 301 redirect manager without .htaccess & real-time 404 hit logger table.</td>
-					</tr>
-					<tr>
-						<td>18</td>
-						<td><strong>Schema JSON-LD Studio</strong></td>
-						<td><code>asf-schema</code></td>
-						<td>Visual structured data graph builder for WebSite, Organization, LocalBusiness, Breadcrumbs.</td>
-					</tr>
-					<tr>
-						<td>19</td>
-						<td><strong>GEO & AI Search Hub</strong></td>
-						<td><code>asf-geo</code></td>
-						<td>Generative Engine Optimization (SearchGPT, Perplexity) & markdown /llms.txt generator.</td>
-					</tr>
-					<tr>
-						<td>20</td>
-						<td><strong>🛠️ Swiss-Knife Tools</strong></td>
-						<td><code>asf-swiss-tools</code></td>
-						<td>19-in-1 DNS, WHOIS, IP Geolocation, Ping, Port Scanner & cryptographic suite.</td>
-					</tr>
-					<tr>
-						<td>21</td>
-						<td><strong>Settings Hub</strong></td>
-						<td><code>asf-settings</code></td>
-						<td>7 organized horizontal tabs: General, AI, Local SEO, Robots, Diagnostics, License, Developer.</td>
-					</tr>
-				</tbody>
-			</table>
-		</section>
+</section>
+<section class="doc-card" id="overview">
+<h2>1. Plugin Overview & Philosophy</h2>
+<strong>All-in-One SEO Fixer (v2.3.0)</strong> is an enterprise-grade, lightweight WordPress SEO suite designed by <strong>Abid Ali</strong>. Unlike bulky competitors that slow down WordPress with external React runtimes, background telemetry, and hundreds of database tables, All-in-One SEO Fixer operates on three core engineering principles:
+<ol>
+<li><strong>Native WordPress Admin Architecture</strong>: Built directly with standard WordPress PHP templates, native <code>.wrap</code>, <code>.asf-card</code>, <code>.nav-tab-wrapper</code>, and vanilla JavaScript/CSS. Sub-50ms page loading with zero bundle overhead.</li>
+<li><strong>Real Database Persistence (No Simulations)</strong>: Every optimization—from meta descriptions and alt texts to redirect rules and security toggles—writes directly to native WordPress database tables (<code>wp_postmeta</code>, <code>wp_options</code>, <code>wp_asf_404_logs</code>). Changes persist across page reloads and integrate seamlessly with Yoast, Rank Math, or standalone setups.</li>
+<li><strong>Dual Physical & Virtual Fallback Engine</strong>: Works whether your server disk is writable (writing physical <code>robots.txt</code> and <code>llms.txt</code> for maximum Nginx/Apache performance) or read-only (serving dynamic virtual content via WordPress filters).</li>
+</ol>
+<p>---</p>
 
-		<!-- SECTION 3.1: 360 AUDIT -->
-		<section class="doc-card" id="asf-panel">
-			<h2>3.1 360° SEO Audit & Health Dashboard (asf-panel)</h2>
-			<p>The main dashboard provides an instant, unified view of your entire website's search readiness.</p>
-			<h3>How It Works</h3>
-			<p>On initial page load, the dashboard automatically reads the cached health score from <code>wp_options</code> (<code>asf_health_score_cache</code>) so you see your score, grade, and checkmark pills immediately. A background ping validates live status.</p>
-			<h3>Step-by-Step Instructions</h3>
-			<ol>
-				<li>Open <strong>All SEO Fixer → 360° SEO Audit</strong>.</li>
-				<li>Inspect the top <strong>Health Score Banner</strong>. Click <strong>↻ Re-check Now</strong> to re-run the 7-point health check.</li>
-				<li>Click the primary button: <strong>Run Full 360° SEO Audit</strong>.</li>
-				<li>Review the categorised findings (Technical SEO, Meta Tags, Media, Security).</li>
-				<li>Click <strong>Download Audit PDF Report</strong> to download a client-ready, branded 4-page PDF summary.</li>
-				<li>Click <strong>Ping Search Engines</strong> to notify Google and Bing crawlers of recent content updates.</li>
-			</ol>
-		</section>
+</section>
+<section class="doc-card" id="module-index">
+<h2>2. Master Module Index & Navigation Map</h2>
+<p>The plugin registers a top-level menu in the WordPress Admin sidebar titled <strong>"All SEO Fixer"</strong> with the following submenus:</p>
+<table class="clean-table">
+<thead>
+<tr><th>#</th><th>Menu Item Title</th><th>Page Slug (<code>page=</code>)</th><th>Primary Function</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><strong>360° SEO Audit</strong></td><td><code>asf-panel</code></td><td>Site-wide technical audit, health score, and 4-page PDF exporter</td></tr>
+<tr><td>2</td><td><strong>🤖 AI Assistant</strong></td><td><code>asf-ai-assistant</code></td><td>Full-page AI Copilot, prompt pills, and Master JSON Importer</td></tr>
+<tr><td>3</td><td><strong>On-Page Checker</strong></td><td><code>asf-onpage</code></td><td>Per-page title/meta audit, thin content detector, and bulk auto-fixer</td></tr>
+<tr><td>4</td><td><strong>PageSpeed Insights</strong></td><td><code>asf-pagespeed</code></td><td>Google Lighthouse API v5, Core Web Vitals (LCP, CLS, TBT) metrics</td></tr>
+<tr><td>5</td><td><strong>Lazy Load Images</strong></td><td><code>asf-lazy-load</code></td><td>Native HTML5 lazy loading with LCP Hero Guard protection</td></tr>
+<tr><td>6</td><td><strong>Media Scanner</strong></td><td><code>asf-media</code></td><td>Missing image alt text finder, auto-alt generator & orphan cleaner</td></tr>
+<tr><td>7</td><td><strong>Speed & DB Optimizer</strong></td><td><code>asf-performance</code></td><td>Batched (50/batch) revision pruner, transient cleaner, table optimizer</td></tr>
+<tr><td>8</td><td><strong>Page Builder Optimizer</strong></td><td><code>asf-builder-analyzer</code></td><td>Elementor JSON payload size inspector and DOM complexity reducer</td></tr>
+<tr><td>9</td><td><strong>Google Search Console</strong></td><td><code>asf-gsc-inspector</code></td><td>OAuth 2.0 / Service Account ranking queries & Indexing API v3</td></tr>
+<tr><td>10</td><td><strong>W3C HTML Validator</strong></td><td><code>asf-w3c-validator</code></td><td>Official Nu HTML Checker integration with line-by-line syntax logs</td></tr>
+<tr><td>11</td><td><strong>Keyword Density</strong></td><td><code>asf-keyword-analyzer</code></td><td>N-gram phrase counter and keyword stuffing/density evaluator</td></tr>
+<tr><td>12</td><td><strong>On-Page SEO Health</strong></td><td><code>asf-authority</code></td><td>Flesch-Kincaid readability, E-E-A-T signals, and heading hierarchy</td></tr>
+<tr><td>13</td><td><strong>SERP Simulator</strong></td><td><code>asf-serp-preview</code></td><td>Live Desktop/Mobile Google search snippet & Facebook OG card preview</td></tr>
+<tr><td>14</td><td><strong>Security & Headers</strong></td><td><code>asf-security</code></td><td>HTTP Security Headers (HSTS, CSP), SSL check, DNSBL scanner</td></tr>
+<tr><td>15</td><td><strong>Console & Error Doctor</strong></td><td><code>asf-error-doctor</code></td><td>Front-end JS crash detector, mixed content fixer, debug.log solver</td></tr>
+<tr><td>16</td><td><strong>Broken Link Cleaner</strong></td><td><code>asf-link-cleaner</code></td><td>404 broken hyperlink finder & malformed double-domain typo repair</td></tr>
+<tr><td>17</td><td><strong>301 Redirects</strong></td><td><code>asf-redirects</code></td><td>Visual permanent redirect manager & live 404 error hit logger</td></tr>
+<tr><td>18</td><td><strong>Schema JSON-LD Studio</strong></td><td><code>asf-schema</code></td><td>Visual graph builder for Organization, LocalBusiness, Breadcrumbs</td></tr>
+<tr><td>19</td><td><strong>GEO & AI Search Hub</strong></td><td><code>asf-geo</code></td><td>Generative Engine Optimization for SearchGPT, Perplexity & <code>/llms.txt</code></td></tr>
+<tr><td>20</td><td><strong>🛠️ Swiss-Knife Tools</strong></td><td><code>asf-swiss-tools</code></td><td>19-in-1 network, DNS, WHOIS, IP lookup & diagnostic toolkit</td></tr>
+<tr><td>21</td><td><strong>Settings</strong></td><td><code>asf-settings</code></td><td>7 horizontal tabs: APIs, AI, Local SEO, Robots, Diagnostics, License</td></tr>
+</tbody>
+</table>
+<p>---</p>
 
-		<!-- SECTION 3.2: AI ASSISTANT -->
-		<section class="doc-card" id="asf-ai-assistant">
-			<h2>3.2 🤖 AI SEO Assistant & Copilot Hub (asf-ai-assistant)</h2>
-			<p>A full-page dedicated AI copilot pre-loaded with live context from your website.</p>
-			<h3>Multi-Route AI Routing</h3>
-			<ul>
-				<li><strong>Route 1 (Primary)</strong>: <strong>Groq AI</strong> (LLaMA-3.3-70B) with sub-second response times.</li>
-				<li><strong>Route 2 (Failover)</strong>: <strong>Google Gemini 1.5 Flash</strong>.</li>
-				<li><strong>Route 3 (Failover)</strong>: <strong>OpenRouter LLaMA-3.3</strong>.</li>
-				<li><strong>Route 4 (Offline)</strong>: Built-in contextual SEO heuristic rules engine.</li>
-			</ul>
-			<h3>Master AI JSON Workflow</h3>
-			<ol>
-				<li>Scroll to the <strong>Import & Apply External AI JSON Config</strong> card at the bottom.</li>
-				<li>Click <strong>📥 Download Master AI Prompt File</strong>. This generates a complete structured JSON representation of your website.</li>
-				<li>Upload this file to <strong>ChatGPT Plus (GPT-4o)</strong> or <strong>Claude 3.5 Sonnet</strong>.</li>
-				<li>Copy the optimized JSON returned by the external AI.</li>
-				<li>Paste it into the console and click <strong>⚡ Apply AI JSON Settings to Site</strong>. Your site's titles, descriptions, and settings will update in seconds.</li>
-			</ol>
-		</section>
+</section>
+<section class="doc-card" id="3-page-by-page-complete-user-manual">
+<h2>3. Page-by-Page Complete User Manual</h2>
+<h3>3.1 360° SEO Audit & Health Dashboard (<code>asf-panel</code>)</h3>
+<h4>What it Does</h4>
+<p>The central mission control for your website's search performance. It scans the entire WordPress database, live HTTP headers, sitemaps, robots directives, image media, and content hierarchy to generate an actionable <strong>0–100 Health Score</strong> and letter grade (A to F).</p>
+<h4>How it Works Behind the Scenes</h4>
+<ul>
+<li><strong>Health Check Algorithm</strong>: Runs <code>ASF_HealthPing::handle()</code>, inspecting site title, missing meta descriptions, missing titles, missing H1 headings, SSL certificates, robots accessibility, and alt tags.</li>
+<li><strong>State Hydration</strong>: Results are stored in <code>wp_options</code> under <code>asf_health_score_cache</code>. When you reload the page, the score, ring border color, and check pills appear instantly without delay.</li>
+<li><strong>Automatic Fix Routing</strong>: Issues detected display direct 1-click fix buttons that link or trigger respective resolution handlers.</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → 360° SEO Audit</strong>.</li>
+<li>Notice the top <strong>Health Score Banner</strong>. It automatically hydrates from your last scan. Click <strong>↻ Re-check Now</strong> at any time to run an instant diagnostic ping.</li>
+<li>Click the primary blue button: <strong>Run Full 360° SEO Audit</strong>.</li>
+<li>The scanner will crawl your website and display interactive category accordions:</li>
+</ol>
+<ul>
+<li><em>Technical SEO & Indexing</em> (Robots, XML Sitemaps, Canonical URLs)</li>
+<li><em>Meta Tags & Content</em> (Titles, Descriptions, H1 tags, Content depth)</li>
+<li><em>Media & Accessibility</em> (Missing Alt attributes, Heavy images)</li>
+<li><em>Security & Server Headers</em> (HTTPS, HSTS, X-Frame-Options)</li>
+</ul>
+<ol>
+<li>Click <strong>Download Audit PDF Report</strong> to generate a branded, client-ready 3–4 page executive report with your website name, date, and optimization checklist.</li>
+<li>Click <strong>Ping Search Engines</strong> to immediately notify Google and Bing that your content has been updated.</li>
+</ol>
+<p>---</p>
+<h3>3.2 🤖 AI SEO Assistant & Copilot Hub (<code>asf-ai-assistant</code>)</h3>
+<h4>What it Does</h4>
+<p>A dedicated full-page AI copilot that acts as your dedicated in-house SEO specialist. It understands the exact state of your website because it has real-time access to your site's posts, pages, missing tags, and audit scores.</p>
+<h4>How it Works Behind the Scenes</h4>
+<ul>
+<li><strong>Multi-Route Fallback Architecture</strong>:</li>
+</ul>
+<ol>
+<li><em>Route 1 (Primary)</em>: <strong>Groq AI</strong> (<code>llama-3.3-70b-versatile</code>) with sub-second response times.</li>
+<li><em>Route 2 (Failover)</em>: <strong>Google Gemini 1.5 Flash</strong> API.</li>
+<li><em>Route 3 (Failover)</em>: <strong>OpenRouter</strong> AI.</li>
+<li><em>Route 4 (Offline)</em>: Built-in contextual SEO heuristic rules engine.</li>
+</ol>
+<ul>
+<li><strong>Site Snapshot Injection</strong>: Every question sent automatically injects a background JSON payload containing post counts, missing titles, missing descriptions, schema status, and server domain.</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → 🤖 AI Assistant</strong>.</li>
+<li>In the chat interface, you can:</li>
+</ol>
+<ul>
+<li>Click any <strong>Prompt Pill</strong> (e.g., <em>"Write meta descriptions for my top 5 pages"</em>, <em>"Audit our heading hierarchy"</em>, <em>"How to improve Core Web Vitals?"</em>).</li>
+<li>Or type any custom question into the input box and press <strong>Enter</strong> or click <strong>Send</strong>.</li>
+</ul>
+<ol>
+<li><strong>Master AI Prompt Workflow (For ChatGPT Plus / Claude 3.5 Sonnet users)</strong>:</li>
+</ol>
+<ul>
+<li>Scroll to the bottom card: <strong>Import & Apply External AI JSON Config</strong>.</li>
+<li>Click <strong>📥 Download Master AI Prompt File</strong>. This downloads a structured JSON file containing your site's entire inventory.</li>
+<li>Upload this file to ChatGPT (GPT-4o) or Claude 3.5 Sonnet with the prompt: <em>"Optimize this JSON according to the instructions inside."</em></li>
+<li>Copy the JSON response returned by the external AI.</li>
+<li>Paste it into the <strong>Paste Optimized AI JSON Response</strong> textarea.</li>
+<li>Click <strong>⚡ Apply AI JSON Settings to Site</strong>.</li>
+<li>The plugin will bulk-update all SEO titles, meta descriptions, and security headers in seconds!</li>
+</ul>
+<p>---</p>
+<h3>3.3 💬 Global Floating AI Assistant Bubble (Widget)</h3>
+<h4>What it Does</h4>
+<p>An ambient, non-intrusive floating chat drawer available on <strong>every page</strong> of the All-in-One SEO Fixer plugin (<code>page=asf-<em></code>). You never have to leave the page you are working on to ask for SEO advice.</p>
+<h4>How to Use It</h4>
+<ol>
+<li>Look at the <strong>bottom-right corner</strong> of your screen on any plugin page.</li>
+<li>You will see a vibrant gradient circle with a pulsing green live dot (<code>🟢</code>).</li>
+<li>Click the bubble to open the slide-out drawer (<code>390px × 540px</code>).</li>
+<li>Click quick topic chips (Audit Fixes, Meta Descs, Speed & CWV, Local Schema) or ask a question.</li>
+<li>Get sub-second AI answers powered by Groq LLaMA-3.3.</li>
+<li>Click the <strong>—</strong> minimize icon or anywhere outside the drawer to smoothly close it.</li>
+</ol>
+<p>---</p>
+<h3>3.4 On-Page SEO Checker & Tag Auditor (<code>asf-onpage</code>)</h3>
+<h4>What it Does</h4>
+<p>Performs an exhaustive, per-page audit of every published post, page, and custom post type. It verifies title tag length (30–60 chars), meta description length (120–155 chars), H1 presence, H2 subheadings, content word depth (<300 words = thin content), and internal link distribution.</p>
+<h4>How it Works Behind the Scenes</h4>
+<ul>
+<li>Inspects both post content and postmeta (<code>_asf_seo_title</code>, <code>_asf_meta_description</code>, <code>rank_math_title</code>, <code>_yoast_wpseo_title</code>).</li>
+<li>Automatically filters out Elementor template parts, header/footer builder CPTs, and navigation menus to prevent false positives.</li>
+<li>Saves generated data directly to <code>_asf_meta_description</code> and <code>_asf_seo_title</code>.</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → On-Page Checker</strong>.</li>
+<li>Select your post type filter (All, Pages Only, Posts Only, Products Only).</li>
+<li>Click <strong>Scan All Pages for SEO Errors</strong>.</li>
+<li>The results table displays all pages with flagged issues.</li>
+<li><strong>To auto-fix everything at once</strong>: Click <strong>⚡ 1-Click Auto-Fix Missing Meta Descriptions & Titles</strong>. The plugin intelligently extracts clean 145-character summaries from page content and crafts Google-compliant title tags.</li>
+<li><strong>To customize a specific page</strong>: Click the <strong>⚡ Quick Fix</strong> button next to any post row. An interactive modal opens where you can write custom titles, meta descriptions, and assign schemas. Click <strong>Save Changes</strong>.</li>
+</ol>
+<p>---</p>
+<h3>3.5 Google PageSpeed & Core Web Vitals (<code>asf-pagespeed</code>)</h3>
+<h4>What it Does</h4>
+<p>Directly connects your WordPress dashboard to Google's official PageSpeed Insights API v5 (Lighthouse engine) to test real mobile and desktop user performance without leaving WordPress.</p>
+<h4>How to Use It</h4>
+<ol>
+<li>Ensure your free PageSpeed API Key is entered in <strong>Settings → General & APIs</strong> (optional, but unlocks 25,000 requests/day).</li>
+<li>Go to <strong>All SEO Fixer → PageSpeed Insights</strong>.</li>
+<li>Choose your device: <strong>Mobile</strong> (default, recommended) or <strong>Desktop</strong>.</li>
+<li>Click <strong>Analyze PageSpeed & Core Web Vitals</strong>.</li>
+<li>The dashboard renders 4 animated radial score rings:</li>
+</ol>
+<ul>
+<li><strong>Performance</strong> (0–100)</li>
+<li><strong>Accessibility</strong> (0–100)</li>
+<li><strong>Best Practices</strong> (0–100)</li>
+<li><strong>SEO Score</strong> (0–100)</li>
+</ul>
+<ol>
+<li>Inspect the Core Web Vitals metric cards below:</li>
+</ol>
+<ul>
+<li><strong>LCP (Largest Contentful Paint)</strong>: Good ≤ 2.5s</li>
+<li><strong>CLS (Cumulative Layout Shift)</strong>: Good ≤ 0.1</li>
+<li><strong>TBT (Total Blocking Time)</strong>: Good ≤ 200ms</li>
+<li><strong>FCP (First Contentful Paint)</strong>: Good ≤ 1.8s</li>
+</ul>
+<ol>
+<li>Review the diagnostic recommendations at the bottom to identify render-blocking scripts or oversized media.</li>
+</ol>
+<p>---</p>
+<h3>3.6 Native Lazy Load Images & Media Optimizer (<code>asf-lazy-load</code>)</h3>
+<h4>What it Does</h4>
+<p>Dramatically speeds up mobile page load times by deferring offscreen images and iframes until the visitor scrolls near them, reducing initial page payload by up to 60%.</p>
+<h4>Key Features & Settings</h4>
+<ul>
+<li><strong>Enable Content Image Lazy Load</strong>: Adds native HTML5 <code>loading="lazy"</code> and <code>decoding="async"</code> to all images.</li>
+<li><strong>Enable Video/Iframe Lazy Load</strong>: Defers YouTube, Vimeo, and Google Maps embeds.</li>
+<li><strong>LCP Hero Guard (Exclude 1st Image)</strong>: <strong>Critical for SEO!</strong> Keeps the first above-the-fold image eager-loaded so Google PageSpeed LCP scores do not drop.</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Lazy Load Images</strong>.</li>
+<li>Configure your desired checkboxes.</li>
+<li>Click <strong>Save Lazy Load Settings</strong>.</li>
+<li>Click <strong>1-Click Apply Lazy Load to All Existing Posts</strong> if you have older posts that need attributes enforced across historical post content.</li>
+<li>All toggles permanently retain their saved state across page reloads.</li>
+</ol>
+<p>---</p>
+<h3>3.7 Media Library Scanner & Alt-Text Generator (<code>asf-media</code>)</h3>
+<h4>What it Does</h4>
+<p>Scans your WordPress Media Library to detect:</p>
+<ol>
+<li>Images missing the essential <code>alt</code> attribute (damages accessibility and Google Image SEO).</li>
+<li>Orphan / unused image attachments taking up disk space.</li>
+</ol>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Media Scanner</strong>.</li>
+<li>Click <strong>Scan Media Library (All Images)</strong>.</li>
+<li>Use the dropdown filter to view:</li>
+</ol>
+<ul>
+<li></em>Missing Alt Text Only<em></li>
+<li></em>Unused / Orphan Images Only<em></li>
+<li></em>In-Use Images Only<em></li>
+</ul>
+<ol>
+<li><strong>1-Click Auto-Fix Alt Text</strong>: Click <strong>⚡ 1-Click Scan & Fill Missing Alt Texts</strong>. The engine converts filenames into human-readable titles (e.g. <code>ac-repair-dubai-service.jpg</code> ➔ <code>Ac repair dubai service</code>) and saves directly into <code>_wp_attachment_image_alt</code>.</li>
+<li><strong>Manual Inline Edit</strong>: You can also type custom alt text directly into any table row input field and click <strong>Save</strong>.</li>
+<li><strong>Orphan Media Management</strong>: For unused images, click <strong>Move to Trash</strong>. The plugin safely sends files to the native WordPress Media Trash (allowing 100% restoration if needed).</li>
+</ol>
+<p>---</p>
+<h3>3.8 Speed & Database Optimizer (<code>asf-performance</code>)</h3>
+<h4>What it Does</h4>
+<p>Cleans database bloat that accumulates over months of WordPress usage: post revisions, auto-drafts, trashed posts, spam comments, and expired transients. It defragments tables using MySQL <code>OPTIMIZE TABLE</code>.</p>
+<h4>Safety Architecture</h4>
+<ul>
+<li>Uses <strong>Safe Chunked Execution (50 records per batch)</strong> to guarantee your server will never encounter memory exhaustion (<code>Fatal Error: Allowed memory size exhausted</code>) or timeouts on shared hosting.</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Speed & DB Optimizer</strong>.</li>
+<li>Click <strong>Scan Database Bloat</strong>.</li>
+<li>Inspect the clean tally cards:</li>
+</ol>
+<ul>
+<li></em>Post Revisions<em></li>
+<li></em>Auto Drafts<em></li>
+<li></em>Trashed Posts<em></li>
+<li></em>Spam Comments<em></li>
+<li></em>Expired Transients<em></li>
+</ul>
+<ol>
+<li>Select the checkboxes you wish to clean.</li>
+<li>Click <strong>⚡ Optimize Database & Purge Bloat</strong>.</li>
+<li>The engine executes batch purging and table optimization, returning a green success notice with the exact amount of cleaned records.</li>
+</ol>
+<p>---</p>
+<h3>3.9 Page Builder & Elementor Overhead Optimizer (<code>asf-builder-analyzer</code>)</h3>
+<h4>What it Does</h4>
+<p>Visual page builders (Elementor, Divi, Beaver Builder, Oxygen) add heavy serialized JSON into <code>wp_postmeta</code> and generate deeply nested HTML wrappers (DIV ceilings of 20+ levels). This module measures that overhead and provides safe 1-click remedies.</p>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Page Builder Optimizer</strong>.</li>
+<li>Click <strong>Scan Active Builders & Bloat</strong>.</li>
+<li>Review the diagnostic breakdown:</li>
+</ol>
+<ul>
+<li>Active page builders detected.</li>
+<li>Total Elementor JSON payload size in megabytes.</li>
+<li>List of the heaviest pages exceeding 500 KB payload.</li>
+</ul>
+<ol>
+<li>Enable optimization toggles:</li>
+</ol>
+<ul>
+<li><strong>Disable Elementor Eicons</strong>: Stops loading unnecessary font icon files on front-end pages.</li>
+<li><strong>Disable Elementor Google Fonts</strong>: Prevents duplicate Google Font network requests.</li>
+<li><strong>Purge Orphaned Builder Revisions</strong>: Cleans historic revisions of deleted Elementor sections.</li>
+</ul>
+<ol>
+<li>Click <strong>🚀 Optimize Page Builders & Clean Revisions</strong>.</li>
+</ol>
+<p>---</p>
+<h3>3.10 Google Search Console & Instant Indexer (<code>asf-gsc-inspector</code>)</h3>
+<h4>What it Does</h4>
+<p>Integrates directly with Google Search Console and Indexing API v3. It tracks your keyword rankings, impressions, and CTR, and allows you to instantly notify Google to crawl new or updated URLs.</p>
+<h4>How to Set Up & Use It</h4>
+<ol>
+<li>Add your Google OAuth credentials or upload your Google Cloud Service Account JSON key in <strong>Settings → General & APIs</strong>.</li>
+<li>Go to <strong>All SEO Fixer → Google Search Console</strong>.</li>
+<li>Click <strong>Fetch Search Console Performance</strong> to view your top 25 performing search queries, average ranking position, impressions, and clicks.</li>
+<li><strong>Instant Indexing</strong>: Enter any published URL and click <strong>⚡ Request Google Indexing (IndexNow / Google API)</strong>. The plugin dispatches a signed JWT assertion to Google's indexing endpoint for immediate bot crawl scheduling.</li>
+</ol>
+<p>---</p>
+<h3>3.11 W3C Nu HTML Markup Validator (<code>asf-w3c-validator</code>)</h3>
+<h4>What it Does</h4>
+<p>Validates your website's front-end markup against the official <strong>W3C Nu HTML Checker</strong> specification. It reveals hidden unclosed tags, duplicate IDs, missing required attributes, and deprecated HTML elements that can confuse search crawlers.</p>
+<h4>How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → W3C HTML Validator</strong>.</li>
+<li>Select any published page from the dropdown menu, or enter a custom URL.</li>
+<li>Click <strong>Validate HTML Syntax</strong>.</li>
+<li>The engine communicates with the W3C validator service and renders a line-by-line report showing:</li>
+</ol>
+<ul>
+<li>Line numbers and column numbers.</li>
+<li>Exact HTML code snippet.</li>
+<li>Description of the syntax violation.</li>
+</ul>
+<ol>
+<li>Open your page editor or theme template to fix the identified HTML lines.</li>
+</ol>
+<p>---</p>
+<h3>3.12 Keyword Density & N-Gram Analyzer (<code>asf-keyword-analyzer</code>)</h3>
+<h4>What it Does</h4>
+<p>Scans any page's textual content and computes keyword frequencies across single words, 2-word phrases, and 3-word n-grams. It ensures you maintain optimal keyword density (1.5% to 2.5%) while avoiding Google algorithmic penalties for keyword stuffing.</p>
+<h4>How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Keyword Density</strong>.</li>
+<li>Select the post or page you wish to audit.</li>
+<li></em>(Optional)<em> Enter your target primary focus keyword in the input box.</li>
+<li>Click <strong>Analyze Keyword Density</strong>.</li>
+<li>The module strips common stop words and presents three structured tabs:</li>
+</ol>
+<ul>
+<li><strong>1-Word Keywords</strong> (Word count & percentage frequency)</li>
+<li><strong>2-Word Phrases</strong> (e.g. </em>"SEO services"<em>, </em>"ac repair"<em>)</li>
+<li><strong>3-Word N-Grams</strong> (e.g. </em>"best ac repair"<em>, </em>"search engine optimization"<em>)</li>
+</ul>
+<ol>
+<li>If any keyword exceeds 3.5% density, an amber warning banner highlights the over-optimization risk.</li>
+</ol>
+<p>---</p>
+<h3>3.13 On-Page SEO Health & Authority Hub (<code>asf-authority</code>)</h3>
+<h4>What it Does</h4>
+<p>Evaluates the qualitative and trust signals of your content according to Google's <strong>E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness)</strong> guidelines and readability metrics.</p>
+<h4>How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → On-Page SEO Health</strong>.</li>
+<li>Select your target page from the dropdown.</li>
+<li>Click <strong>Analyze On-Page Authority & Readability</strong>.</li>
+<li>Review the scoring metrics:</li>
+</ol>
+<ul>
+<li><strong>Flesch Reading Ease</strong>: Score 0–100 (60–70 is ideal for general audiences).</li>
+<li><strong>Heading Hierarchy Check</strong>: Verifies that H1 flows into H2, and H2 into H3 without skipped levels.</li>
+<li><strong>E-E-A-T Signals</strong>: Checks for author bylines, author bio boxes, published/modified timestamps, and outbound authoritative citation links.</li>
+</ul>
+<ol>
+<li>Follow the recommendations to improve user engagement and trust.</li>
+</ol>
+<p>---</p>
+<h3>3.14 Live SERP & Social Card Simulator (<code>asf-serp-preview</code>)</h3>
+<h4>What it Does</h4>
+<p>Provides a real-time, interactive simulator showing exactly how your page appears in Google Desktop search, Google Mobile search, and Facebook Open Graph social sharing cards.</p>
+<h4>Features</h4>
+<ul>
+<li><strong>Live Pixel-Width Calculator</strong>: Measures title length against Google's 580px desktop ceiling and 960px mobile ceiling.</li>
+<li><strong>Character Counters</strong>: Live feedback for Title (50–60 chars) and Description (120–155 chars).</li>
+<li><strong>Direct Database Saving</strong>: You can edit and save titles and descriptions right from this screen.</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → SERP Simulator</strong>.</li>
+<li>Select any page from the <strong>Select Published Page/Post to Edit</strong> dropdown.</li>
+<li>The input boxes will auto-populate with the page's saved SEO title and description.</li>
+<li>Edit the text in real-time. Watch the interactive preview cards update instantly below.</li>
+<li>Click <strong>Save Snippet to Page</strong>. The updated metadata is written directly to the database.</li>
+</ol>
+<p>---</p>
+<h3>3.15 Domain Security & HTTP Headers (<code>asf-security</code>)</h3>
+<h4>What it Does</h4>
+<p>Inspects your live server response headers to verify essential security configurations required by modern browsers and search engines.</p>
+<h4>Headers Inspected</h4>
+<ul>
+<li><strong>HSTS (HTTP Strict Transport Security)</strong>: Forces encrypted HTTPS connections.</li>
+<li><strong>X-Frame-Options</strong>: Prevents clickjacking by blocking unauthorized framing (<code>SAMEORIGIN</code>).</li>
+<li><strong>X-Content-Type-Options</strong>: Prevents MIME-type sniffing (<code>nosniff</code>).</li>
+<li><strong>Referrer-Policy</strong>: Protects user privacy while preserving search referrer analytics (<code>strict-origin-when-cross-origin</code>).</li>
+<li><strong>SSL Certificate Validity</strong>: Verifies expiration dates and issuer authority.</li>
+</ul>
+<h4>How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Security & Headers</strong>.</li>
+<li>Click <strong>Scan Security & HTTP Headers</strong>.</li>
+<li>Inspect the color-coded status badges.</li>
+<li>If any headers are missing, click <strong>⚡ 1-Click Enforce Security Headers</strong>. The plugin hooks into WordPress response filters to automatically inject compliant security headers on every front-end page load.</li>
+</ol>
+<p>---</p>
+<h3>3.16 Console & Error Doctor (<code>asf-error-doctor</code>)</h3>
+<h4>What it Does</h4>
+<p>Detects and resolves front-end JavaScript console crashes, mixed content script blocks (<code>http://</code> loaded on <code>https://</code>), jQuery <code>$</code> undefined conflicts, and PHP runtime fatal errors from <code>wp-content/debug.log</code>.</p>
+<h4>Toggles Available</h4>
+<ul>
+<li><strong>Mixed Content HTTPS Enforcer</strong>: Automatically rewrites insecure <code>http://</code> script/style URLs to <code>https://</code>.</li>
+<li><strong>Safe jQuery Compatibility Layer</strong>: Injects a tiny, zero-cost compatibility wrapper ensuring <code>$</code> is always available even in strict no-conflict themes.</li>
+<li><strong>Real-Time Console Monitor</strong>: Captures uncaught JavaScript runtime exceptions and logs them for developer inspection.</li>
+</ul>
+<h4>How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Console & Error Doctor</strong>.</li>
+<li>Toggle on the protection layers you need (badges update in real-time).</li>
+<li>Click <strong>Scan Console & Error Logs</strong> to inspect recent issues.</li>
+<li>Click <strong>Auto-Fix</strong> next to identified errors to deploy safe automated shims.</li>
+</ol>
+<p>---</p>
+<h3>3.17 Broken Link & Typo Cleaner (<code>asf-link-cleaner</code>)</h3>
+<h4>What it Does</h4>
+<p>Crawls your published posts and pages to find:</p>
+<ol>
+<li>Broken internal/external hyperlinks returning HTTP 404 or 500 errors.</li>
+<li><strong>Double-Domain Typo Errors</strong>: Extremely common WordPress content errors where a link was pasted as <code>https://yourdomain.comhttps://external.com</code>.</li>
+<li>Unsecured internal <code>http://</code> links.</li>
+</ol>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Broken Link Cleaner</strong>.</li>
+<li>Click <strong>Scan All Content for Broken Links</strong>.</li>
+<li>Review the broken link results table.</li>
+<li>Click <strong>⚡ Auto-Fix Malformed URLs</strong> to instantly strip concatenated double-domain prefixes across all posts.</li>
+<li>Or click <strong>Edit Link</strong> to update the URL in place.</li>
+</ol>
+<p>---</p>
+<h3>3.18 301 Canonical Redirect Manager & 404 Monitor (<code>asf-redirects</code>)</h3>
+<h4>What it Does</h4>
+<p>A lightning-fast, database-driven 301 permanent redirect manager that operates without modifying <code>.htaccess</code> or Nginx configuration files. It also includes an automated <strong>404 URL Hit Monitor</strong>.</p>
+<h4>How it Works Behind the Scenes</h4>
+<ul>
+<li>Intercepts requests on <code>template_redirect</code> at priority 1.</li>
+<li>Matches the requested URI against the <code>asf_redirects</code> option in <code>wp_options</code>.</li>
+<li>If matched, executes a native <code>wp_redirect($target, 301)</code> and exits.</li>
+<li>If a visitor hits a non-existent URL (404), the hit is logged into the dedicated indexed database table <code>wp_asf_404_logs</code>.</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → 301 Redirects</strong>.</li>
+<li>Under <strong>Active Redirect Rules</strong>, click <strong>+ Add Redirect Rule</strong>.</li>
+<li>In <strong>Source Path</strong>, enter the legacy path (e.g. <code>/old-page/</code> or <code>/services/legacy/</code>).</li>
+<li>In <strong>Target URL</strong>, enter the destination URL (e.g. <code>https://yourdomain.com/new-page/</code>).</li>
+<li>Click <strong>Save All Redirect Rules</strong>.</li>
+<li><strong>404 Monitor</strong>: Scroll down to the <strong>Real-Time 404 URL Monitor</strong> card. View frequently requested 404 URLs and hit counts. Click <strong>+ Convert to 301</strong> next to any 404 URL to instantly create a redirect rule for it.</li>
+</ol>
+<p>---</p>
+<h3>3.19 Schema.org JSON-LD Studio (<code>asf-schema</code>)</h3>
+<h4>What it Does</h4>
+<p>Visually configures and automatically injects Google-compliant structured data graphs directly into your site's <code><head></code> on every page. This qualifies your pages for Google Rich Snippets (Star Ratings, Sitelinks Searchbox, Business Cards, FAQs).</p>
+<h4>Schemas Supported</h4>
+<ul>
+<li><strong>WebSite</strong>: Includes Google Sitelinks Searchbox schema (<code>SearchAction</code>).</li>
+<li><strong>Organization & LocalBusiness</strong>: Name, logo, address, phone, geotargeting coordinates, opening hours, social profiles.</li>
+<li><strong>BreadcrumbList</strong>: Hierarchical navigational trail schema.</li>
+<li><strong>Article / BlogPosting</strong>: Schema for published blog posts.</li>
+<li><strong>Custom JSON-LD</strong>: Free-form textarea for specialized schemas (Event, Course, SoftwareApplication).</li>
+</ul>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → Schema JSON-LD Studio</strong>.</li>
+<li>Turn on the master switch: <strong>Active Live Injection</strong>.</li>
+<li>Toggle the schema types you want active (WebSite, Organization, Breadcrumbs).</li>
+<li>Fill in your business details in the inputs provided.</li>
+<li>Click <strong>Save Schema Settings</strong>.</li>
+<li>Click <strong>Google Rich Results Test</strong> at the top-right to verify your live schema output directly with Google's official testing tool.</li>
+</ol>
+<p>---</p>
+<h3>3.20 GEO & AI Search Hub (<code>asf-geo</code>)</h3>
+<h4>What it Does</h4>
+<p>Optimizes your website for <strong>Generative Engine Optimization (GEO)</strong>—ensuring your brand and articles are cited as primary sources by ChatGPT Search, Perplexity AI, Google Gemini, and Claude. It also generates and serves <code>/llms.txt</code>.</p>
+<h4>What is <code>/llms.txt</code>?</h4>
+<p>Similar to <code>robots.txt</code>, <code>/llms.txt</code> is the new standard used by AI search engines to read a curated, markdown-formatted summary of your website, services, and key pages.</p>
+<h4>Step-by-Step: How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → GEO & AI Search Hub</strong>.</li>
+<li>Click <strong>🔍 Run AI Readiness Audit</strong> to check your entity clarity and citability score.</li>
+<li>Under <strong>AI Crawler Permissions</strong>, check the bots you want to allow:</li>
+</ol>
+<ul>
+<li>OpenAI / SearchGPT (<code>GPTBot</code>)</li>
+<li>Perplexity AI (<code>PerplexityBot</code>)</li>
+<li>Anthropic Claude (<code>ClaudeBot</code>)</li>
+<li>Google Gemini (<code>Google-Extended</code>)</li>
+</ul>
+<ol>
+<li>Click <strong>Save AI Crawler Permissions</strong>.</li>
+<li>Customize your <code>/llms.txt</code> markdown content in the editor box.</li>
+<li>Click <strong>Regenerate & Save /llms.txt</strong>.</li>
+<li>Click <strong>View Live /llms.txt</strong> to inspect your live file at <code>https://yourdomain.com/llms.txt</code>.</li>
+</ol>
+<p>---</p>
+<h3>3.21 🛠️ Swiss-Knife 19-in-1 Diagnostic Suite (<code>asf-swiss-tools</code>)</h3>
+<h4>What it Does</h4>
+<p>A complete built-in network and developer utility suite. You no longer need to visit sketchy third-party websites to perform WHOIS lookups, DNS checks, or password generation.</p>
+<h4>19 Built-in Tools</h4>
+<ol>
+<li><strong>DNS Lookup</strong>: Query A, AAAA, MX, TXT, NS, and CNAME records.</li>
+<li><strong>WHOIS Lookup</strong>: Domain registrar, creation date, expiry date, name servers.</li>
+<li><strong>IP Geolocation</strong>: Country, city, region, ISP, and organization.</li>
+<li><strong>Reverse IP Lookup</strong>: Discover hostnames sharing the same IP address.</li>
+<li><strong>Server Ping</strong>: Measure ICMP/TCP round-trip latency to any host.</li>
+<li><strong>Port Scanner</strong>: Check open ports (80, 443, 21, 22, 25, 3306, 8080).</li>
+<li><strong>HTTP Header Inspector</strong>: View complete server response headers and status codes.</li>
+<li><strong>SSL Certificate Checker</strong>: Inspect SSL issuer, validity period, and cipher suite.</li>
+<li><strong>URL Encoder / Decoder</strong>: Safely encode/decode URI strings.</li>
+<li><strong>Base64 Encoder / Decoder</strong>: Convert strings to and from Base64.</li>
+<li><strong>MD5 & SHA256 Hash Generator</strong>: Cryptographic hash generator.</li>
+<li><strong>Random Password Generator</strong>: Strong, secure passwords with custom length.</li>
+<li><strong>User-Agent Parser</strong>: Identify browser, OS, engine, and device type.</li>
+<li><strong>Word & Character Counter</strong>: Real-time text metrics and reading time.</li>
+<li><strong>Case Converter</strong>: Upper, Lower, Title, Slug, and CamelCase transformations.</li>
+<li><strong>Lorem Ipsum Generator</strong>: Quick dummy placeholder text generator.</li>
+<li><strong>Credit Card Validator</strong>: Luhn algorithm checksum validator (no data stored).</li>
+<li><strong>JSON Formatter & Validator</strong>: Beautify, validate, and minify JSON strings.</li>
+<li><strong>HTML Entity Encoder / Decoder</strong>: Clean special character converter.</li>
+</ol>
+<h4>How to Use It</h4>
+<ol>
+<li>Navigate to <strong>All SEO Fixer → 🛠️ Swiss-Knife Tools</strong>.</li>
+<li>Click on any tool tab in the horizontal navigation bar.</li>
+<li>Enter your target domain, IP, or text into the input field.</li>
+<li>Click <strong>Run Utility / Inspect</strong>.</li>
+<li>The structured result is displayed immediately with a 1-click <strong>Copy Result</strong> button.</li>
+</ol>
+<p>---</p>
+<h3>3.22 ⚙️ Settings Hub with Horizontal Tabs (<code>asf-settings</code>)</h3>
+<h4>What it Does</h4>
+<p>The central configuration engine organized into <strong>7 native horizontal tabs</strong>:</p>
+<ol>
+<li><strong>⚙️ General & APIs</strong>:</li>
+</ol>
+<ul>
+<li></em>Homepage SEO Meta Description<em>: Set your primary homepage search snippet.</li>
+<li></em>Google PageSpeed Insights API Key<em>: Unlock 25,000 requests/day.</li>
+<li></em>Google Search Console<em>: Web OAuth Client ID/Secret and Service Account JSON key.</li>
+</ul>
+<ol>
+<li><strong>🤖 AI Engine & Keys</strong>:</li>
+</ol>
+<ul>
+<li></em>Groq AI API Key<em>: Primary, ultra-fast LLM provider (pre-configured out of the box).</li>
+<li></em>Google Gemini Flash API Key<em>: Secondary failover provider.</li>
+<li></em>OpenRouter API Key<em>: Tertiary failover provider.</li>
+</ul>
+<ol>
+<li><strong>📍 Local & GEO SEO</strong>:</li>
+</ol>
+<ul>
+<li></em>Live Geotargeting Meta Tags<em>: Toggles <code>geo.position</code>, <code>geo.placename</code>, <code>geo.region</code>, <code>ICBM</code>.</li>
+<li></em>Business Schema Type<em>: Choose from 13 local business categories.</li>
+<li></em>Business Name, Phone, Email, Physical Address<em>.</li>
+<li></em>GPS Coordinates<em>: Includes a <strong>📍 Auto-Detect via Browser GPS</strong> button to fill exact latitude/longitude with one click.</li>
+</ul>
+<ol>
+<li><strong>🤖 Robots & LLMs.txt</strong>:</li>
+</ol>
+<ul>
+<li></em>Robots.txt Editor<em>: Edit rules with live dynamic serving and physical disk sync.</li>
+<li></em>LLMs.txt Publisher<em>: Customize instructions for generative AI search crawlers.</li>
+</ul>
+<ol>
+<li><strong>🩺 System Diagnostics & Logs</strong>:</li>
+</ol>
+<ul>
+<li></em>16-Point Environment Scanner<em>: Tests PHP version, memory limits, cURL, DOM, mbstring, OpenSSL, SimpleXML, and file write permissions.</li>
+<li></em>Debug Log Viewer<em>: Reads the latest errors from <code>wp-content/debug.log</code>.</li>
+<li></em>Email Report Dispatcher<em>: Send complete diagnostic reports with one click to <code>support@abidalidev.com</code> or your admin email.</li>
+</ul>
+<ol>
+<li><strong>👑 Pro License & Plans</strong>:</li>
+</ol>
+<ul>
+<li>Activate your lifetime license key (<code>ASF-PRO-LIFETIME-...</code>).</li>
+<li>Review the Free vs Pro feature matrix.</li>
+</ul>
+<ol>
+<li><strong>👨‍💻 About Developer</strong>:</li>
+</ol>
+<ul>
+<li>Creator bio for <strong>Abid Ali</strong>, portfolio links (<a href="https://abidalidev.com" target="_blank">abidalidev.com</a>), and direct support channels.</li>
+</ul>
+<p>---</p>
 
-		<!-- SECTION 3.3: FLOATING WIDGET -->
-		<section class="doc-card" id="floating-widget">
-			<h2>3.3 💬 Global Floating AI Assistant Bubble (Widget)</h2>
-			<p>Available in the bottom-right corner across every page of the plugin.</p>
-			<h3>How to Use It</h3>
-			<ol>
-				<li>Click the purple-blue gradient bubble with the pulsing green dot at the bottom-right.</li>
-				<li>A <code>390px × 540px</code> chat drawer smoothly slides into view.</li>
-				<li>Ask any technical SEO question or click a prompt chip (Audit Fixes, Meta Descs, Speed & CWV, Local Schema).</li>
-				<li>Receive instant AI guidance while remaining on your active working screen.</li>
-				<li>Click the minimize bar to hide the drawer.</li>
-			</ol>
-		</section>
+</section>
+<section class="doc-card" id="state-persistence">
+<h2>4. Data Persistence & State Management Architecture</h2>
+<p>All-in-One SEO Fixer is built with strict database persistence:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+<p>│                      WORDPRESS DATABASE STORAGE                         │</p>
+<p>├──────────────────────────┬──────────────────────┬───────────────────────┤</p>
+<p>│ TABLE: wp_postmeta       │ TABLE: wp_options    │ TABLE: wp_asf_404_logs│</p>
+<p>├──────────────────────────┼──────────────────────┼───────────────────────┤</p>
+<p>│ • _asf_seo_title         │ • asf_settings       │ • id (auto_increment) │</p>
+<p>│ • _asf_meta_description  │ • asf_redirects      │ • url (varchar 255)   │</p>
+<p>│ • _asf_focus_keyword     │ • asf_robots_content │ • hits (int)          │</p>
+<p>│ • _wp_attachment_img_alt │ • asf_llms_content   │ • last_seen (bigint)  │</p>
+<p>│ • rank_math_title        │ • asf_schema_</em>       │                       │</p>
+<p>│ • _yoast_wpseo_metadesc  │ • asf_health_cache   │                       │</p>
+<p>└──────────────────────────┴──────────────────────┴───────────────────────┘</code></pre></p>
+<h3>Why This Matters</h3>
+<ol>
+<li><strong>Third-Party Compatibility</strong>: When All-in-One SEO Fixer updates a meta description, it writes to <code>_asf_meta_description</code>, <code>rank_math_description</code>, and <code>_yoast_wpseo_metadesc</code>. If you ever switch plugins, your data is never lost.</li>
+<li><strong>Zero-Delay Reload Hydration</strong>: Every view file fetches its options using <code>get_option()</code> or <code>get_post_meta()</code> on initial render, ensuring checkboxes, input fields, and score rings reflect their exact saved values without flickering.</li>
+</ol>
+<p>---</p>
 
-		<!-- SECTION 3.4: ON-PAGE CHECKER -->
-		<section class="doc-card" id="asf-onpage">
-			<h2>3.4 On-Page SEO Checker & Tag Auditor (asf-onpage)</h2>
-			<p>Audits every published post and page for title length, meta description quality, H1 tags, and content depth.</p>
-			<h3>How to Use It</h3>
-			<ol>
-				<li>Select your post type filter (All, Pages, Posts, Products).</li>
-				<li>Click <strong>Scan All Pages for SEO Errors</strong>.</li>
-				<li>Inspect the flagged issues in the results table.</li>
-				<li>Click <strong>⚡ 1-Click Auto-Fix Missing Meta Descriptions & Titles</strong> to automatically generate clean 145-character descriptions and standard SEO titles across all empty posts.</li>
-				<li>Or click <strong>⚡ Quick Fix</strong> next to any row to open the editing modal and customize metadata directly.</li>
-			</ol>
-		</section>
+</section>
+<section class="doc-card" id="disk-permissions">
+<h2>5. File Manager & Disk Permissions (Dual-Engine Architecture)</h2>
+<p>Users often ask: <em>"Does the plugin require server file manager write permissions?"</em></p>
+<h3>The Answer: Smart Dual-Engine Fallback</h3>
+<ul>
+<li><strong>Engine 1: Physical File Mode (When Writable)</strong>:</li>
+</ul>
+<p>If your server root directory has standard write permissions (<code>is_writable(ABSPATH)</code>), the plugin writes physical <code>robots.txt</code> and <code>llms.txt</code> files directly to disk. This delivers maximum performance because Nginx and Apache serve static <code>.txt</code> files directly without bootstrapping PHP.</p>
+<ul>
+<li><strong>Engine 2: Virtual WordPress Mode (When Read-Only)</strong>:</li>
+</ul>
+<p>On locked-down shared hosting or hardened VPS environments where the root directory is read-only, the plugin automatically falls back to virtual WordPress filters:</p>
+<ul>
+<li><code>add_filter( 'robots_txt', ... )</code> serves dynamic <code>robots.txt</code> content.</li>
+<li><code>add_action( 'template_redirect', ... )</code> intercepts <code>/llms.txt</code> requests and delivers valid UTF-8 markdown.</li>
+</ul>
+<strong>Result</strong>: Your search crawler directives work 100% reliably in either server environment!
+<p>---</p>
 
-		<!-- SECTION 3.5: PAGESPEED -->
-		<section class="doc-card" id="asf-pagespeed">
-			<h2>3.5 Google PageSpeed & Core Web Vitals (asf-pagespeed)</h2>
-			<p>Direct integration with Google PageSpeed Insights API v5 (Lighthouse engine).</p>
-			<h3>How to Use It</h3>
-			<ol>
-				<li>Add your free PageSpeed API Key in <strong>Settings → General & APIs</strong>.</li>
-				<li>Choose <strong>Mobile</strong> or <strong>Desktop</strong> mode.</li>
-				<li>Click <strong>Analyze PageSpeed & Core Web Vitals</strong>.</li>
-				<li>Review radial score rings: Performance, Accessibility, Best Practices, SEO.</li>
-				<li>Check your Core Web Vitals (LCP, CLS, TBT, FCP) against Google's passing thresholds.</li>
-			</ol>
-		</section>
+</section>
+<section class="doc-card" id="toast-alerts">
+<h2>6. Toast Notification System vs Browser Alerts</h2>
+<p>In version 2.3.0, the jarring, thread-blocking default Chrome/Firefox <code>window.alert(...)</code> popup modal has been completely replaced with a custom <strong>Modern Toast Notification Engine</strong>:</p>
+<ul>
+<li><strong>Visual Design</strong>: Sleek floating cards rendered in the bottom-right corner with smooth slide-in animations.</li>
+<li><strong>Semantic Color Coding</strong>:</li>
+<li>🟢 <strong>Success</strong>: Emerald green gradient with checkmark icon.</li>
+<li>🔴 <strong>Error</strong>: Crimson red gradient with warning symbol.</li>
+<li>🟡 <strong>Warning</strong>: Amber gold with caution badge.</li>
+<li>🔵 <strong>Info</strong>: Deep indigo with info icon.</li>
+<li><strong>Non-Blocking</strong>: Toasts auto-dismiss after 4.5 seconds or can be dismissed with a single click. They never freeze the browser or prevent user interaction.</li>
+</ul>
+<p>---</p>
 
-		<!-- SECTION 3.6: LAZY LOAD -->
-		<section class="doc-card" id="asf-lazy-load">
-			<h2>3.6 Native Lazy Load Images & Media Optimizer (asf-lazy-load)</h2>
-			<p>Enforces native HTML5 <code>loading="lazy"</code> on images and iframes with LCP Hero Guard protection.</p>
-			<h3>Settings Explained</h3>
-			<ul>
-				<li><strong>Content Images</strong>: Adds <code>loading="lazy"</code> to all post content images.</li>
-				<li><strong>Video/Iframe</strong>: Defers YouTube, Vimeo, and Google Maps iframe embeds.</li>
-				<li><strong>LCP Hero Guard</strong>: Excludes the first above-the-fold image from lazy loading to protect your Largest Contentful Paint (LCP) score.</li>
-			</ul>
-			<p>Click <strong>Save Lazy Load Settings</strong> to store your configuration. Toggles persistently retain state on reload.</p>
-		</section>
+</section>
+<section class="doc-card" id="developer-api">
+<h2>7. Developer API, AJAX Endpoints & Database Schema</h2>
+<p>All AJAX communication is secured via WordPress nonces and administrative capability checks (<code>manage_options</code>).</p>
+<h3>Core Endpoints</h3>
+<table class="clean-table">
+<thead>
+<tr><th>Endpoint Action</th><th>Class Handler</th><th>Function</th></tr>
+</thead>
+<tbody>
+<tr><td><code>asf_run_audit</code></td><td><code>ASF_Audit</code></td><td>Executes 360° technical site crawl</td></tr>
+<tr><td><code>asf_health_ping</code></td><td><code>ASF_HealthPing</code></td><td>Quick boot-time SEO health score calculation</td></tr>
+<tr><td><code>asf_ai_chat</code></td><td><code>ASF_AIChatbot</code></td><td>Dispatches Groq LLaMA-3.3 query with site context</td></tr>
+<tr><td><code>asf_export_ai_prompt</code></td><td><code>ASF_AIChatbot</code></td><td>Exports Master AI Prompt JSON file</td></tr>
+<tr><td><code>asf_import_ai_config</code></td><td><code>ASF_AIChatbot</code></td><td>Bulk-applies external AI JSON settings</td></tr>
+<tr><td><code>asf_run_diagnostics</code></td><td><code>ASF_Diagnostics</code></td><td>Runs 16-point server environment health check</td></tr>
+<tr><td><code>asf_send_diagnostic_report</code></td><td><code>ASF_Diagnostics</code></td><td>Dispatches diagnostic email via <code>wp_mail()</code></td></tr>
+<tr><td><code>asf_onpage_scan</code></td><td><code>ASF_OnPage</code></td><td>Audits published posts for metadata and titles</td></tr>
+<tr><td><code>asf_bulk_autofix</code></td><td><code>ASF_OnPage</code></td><td>Auto-generates missing titles and meta descriptions</td></tr>
+<tr><td><code>asf_media_scan</code></td><td><code>ASF_Media</code></td><td>Scans media library for alt text and orphans</td></tr>
+<tr><td><code>asf_save_schema_studio</code></td><td><code>ASF_Schema</code></td><td>Persists visual schema definitions</td></tr>
+<tr><td><code>asf_save_geo_bots</code></td><td><code>ASF_GEO</code></td><td>Updates AI crawler permissions</td></tr>
+<tr><td><code>asf_tool_<em></code></td><td><code>ASF_SwissTools</code></td><td>19 separate network diagnostic endpoints</td></tr>
+</tbody>
+</table>
+<p>---</p>
 
-		<!-- SECTION 3.7: MEDIA SCANNER -->
-		<section class="doc-card" id="asf-media">
-			<h2>3.7 Media Library Scanner & Alt-Text Generator (asf-media)</h2>
-			<p>Detects missing alt text and discovers orphan media attachments taking up disk space.</p>
-			<h3>How to Use It</h3>
-			<ol>
-				<li>Click <strong>Scan Media Library (All Images)</strong>.</li>
-				<li>Filter by <em>Missing Alt Text Only</em> or <em>Orphan Images Only</em>.</li>
-				<li>Click <strong>⚡ 1-Click Scan & Fill Missing Alt Texts</strong> to auto-generate readable alt attributes from clean filenames.</li>
-				<li>Or edit alt text directly inside any table row input field and click <strong>Save</strong>.</li>
-				<li>For unused orphan images, click <strong>Move to Trash</strong> to safely stage them in the native WordPress Media Trash.</li>
-			</ol>
-		</section>
+</section>
+<section class="doc-card" id="credits">
+<h2>8. Credits & Developer Support</h2>
+<strong>All-in-One SEO Fixer</strong> is authored and maintained by <strong>Abid Ali</strong>.
+<ul>
+<li><strong>Official Website</strong>: <a href="https://abidalidev.com" target="_blank">https://abidalidev.com</a></li>
+<li><strong>GitHub Repository</strong>: <a href="https://github.com/abidalidevv/all-seo-fixer" target="_blank">https://github.com/abidalidevv/all-seo-fixer</a></li>
+<li><strong>Direct Email Support</strong>: <a href="mailto:support@abidalidev.com" target="_blank">support@abidalidev.com</a></li>
+<li><strong>License</strong>: GNU General Public License v2.0 or later</li>
+</ul>
+</em>Built with passion for WordPress professionals, digital agencies, and site owners who demand elite search performance.*
 
-		<!-- SECTION 3.8: PERFORMANCE -->
-		<section class="doc-card" id="asf-performance">
-			<h2>3.8 Speed & Database Optimizer (asf-performance)</h2>
-			<p>Cleans historical revisions, auto-drafts, trashed items, spam comments, and expired transients.</p>
-			<div class="callout">
-				<div class="callout-title">🛡️ Safe Batch Execution (50 Records / Batch)</div>
-				<p>To prevent server crashes, memory limits, or database locks on shared hosting, the optimizer executes queries in controlled chunks of 50 records.</p>
-			</div>
-			<ol>
-				<li>Click <strong>Scan Database Bloat</strong>.</li>
-				<li>Check the items you want to purge.</li>
-				<li>Click <strong>⚡ Optimize Database & Purge Bloat</strong>.</li>
-			</ol>
-		</section>
+</section>
 
-		<!-- SECTION 3.9: PAGE BUILDER -->
-		<section class="doc-card" id="asf-builder-analyzer">
-			<h2>3.9 Page Builder & Elementor Overhead Optimizer (asf-builder-analyzer)</h2>
-			<p>Measures Elementor JSON postmeta bloat, deep DOM ceilings, and font overhead.</p>
-			<ol>
-				<li>Click <strong>Scan Active Builders & Bloat</strong>.</li>
-				<li>Review pages exceeding 500 KB payload.</li>
-				<li>Enable toggles: <em>Disable Elementor Eicons</em>, <em>Disable Elementor Google Fonts</em>, and <em>Purge Orphaned Builder Revisions</em>.</li>
-				<li>Click <strong>🚀 Optimize Page Builders & Clean Revisions</strong>.</li>
-			</ol>
-		</section>
+		</div>
 
-		<!-- SECTION 3.10: GSC -->
-		<section class="doc-card" id="asf-gsc-inspector">
-			<h2>3.10 Google Search Console & Instant Indexer (asf-gsc-inspector)</h2>
-			<p>Connects with Google Search Console and Indexing API v3.</p>
-			<ol>
-				<li>Enter OAuth credentials or Google Cloud Service Account JSON key in Settings.</li>
-				<li>Click <strong>Fetch Search Console Performance</strong> to inspect top ranking keywords, CTR, and average positions.</li>
-				<li>To index a new URL immediately, enter the URL and click <strong>⚡ Request Google Indexing</strong>.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.11: W3C -->
-		<section class="doc-card" id="asf-w3c-validator">
-			<h2>3.11 W3C Nu HTML Markup Validator (asf-w3c-validator)</h2>
-			<p>Validates front-end HTML against the official W3C Nu HTML Checker.</p>
-			<ol>
-				<li>Select a page from the dropdown or enter a custom URL.</li>
-				<li>Click <strong>Validate HTML Syntax</strong>.</li>
-				<li>Inspect line numbers, offending tags, and clear error explanations to fix broken markup.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.12: KEYWORD DENSITY -->
-		<section class="doc-card" id="asf-keyword-analyzer">
-			<h2>3.12 Keyword Density & N-Gram Analyzer (asf-keyword-analyzer)</h2>
-			<p>Analyzes 1-word, 2-word, and 3-word n-gram frequencies to avoid keyword stuffing penalties.</p>
-			<ol>
-				<li>Select a post and optionally enter your focus keyword.</li>
-				<li>Click <strong>Analyze Keyword Density</strong>.</li>
-				<li>Review the keyword tables. Ensure primary terms stay between <strong>1.5% and 2.5%</strong>. Terms over 3.5% will be flagged with a warning.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.13: AUTHORITY -->
-		<section class="doc-card" id="asf-authority">
-			<h2>3.13 On-Page SEO Health & Authority Hub (asf-authority)</h2>
-			<p>Evaluates Flesch-Kincaid readability, heading flow, and Google E-E-A-T trust signals.</p>
-			<ol>
-				<li>Select a published post and click <strong>Analyze On-Page Authority & Readability</strong>.</li>
-				<li>Verify that your Flesch Reading Ease score is in the optimal 60–70 range.</li>
-				<li>Ensure no heading levels are skipped (e.g. H1 directly to H3).</li>
-				<li>Verify author bio boxes and outbound authority citation links are present.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.14: SERP PREVIEW -->
-		<section class="doc-card" id="asf-serp-preview">
-			<h2>3.14 Live SERP & Social Card Simulator (asf-serp-preview)</h2>
-			<p>Real-time visual preview of Google Search results (Desktop and Mobile) and Facebook Open Graph cards.</p>
-			<ol>
-				<li>Select a page from the dropdown. Saved titles and descriptions load automatically.</li>
-				<li>Edit the SEO Title and Meta Description.</li>
-				<li>Check pixel-width meters (580px desktop ceiling, 960px mobile ceiling).</li>
-				<li>Click <strong>Save Snippet to Page</strong> to save changes directly to the database.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.15: SECURITY -->
-		<section class="doc-card" id="asf-security">
-			<h2>3.15 Domain Security & HTTP Headers (asf-security)</h2>
-			<p>Scans server response headers for HSTS, X-Frame-Options, X-Content-Type-Options, and SSL validity.</p>
-			<ol>
-				<li>Click <strong>Scan Security & HTTP Headers</strong>.</li>
-				<li>Inspect status badges.</li>
-				<li>Click <strong>⚡ 1-Click Enforce Security Headers</strong> to automatically inject missing headers on all front-end requests.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.16: ERROR DOCTOR -->
-		<section class="doc-card" id="asf-error-doctor">
-			<h2>3.16 Console & Error Doctor (asf-error-doctor)</h2>
-			<p>Monitors front-end JavaScript errors, mixed content scripts, and PHP runtime fatal errors.</p>
-			<ol>
-				<li>Enable toggles: <em>Mixed Content HTTPS Enforcer</em>, <em>Safe jQuery Compatibility Layer</em>, <em>Console Monitor</em>.</li>
-				<li>Click <strong>Scan Console & Error Logs</strong>.</li>
-				<li>Click <strong>Auto-Fix</strong> next to identified issues to deploy safe compatibility shims.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.17: LINK CLEANER -->
-		<section class="doc-card" id="asf-link-cleaner">
-			<h2>3.17 Broken Link & Typo Cleaner (asf-link-cleaner)</h2>
-			<p>Finds broken 404 hyperlinks and common double-domain concatenation typos.</p>
-			<ol>
-				<li>Click <strong>Scan All Content for Broken Links</strong>.</li>
-				<li>Review the flagged URLs table.</li>
-				<li>Click <strong>⚡ Auto-Fix Malformed URLs</strong> to instantly clean concatenated domain prefixes.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.18: REDIRECTS -->
-		<section class="doc-card" id="asf-redirects">
-			<h2>3.18 301 Canonical Redirect Manager & 404 Monitor (asf-redirects)</h2>
-			<p>Database-driven 301 permanent redirect engine operating on <code>template_redirect</code> without modifying <code>.htaccess</code>.</p>
-			<ol>
-				<li>Click <strong>+ Add Redirect Rule</strong>.</li>
-				<li>Enter the legacy Source Path (e.g. <code>/old-slug/</code>) and the Target Destination URL.</li>
-				<li>Click <strong>Save All Redirect Rules</strong>.</li>
-				<li>Scroll to the <strong>Real-Time 404 URL Monitor</strong> table below to see which missing URLs visitors are hitting, and click <strong>+ Convert to 301</strong> to fix them in one click.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.19: SCHEMA -->
-		<section class="doc-card" id="asf-schema">
-			<h2>3.19 Schema.org JSON-LD Studio (asf-schema)</h2>
-			<p>Visual generator for Google-compliant structured data graphs (WebSite, Organization, LocalBusiness, Breadcrumbs).</p>
-			<ol>
-				<li>Turn on the master toggle: <strong>Active Live Injection</strong>.</li>
-				<li>Select your desired schema components.</li>
-				<li>Fill in your business name, address, phone number, and logo URL.</li>
-				<li>Click <strong>Save Schema Settings</strong>.</li>
-				<li>Click <strong>Google Rich Results Test</strong> to verify live rich snippets with Google.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.20: GEO HUB -->
-		<section class="doc-card" id="asf-geo">
-			<h2>3.20 GEO & AI Search Hub (/llms.txt) (asf-geo)</h2>
-			<p>Prepares your website for AI search engines (ChatGPT Search, Perplexity AI, Claude, Gemini) and serves <code>/llms.txt</code>.</p>
-			<ol>
-				<li>Click <strong>🔍 Run AI Readiness Audit</strong>.</li>
-				<li>Under <strong>AI Crawler Permissions</strong>, select which bots are allowed (GPTBot, PerplexityBot, ClaudeBot, Google-Extended).</li>
-				<li>Edit your markdown summary in the <strong>LLMs.txt Editor</strong>.</li>
-				<li>Click <strong>Regenerate & Save /llms.txt</strong>.</li>
-				<li>Click <strong>View Live /llms.txt</strong> to view the served file live in your browser.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 3.21: SWISS TOOLS -->
-		<section class="doc-card" id="asf-swiss-tools">
-			<h2>3.21 🛠️ Swiss-Knife 19-in-1 Diagnostic Suite (asf-swiss-tools)</h2>
-			<p>19 built-in network, DNS, WHOIS, IP, and cryptographic developer tools right inside WordPress:</p>
-			<table class="doc-table">
-				<thead>
-					<tr>
-						<th>Category</th>
-						<th>Tools Available</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td><strong>Network & DNS</strong></td>
-						<td>DNS Lookup, WHOIS Lookup, Server Ping, Port Scanner (80, 443, 22, 21, 3306), HTTP Headers.</td>
-					</tr>
-					<tr>
-						<td><strong>IP & Location</strong></td>
-						<td>IP Geolocation, Reverse IP Domain Lookup, User-Agent Parser.</td>
-					</tr>
-					<tr>
-						<td><strong>Security & Crypto</strong></td>
-						<td>SSL Certificate Checker, MD5 & SHA256 Hash Generator, Random Password Generator.</td>
-					</tr>
-					<tr>
-						<td><strong>Encoding & Text</strong></td>
-						<td>Base64 Encode/Decode, URL Encode/Decode, Word & Character Counter, Case Converter, Lorem Ipsum Generator, JSON Formatter, HTML Entity Encoder.</td>
-					</tr>
-				</tbody>
-			</table>
-			<p>Select any tool, enter the input target, click <strong>Run Utility</strong>, and click <strong>Copy Result</strong>.</p>
-		</section>
-
-		<!-- SECTION 3.22: SETTINGS -->
-		<section class="doc-card" id="asf-settings">
-			<h2>3.22 ⚙️ Settings Hub (7 Horizontal Tabs) (asf-settings)</h2>
-			<p>Central configuration organized into 7 native WordPress tabs:</p>
-			<ol>
-				<li><strong>⚙️ General & APIs</strong>: Homepage SEO description, PageSpeed Insights API key, Google Search Console OAuth & Service Account JSON.</li>
-				<li><strong>🤖 AI Engine & Keys</strong>: Groq API key (Primary), Google Gemini Flash key, OpenRouter key.</li>
-				<li><strong>📍 Local & GEO SEO</strong>: Geotargeting meta tags, LocalBusiness schema, GPS coordinate auto-detection.</li>
-				<li><strong>🤖 Robots & LLMs.txt</strong>: Physical and virtual robots.txt & llms.txt configuration.</li>
-				<li><strong>🩺 System Diagnostics & Logs</strong>: 16-point server environment health check, debug log viewer, 1-click email report dispatcher.</li>
-				<li><strong>👑 Pro License & Plans</strong>: Product key activation and feature comparison.</li>
-				<li><strong>👨‍💻 About Developer</strong>: Bio for creator Abid Ali, portfolio links, and support contact.</li>
-			</ol>
-		</section>
-
-		<!-- SECTION 4: PERSISTENCE -->
-		<section class="doc-card" id="state-persistence">
-			<h2>4. Data Persistence & State Management Architecture</h2>
-			<p>All-in-One SEO Fixer guarantees that every action creates real database records:</p>
-			<table class="doc-table">
-				<thead>
-					<tr>
-						<th>Module / Feature</th>
-						<th>Database Table</th>
-						<th>Database Key / Column</th>
-						<th>Reload Hydration</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td>SEO Title Tags</td>
-						<td><code>wp_postmeta</code></td>
-						<td><code>_asf_seo_title</code>, <code>rank_math_title</code>, <code>_yoast_wpseo_title</code></td>
-						<td><code>get_post_meta()</code></td>
-					</tr>
-					<tr>
-						<td>Meta Descriptions</td>
-						<td><code>wp_postmeta</code></td>
-						<td><code>_asf_meta_description</code>, <code>rank_math_description</code>, <code>_yoast_wpseo_metadesc</code></td>
-						<td><code>get_post_meta()</code></td>
-					</tr>
-					<tr>
-						<td>Image Alt Texts</td>
-						<td><code>wp_postmeta</code></td>
-						<td><code>_wp_attachment_image_alt</code></td>
-						<td><code>get_post_meta()</code></td>
-					</tr>
-					<tr>
-						<td>301 Redirect Rules</td>
-						<td><code>wp_options</code></td>
-						<td><code>asf_redirects</code></td>
-						<td><code>get_option()</code></td>
-					</tr>
-					<tr>
-						<td>404 Error Hits</td>
-						<td><code>wp_asf_404_logs</code></td>
-						<td><code>url</code>, <code>hits</code>, <code>last_seen</code></td>
-						<td><code>$wpdb->get_results()</code></td>
-					</tr>
-					<tr>
-						<td>Health Score Cache</td>
-						<td><code>wp_options</code></td>
-						<td><code>asf_health_score_cache</code></td>
-						<td>Pre-rendered on page load</td>
-					</tr>
-					<tr>
-						<td>Lazy Load Toggles</td>
-						<td><code>wp_options</code></td>
-						<td><code>asf_enable_lazy</code>, <code>asf_exclude_first</code></td>
-						<td><code>checked()</code></td>
-					</tr>
-					<tr>
-						<td>Robots & LLMs Content</td>
-						<td><code>wp_options</code> / Disk</td>
-						<td><code>asf_robots_txt_content</code>, <code>asf_llms_txt_content</code></td>
-						<td>Disk check + <code>get_option()</code></td>
-					</tr>
-				</tbody>
-			</table>
-		</section>
-
-		<!-- SECTION 5: DISK ACCESS -->
-		<section class="doc-card" id="disk-permissions">
-			<h2>5. Dual-Engine File Access (Physical vs Virtual)</h2>
-			<p>The plugin is designed to operate seamlessly across both write-enabled and locked-down hosting architectures:</p>
-			<div class="callout">
-				<div class="callout-title">How the Dual Fallback Works:</div>
-				<ul>
-					<li><strong>Physical Mode (Writable Disk)</strong>: If <code>is_writable(ABSPATH)</code> is true, physical <code>robots.txt</code> and <code>llms.txt</code> files are written to disk. Web servers (Nginx/Apache) serve these static files directly without loading PHP or WordPress, maximizing performance.</li>
-					<li><strong>Virtual Mode (Read-Only Disk)</strong>: If file manager write access is restricted, the plugin seamlessly falls back to WordPress core filters (<code>do_robotstxt</code> and <code>template_redirect</code>). Crawlers receive the exact same dynamic output.</li>
-				</ul>
-			</div>
-		</section>
-
-		<!-- SECTION 6: TOAST NOTIFICATIONS -->
-		<section class="doc-card" id="toast-alerts">
-			<h2>6. Modern Toast Notification System</h2>
-			<p>In version 2.3.0, the default browser alert dialog (<code>window.alert</code>) has been replaced by a sleek, modern toast notification system:</p>
-			<ul>
-				<li><span class="badge badge-green">Success</span>: Emerald green toast with checkmark icon.</li>
-				<li><span class="badge badge-err">Error</span>: Crimson red toast with warning icon.</li>
-				<li><span class="badge badge-warn">Warning</span>: Amber gold toast with caution symbol.</li>
-				<li><span class="badge badge-blue">Info</span>: Deep indigo toast with info badge.</li>
-			</ul>
-			<p>Toasts float at the bottom-right of the screen, animate into view, auto-dismiss after 4.5 seconds, and never freeze the browser window.</p>
-		</section>
-
-		<!-- SECTION 7: DEVELOPER API -->
-		<section class="doc-card" id="developer-api">
-			<h2>7. Developer API & AJAX Endpoints</h2>
-			<p>All AJAX actions route through <code>admin-ajax.php</code> with nonce validation and <code>manage_options</code> capability checks:</p>
-			<pre><code>// Example: Hooking into the 360° Audit completion
-add_action( 'asf_after_audit_completed', function( $audit_data ) {
-    // Custom post-audit webhook or notification
-} );</code></pre>
-		</section>
-
-		<!-- FOOTER -->
 		<footer class="doc-footer">
-			All-in-One SEO Fixer v2.3.0 · Engineered with ❤️ by <a href="https://abidalidev.com" target="_blank">Abid Ali</a> · <a href="mailto:support@abidalidev.com">support@abidalidev.com</a>
+			All-in-One SEO Fixer v2.3.0 · Authored by <a href="https://abidalidev.com" target="_blank">Abid Ali</a> · Support: <a href="mailto:support@abidalidev.com">support@abidalidev.com</a>
 		</footer>
 
 	</main>
+
+	<!-- BACK TO TOP BUTTON -->
+	<a href="#top" class="back-top" title="Back to top">↑</a>
+
 </div>
+
+<script>
+
+document.getElementById('doc-search').addEventListener('input', function(e) {
+	var term = e.target.value.toLowerCase().trim();
+	var links = document.querySelectorAll('.nav-list li');
+	links.forEach(function(li) {
+		var txt = li.textContent.toLowerCase();
+		if (!term || txt.indexOf(term) !== -1) {
+			li.style.display = '';
+		} else {
+			li.style.display = 'none';
+		}
+	});
+});
+
+document.querySelectorAll('.sidebar a').forEach(function(anchor) {
+	anchor.addEventListener('click', function (e) {
+		var targetId = this.getAttribute('href').substring(1);
+		var targetElem = document.getElementById(targetId);
+		if (targetElem) {
+			e.preventDefault();
+			targetElem.scrollIntoView({ behavior: 'smooth' });
+			history.pushState(null, null, '#' + targetId);
+		}
+	});
+});
+
+</script>
 
 </body>
 </html>
