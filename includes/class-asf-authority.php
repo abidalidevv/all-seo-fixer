@@ -52,7 +52,10 @@ class ASF_Authority {
 			$word_count = str_word_count( strip_tags( $content ) );
 			$total_word_count += $word_count;
 
-			if ( preg_match( '/<script[^>]*application\/ld\+json/i', $content ) ) {
+			$has_rm_schema   = get_post_meta( $post->ID, 'rank_math_rich_snippet', true );
+			$has_yoast_schema = defined( 'WPSEO_VERSION' );
+			$has_asf_auto    = ( ! class_exists( 'RankMath' ) && ! defined( 'WPSEO_VERSION' ) && ! defined( 'AIOSEO_VERSION' ) && ! defined( 'SEOPRESS_VERSION' ) );
+			if ( $has_rm_schema || $has_yoast_schema || $has_asf_auto ) {
 				$schema_count++;
 			}
 
@@ -119,7 +122,7 @@ class ASF_Authority {
 		asf_check_nonce();
 		asf_cap_check();
 
-		$post_id = intval( $_GET['post_id'] ?? 0 );
+		$post_id = intval( $_REQUEST['post_id'] ?? 0 );
 		if ( ! $post_id ) {
 			wp_send_json( array( 'success' => false, 'message' => 'No post ID provided.' ) );
 		}

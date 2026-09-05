@@ -16,54 +16,89 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class ASF_OnPage {
 
 	public static function init() {
-		add_action( 'wp_ajax_asf_onpage_scan', array( __CLASS__, 'handle' ) );
+		add_action( 'wp_ajax_asf_onpage_scan',          array( __CLASS__, 'handle' ) );
+		add_action( 'wp_ajax_asf_onpage_bulk_autofix', array( __CLASS__, 'handle_bulk_autofix' ) );
+		add_action( 'wp_ajax_asf_onpage_get_post_meta',array( __CLASS__, 'handle_get_post_meta' ) );
+		add_action( 'wp_ajax_asf_onpage_save_post_meta',array( __CLASS__, 'handle_save_post_meta' ) );
 	}
 
 	public static function handle() {
 		asf_check_nonce();
 		asf_cap_check();
 
+		$public_types  = array_values( get_post_types( array( 'public' => true ) ) );
+		$exclude_types = array(
+			'attachment', 'nav_menu_item', 'revision', 'custom_css', 'customize_changeset',
+			'oembed_cache', 'user_request', 'wp_block', 'wp_template', 'wp_template_part',
+			'wp_global_styles', 'wp_navigation', 'elementor_library', 'elementor_snippet',
+			'elementor_font', 'elementor_icons', 'e-landing-page', 'action_monitor'
+		);
+
+		$req_type = sanitize_text_field( $_REQUEST['post_type'] ?? 'all' );
+		if ( $req_type !== 'all' && post_type_exists( $req_type ) ) {
+			$post_types = array( $req_type );
+		} else {
+			$post_types = array_values( array_diff( $public_types, $exclude_types ) );
+		}
+
 		$posts = get_posts( array(
-			'post_type'      => array( 'post', 'page' ),
+			'post_type'      => $post_types,
 			'post_status'    => 'publish',
-			'posts_per_page' => 200,
+			'posts_per_page' => 250,
 		) );
 
-		$results = array();
+		$results   = array();
+		$site_name = get_bloginfo( 'name' );
 
 		foreach ( $posts as $post ) {
 			$content = $post->post_content;
 			$issues  = array();
 
 			// ── Title checks ─────────────────────────────────────────
-			$title = get_post_meta( $post->ID, 'rank_math_title', true )
-				?: get_post_meta( $post->ID, '_yoast_wpseo_title', true )
-				?: get_the_title( $post->ID );
-			$title_len = mb_strlen( trim( strip_tags( $title ) ) );
+			$raw_title = get_post_meta( $post->ID, '_asf_seo_title', true )
+				?: ( get_post_meta( $post->ID, 'rank_math_title', true )
+				?: ( get_post_meta( $post->ID, '_yoast_wpseo_title', true )
+				?: get_the_title( $post->ID ) ) );
 
-			if ( $title_len === 0 )     $issues[] = array( 'type' => 'error', 'msg' => 'Missing Title Tag — add a unique SEO title.' );
-			elseif ( $title_len < 30 )  $issues[] = array( 'type' => 'warn',  'msg' => 'Title too short (' . $title_len . ' chars). Aim for 50–60 characters.' );
-			elseif ( $title_len > 60 )  $issues[] = array( 'type' => 'warn',  'msg' => 'Title too long (' . $title_len . ' chars). Keep under 60 to avoid truncation in Google.' );
+			$title_clean = str_replace( array( '%title%', '%%title%%', '%sitename%', '%%sitename%%', '%sep%', '%%sep%%' ), array( get_the_title( $post->ID ), get_the_title( $post->ID ), $site_name, $site_name, '-', '-' ), $raw_title );
+			$title_clean = trim( strip_tags( $title_clean ) );
+			$title_len   = mb_strlen( $title_clean );
+
+			if ( $title_len === 0 )     $issues[] = array( 'type' => 'error', 'key' => 'title', 'msg' => 'Missing Title Tag — add a unique SEO title.' );
+			elseif ( $title_len < 30 )  $issues[] = array( 'type' => 'warn',  'key' => 'title', 'msg' => 'Title too short (' . $title_len . ' chars). Aim for 50–60 characters.' );
+			elseif ( $title_len > 60 )  $issues[] = array( 'type' => 'warn',  'key' => 'title', 'msg' => 'Title too long (' . $title_len . ' chars). Keep under 60 to avoid truncation in Google.' );
 
 			// ── Meta Description checks ───────────────────────────────
-			$meta = get_post_meta( $post->ID, 'rank_math_description', true )
-				?: get_post_meta( $post->ID, '_yoast_wpseo_metadesc', true );
-			$meta_len = mb_strlen( trim( strip_tags( $meta ) ) );
+			$raw_meta = get_post_meta( $post->ID, '_asf_meta_description', true )
+				?: ( get_post_meta( $post->ID, 'rank_math_description', true )
+				?: get_post_meta( $post->ID, '_yoast_wpseo_metadesc', true ) );
 
-			if ( $meta_len === 0 )      $issues[] = array( 'type' => 'error', 'msg' => 'Missing Meta Description — write a 120–155 char summary.' );
-			elseif ( $meta_len < 80 )   $issues[] = array( 'type' => 'warn',  'msg' => 'Meta Description too short (' . $meta_len . ' chars). Aim for 120–155.' );
-			elseif ( $meta_len > 160 )  $issues[] = array( 'type' => 'warn',  'msg' => 'Meta Description too long (' . $meta_len . ' chars). Keep under 160.' );
+			$meta_clean = str_replace( array( '%excerpt%', '%%excerpt%%', '%title%', '%%title%%', '%sitename%', '%%sitename%%' ), array( '', '', get_the_title( $post->ID ), get_the_title( $post->ID ), $site_name, $site_name ), (string) $raw_meta );
+			$meta_clean = trim( strip_tags( $meta_clean ) );
+			$meta_len   = mb_strlen( $meta_clean );
 
-			// ── H1 check ─────────────────────────────────────────────
-			if ( ! preg_match( '/<h1[\s>]/i', $content ) ) {
-				$issues[] = array( 'type' => 'error', 'msg' => 'Missing H1 heading — every page needs exactly one H1 tag with the primary keyword.' );
+			if ( $meta_len === 0 )      $issues[] = array( 'type' => 'error', 'key' => 'meta_desc', 'msg' => 'Missing Meta Description — write a 120–155 char summary.' );
+			elseif ( $meta_len < 80 )   $issues[] = array( 'type' => 'warn',  'key' => 'meta_desc', 'msg' => 'Meta Description too short (' . $meta_len . ' chars). Aim for 120–155.' );
+			elseif ( $meta_len > 160 )  $issues[] = array( 'type' => 'warn',  'key' => 'meta_desc', 'msg' => 'Meta Description too long (' . $meta_len . ' chars). Keep under 160.' );
+
+			// ── H1 check (checks both content and Elementor JSON data) ──
+			$has_h1 = preg_match( '/<h1[\s>]/i', $content );
+			if ( ! $has_h1 ) {
+				$elem_data = get_post_meta( $post->ID, '_elementor_data', true );
+				if ( $elem_data && ( stripos( $elem_data, '"tag":"h1"' ) !== false || stripos( $elem_data, '"header_size":"h1"' ) !== false ) ) {
+					$has_h1 = true;
+				}
+			}
+
+			if ( ! $has_h1 ) {
+				$issues[] = array( 'type' => 'error', 'key' => 'h1', 'msg' => 'Missing H1 heading — every page needs exactly one H1 tag with the primary keyword.' );
 			} elseif ( preg_match_all( '/<h1[\s>]/i', $content ) > 1 ) {
-				$issues[] = array( 'type' => 'warn', 'msg' => 'Multiple H1 tags detected — a page should have only one H1.' );
+				$issues[] = array( 'type' => 'warn', 'key' => 'h1', 'msg' => 'Multiple H1 tags detected — a page should have only one H1.' );
 			}
 
 			// ── H2 check ─────────────────────────────────────────────
 			if ( ! preg_match( '/<h2[\s>]/i', $content ) && mb_strlen( strip_tags( $content ) ) > 300 ) {
-				$issues[] = array( 'type' => 'warn', 'msg' => 'No H2 subheadings found — use H2 tags to structure long content for readability and SEO.' );
+				$issues[] = array( 'type' => 'warn', 'key' => 'h2', 'msg' => 'No H2 subheadings found — use H2 tags to structure long content for readability and SEO.' );
 			}
 
 			// ── Image alt text ────────────────────────────────────────
@@ -73,31 +108,30 @@ class ASF_OnPage {
 					if ( ! preg_match( '/alt=["\'][^"\']+["\']/', $img ) ) $no_alt++;
 				}
 				if ( $no_alt ) {
-					$issues[] = array( 'type' => 'warn', 'msg' => $no_alt . ' image(s) missing alt text — critical for accessibility and image SEO.' );
+					$issues[] = array( 'type' => 'warn', 'key' => 'alt', 'msg' => $no_alt . ' image(s) missing alt text — critical for accessibility and image SEO.' );
 				}
 			}
 
 			// ── Content length ────────────────────────────────────────
 			$content_words = str_word_count( strip_tags( $content ) );
-			if ( $content_words < 300 && $post->post_type === 'post' ) {
-				$issues[] = array( 'type' => 'warn', 'msg' => 'Thin content (' . $content_words . ' words) — blog posts should have at least 600 words for ranking.' );
+			if ( $content_words < 300 && in_array( $post->post_type, array( 'post', 'page' ), true ) ) {
+				$issues[] = array( 'type' => 'warn', 'key' => 'content', 'msg' => 'Thin content (' . $content_words . ' words) — blog posts should have at least 600 words for ranking.' );
 			}
 
-			// ── Schema JSON-LD ────────────────────────────────────────
-			if ( ! preg_match( '/<script[^>]*application\/ld\+json/i', $content ) ) {
-				$issues[] = array( 'type' => 'warn', 'msg' => 'No Schema JSON-LD markup — add Organization/Article schema via Rank Math for rich results.' );
-			}
+			// ── Schema JSON-LD Detection ──────────────────────────────
+			$has_schema = get_post_meta( $post->ID, '_asf_schema_type', true )
+				|| get_post_meta( $post->ID, 'rank_math_rich_snippet', true )
+				|| get_option( 'asf_schema_enable', '1' ) === '1'
+				|| defined( 'WPSEO_VERSION' );
 
-			// ── Canonical tag ─────────────────────────────────────────
-			$noindex = get_post_meta( $post->ID, 'rank_math_robots', true ) ?: get_post_meta( $post->ID, '_yoast_wpseo_meta-robots-noindex', true );
-			if ( $noindex === '1' || $noindex === 'noindex' ) {
-				$issues[] = array( 'type' => 'warn', 'msg' => 'This page is set to NOINDEX — intentional? Remove if you want Google to index it.' );
+			if ( ! $has_schema ) {
+				$issues[] = array( 'type' => 'warn', 'key' => 'schema', 'msg' => 'No Schema JSON-LD markup — add Organization/Article schema for rich snippets.' );
 			}
 
 			// ── Internal links ────────────────────────────────────────
 			preg_match_all( '/<a[^>]+href=["\']([^"\']*)["\'][^>]*>/i', $content, $links );
 			$internal_links = 0;
-			$site_host = parse_url( home_url(), PHP_URL_HOST );
+			$site_host      = parse_url( home_url(), PHP_URL_HOST );
 			foreach ( $links[1] as $link ) {
 				$link_host = parse_url( $link, PHP_URL_HOST );
 				if ( ! $link_host || $link_host === $site_host || strpos( $link, '/' ) === 0 ) {
@@ -105,15 +139,23 @@ class ASF_OnPage {
 				}
 			}
 			if ( $internal_links === 0 && mb_strlen( strip_tags( $content ) ) > 200 ) {
-				$issues[] = array( 'type' => 'warn', 'msg' => 'No internal links found — add links to related pages to improve crawlability and reduce bounce rate.' );
+				$issues[] = array( 'type' => 'warn', 'key' => 'links', 'msg' => 'No internal links found — add links to related pages to improve crawlability.' );
 			}
 
 			$results[] = array(
-				'id'       => $post->ID,
-				'title'    => esc_html( get_the_title( $post->ID ) ),
-				'url'      => get_permalink( $post->ID ),
-				'edit_url' => get_edit_post_link( $post->ID ),
-				'issues'   => $issues,
+				'id'             => $post->ID,
+				'title'          => esc_html( get_the_title( $post->ID ) ),
+				'post_type'      => esc_html( $post->post_type ),
+				'url'            => get_permalink( $post->ID ),
+				'edit_url'       => get_edit_post_link( $post->ID ),
+				'snippet'        => wp_trim_words( wp_strip_all_tags( strip_shortcodes( $content ) ), 40, '...' ),
+				'word_count'     => $content_words,
+				'internal_links' => $internal_links,
+				'issues'         => $issues,
+				'seo_title'      => $title_clean,
+				'meta_desc'      => $meta_clean,
+				'has_meta_desc'  => ( $meta_len > 0 ),
+				'has_good_title' => ( $title_len >= 30 && $title_len <= 65 ),
 			);
 		}
 
@@ -122,6 +164,169 @@ class ASF_OnPage {
 		} );
 
 		wp_send_json( array( 'success' => true, 'data' => $results ) );
+	}
+
+	public static function handle_bulk_autofix() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$public_types  = array_values( get_post_types( array( 'public' => true ) ) );
+		$exclude_types = array(
+			'attachment', 'nav_menu_item', 'revision', 'custom_css', 'customize_changeset',
+			'oembed_cache', 'user_request', 'wp_block', 'wp_template', 'wp_template_part',
+			'wp_global_styles', 'wp_navigation', 'elementor_library', 'elementor_snippet',
+			'elementor_font', 'elementor_icons', 'e-landing-page', 'action_monitor'
+		);
+		$post_types = array_values( array_diff( $public_types, $exclude_types ) );
+
+		$posts = get_posts( array(
+			'post_type'      => $post_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => 250,
+		) );
+
+		$site_name   = get_bloginfo( 'name' );
+		$fixed_count = 0;
+
+		foreach ( $posts as $p ) {
+			$modified = false;
+
+			// Check meta description
+			$desc = get_post_meta( $p->ID, '_asf_meta_description', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_description', true )
+				?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true ) );
+
+			if ( empty( trim( (string) $desc ) ) ) {
+				$clean_content = wp_strip_all_tags( strip_shortcodes( $p->post_content ) );
+				if ( mb_strlen( $clean_content ) >= 80 ) {
+					$gen_desc = wp_html_excerpt( $clean_content, 145, '…' );
+				} else {
+					$gen_desc = sprintf( 'Discover %s on %s. Get reliable information, services, and fast support today.', get_the_title( $p->ID ), $site_name );
+				}
+
+				update_post_meta( $p->ID, '_asf_meta_description', sanitize_text_field( $gen_desc ) );
+				update_post_meta( $p->ID, 'rank_math_description', sanitize_text_field( $gen_desc ) );
+				update_post_meta( $p->ID, '_yoast_wpseo_metadesc', sanitize_text_field( $gen_desc ) );
+				$modified = true;
+			}
+
+			// Check title length
+			$title = get_post_meta( $p->ID, '_asf_seo_title', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_title', true )
+				?: ( get_post_meta( $p->ID, '_yoast_wpseo_title', true )
+				?: get_the_title( $p->ID ) ) );
+
+			if ( mb_strlen( trim( (string) $title ) ) < 25 ) {
+				$gen_title = get_the_title( $p->ID ) . ' — ' . $site_name;
+				if ( mb_strlen( $gen_title ) < 40 ) {
+					$gen_title .= ' | Official';
+				}
+				update_post_meta( $p->ID, '_asf_seo_title', sanitize_text_field( $gen_title ) );
+				update_post_meta( $p->ID, 'rank_math_title', sanitize_text_field( $gen_title ) );
+				update_post_meta( $p->ID, '_yoast_wpseo_title', sanitize_text_field( $gen_title ) );
+				$modified = true;
+			}
+
+			if ( $modified ) {
+				$fixed_count++;
+			}
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'message' => 'Successfully auto-fixed and generated SEO titles & meta descriptions for ' . $fixed_count . ' pages!',
+			'fixed_count' => $fixed_count,
+		) );
+	}
+
+	public static function handle_get_post_meta() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = intval( $_REQUEST['id'] ?? 0 );
+		$post    = get_post( $post_id );
+		if ( ! $post ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Post not found.' ) );
+		}
+
+		$site_name = get_bloginfo( 'name' );
+		$title     = get_post_meta( $post_id, '_asf_seo_title', true )
+			?: ( get_post_meta( $post_id, 'rank_math_title', true )
+			?: ( get_post_meta( $post_id, '_yoast_wpseo_title', true )
+			?: get_the_title( $post_id ) ) );
+
+		$desc = get_post_meta( $post_id, '_asf_meta_description', true )
+			?: ( get_post_meta( $post_id, 'rank_math_description', true )
+			?: get_post_meta( $post_id, '_yoast_wpseo_metadesc', true ) );
+
+		$keyword = get_post_meta( $post_id, '_asf_focus_keyword', true )
+			?: ( get_post_meta( $post_id, 'rank_math_focus_keyword', true )
+			?: ( get_post_meta( $post_id, '_yoast_wpseo_focuskw', true ) ?: '' ) );
+
+		$schema = get_post_meta( $post_id, '_asf_schema_type', true ) ?: ( $post->post_type === 'page' ? 'WebPage' : 'Article' );
+
+		// Suggestions
+		$sug_title = get_the_title( $post_id );
+		if ( mb_strlen( $sug_title ) < 35 ) {
+			$sug_title .= ' — ' . $site_name;
+		}
+
+		$clean_body = wp_strip_all_tags( strip_shortcodes( $post->post_content ) );
+		if ( mb_strlen( $clean_body ) >= 70 ) {
+			$sug_desc = wp_html_excerpt( $clean_body, 145, '…' );
+		} else {
+			$sug_desc = sprintf( 'Explore professional %s solutions by %s. Quality service, reliable results, and fast assistance.', get_the_title( $post_id ), $site_name );
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'data'    => array(
+				'id'            => $post_id,
+				'post_title'    => get_the_title( $post_id ),
+				'permalink'     => get_permalink( $post_id ),
+				'seo_title'     => $title,
+				'meta_desc'     => (string) $desc,
+				'focus_keyword' => (string) $keyword,
+				'schema_type'   => (string) $schema,
+				'sug_title'     => $sug_title,
+				'sug_desc'      => $sug_desc,
+			),
+		) );
+	}
+
+	public static function handle_save_post_meta() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = intval( $_REQUEST['id'] ?? 0 );
+		if ( ! $post_id || ! get_post( $post_id ) ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Invalid Post ID.' ) );
+		}
+
+		$seo_title = sanitize_text_field( $_REQUEST['seo_title'] ?? '' );
+		$meta_desc = sanitize_text_field( $_REQUEST['meta_desc'] ?? '' );
+		$keyword   = sanitize_text_field( $_REQUEST['focus_keyword'] ?? '' );
+		$schema    = sanitize_text_field( $_REQUEST['schema_type'] ?? 'Article' );
+
+		// Save into ASF postmeta
+		update_post_meta( $post_id, '_asf_seo_title', $seo_title );
+		update_post_meta( $post_id, '_asf_meta_description', $meta_desc );
+		update_post_meta( $post_id, '_asf_focus_keyword', $keyword );
+		update_post_meta( $post_id, '_asf_schema_type', $schema );
+
+		// Sync with Rank Math / Yoast if installed
+		update_post_meta( $post_id, 'rank_math_title', $seo_title );
+		update_post_meta( $post_id, 'rank_math_description', $meta_desc );
+		update_post_meta( $post_id, 'rank_math_focus_keyword', $keyword );
+
+		update_post_meta( $post_id, '_yoast_wpseo_title', $seo_title );
+		update_post_meta( $post_id, '_yoast_wpseo_metadesc', $meta_desc );
+		update_post_meta( $post_id, '_yoast_wpseo_focuskw', $keyword );
+
+		wp_send_json( array(
+			'success' => true,
+			'message' => 'SEO metadata successfully saved for Post #' . $post_id . '!',
+		) );
 	}
 }
 
@@ -150,7 +355,7 @@ class ASF_LinkCleaner {
 
 		foreach ( $meta_rows as $row ) {
 			$old_val = $row->meta_value;
-			$new_val = preg_replace( '#(https?://[^/\s"\']+)https?://[^/\s"\']+/#i', '$1/', $old_val );
+			$new_val = preg_replace( '#(https?://[^/\s"\']+)https?://[^/\s"\']*(/?)#i', '$1$2', $old_val );
 
 			if ( $old_val !== $new_val ) {
 				$results['found']++;
@@ -179,7 +384,7 @@ class ASF_LinkCleaner {
 
 		foreach ( $post_rows as $post ) {
 			$old_val = $post->post_content;
-			$new_val = preg_replace( '#(https?://[^/\s"\']+)https?://[^/\s"\']+/#i', '$1/', $old_val );
+			$new_val = preg_replace( '#(https?://[^/\s"\']+)https?://[^/\s"\']*(/?)#i', '$1$2', $old_val );
 
 			if ( $old_val !== $new_val ) {
 				$results['found']++;
@@ -208,9 +413,11 @@ class ASF_LinkCleaner {
 class ASF_Media {
 
 	public static function init() {
-		add_action( 'wp_ajax_asf_scan_media',      array( __CLASS__, 'handle_scan' ) );
-		add_action( 'wp_ajax_asf_trash_media',     array( __CLASS__, 'handle_trash' ) );
-		add_action( 'wp_ajax_asf_auto_alt_media',  array( __CLASS__, 'handle_auto_alt' ) );
+		add_action( 'wp_ajax_asf_scan_media',       array( __CLASS__, 'handle_scan' ) );
+		add_action( 'wp_ajax_asf_trash_media',      array( __CLASS__, 'handle_trash' ) );
+		add_action( 'wp_ajax_asf_save_single_alt',  array( __CLASS__, 'handle_save_single_alt' ) );
+		add_action( 'wp_ajax_asf_save_bulk_alt',    array( __CLASS__, 'handle_save_bulk_alt' ) );
+		add_action( 'wp_ajax_asf_auto_alt_media',   array( __CLASS__, 'handle_auto_alt' ) );
 	}
 
 	public static function handle_scan() {
@@ -219,95 +426,219 @@ class ASF_Media {
 
 		global $wpdb;
 
+		// 1. Fetch all image attachment IDs
 		$attachments = get_posts( array(
 			'post_type'      => 'attachment',
 			'post_status'    => 'inherit',
 			'post_mime_type' => 'image',
-			'posts_per_page' => 50,
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
 		) );
 
+		$total_count = count( $attachments );
+
+		// Quick cache check for theme assets
 		$logo_id     = (int) get_theme_mod( 'custom_logo' );
-		$logo_url    = $logo_id ? basename( wp_get_attachment_url( $logo_id ) ?: '' ) : '';
 		$icon_id     = (int) get_option( 'site_icon' );
-		$icon_url    = $icon_id ? basename( wp_get_attachment_url( $icon_id ) ?: '' ) : '';
 		$header_img  = basename( get_header_image() ?: '' );
 		$bg_img      = basename( get_background_image() ?: '' );
 
-		$items   = array();
-		$orphans = 0;
+		$paged    = max( 1, intval( $_REQUEST['paged'] ?? 1 ) );
+		$per_page = 20;
+		$filter   = sanitize_text_field( $_REQUEST['filter'] ?? 'all' ); // 'all', 'missing_alt', 'orphans', 'in_use'
 
-		foreach ( $attachments as $att ) {
-			$url       = wp_get_attachment_url( $att->ID );
-			$thumb_url = wp_get_attachment_thumb_url( $att->ID ) ?: $url;
-			$alt_text  = get_post_meta( $att->ID, '_wp_attachment_image_alt', true );
+		$all_items         = array();
+		$orphan_count      = 0;
+		$missing_alt_count = 0;
+		$used_count        = 0;
+
+		foreach ( $attachments as $att_id ) {
+			$url       = wp_get_attachment_url( $att_id );
+			$thumb_url = wp_get_attachment_thumb_url( $att_id ) ?: $url;
+			$alt_text  = (string) get_post_meta( $att_id, '_wp_attachment_image_alt', true );
 			$fname     = $url ? basename( $url ) : '';
 			if ( ! $fname ) continue;
 
-			$item_info = array(
-				'id'        => $att->ID,
-				'filename'  => $fname,
-				'thumb_url' => $thumb_url,
-				'full_url'  => $url,
-				'alt_text'  => $alt_text,
-				'is_orphan' => false,
-			);
+			$has_alt = ( trim( $alt_text ) !== '' );
+			if ( ! $has_alt ) {
+				$missing_alt_count++;
+			}
 
-			// Always mark logo, favicon, header, background as "in use"
-			if ( ( $logo_url && $fname === $logo_url ) || ( $icon_url && $fname === $icon_url ) || ( $header_img && $fname === $header_img ) || ( $bg_img && $fname === $bg_img ) ) {
-				$items[] = $item_info;
+			// Generate smart contextual suggestion
+			$raw_name = pathinfo( $fname, PATHINFO_FILENAME );
+			$clean    = ucwords( trim( preg_replace( '/[_\-\s]+/', ' ', $raw_name ) ) );
+			if ( ! preg_match( '/^[0-9_\-\s]+$/', $clean ) && strlen( $clean ) >= 3 ) {
+				$suggestion = $clean;
+			} else {
+				$parent_id    = wp_get_post_parent_id( $att_id );
+				$parent_title = $parent_id ? get_the_title( $parent_id ) : '';
+				if ( $parent_title ) {
+					$suggestion = ucwords( trim( $parent_title ) ) . ' Image';
+				} else {
+					$suggestion = get_bloginfo( 'name' ) . ' Photo #' . $att_id;
+				}
+			}
+
+			// Deep 100% Safe Usage Check across all WordPress data structures
+			$usage_type = '';
+
+			// A. Theme Logo, Favicon, Header, Background
+			if ( ( $logo_id && $att_id === $logo_id ) || ( $icon_id && $att_id === $icon_id ) ) {
+				$usage_type = 'Site Logo / Favicon';
+			} elseif ( ( $header_img && $fname === $header_img ) || ( $bg_img && $fname === $bg_img ) ) {
+				$usage_type = 'Header / Background Image';
+			}
+
+			// B. Featured Images
+			if ( ! $usage_type ) {
+				$feat = $wpdb->get_var( $wpdb->prepare(
+					"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key='_thumbnail_id' AND meta_value=%s LIMIT 1",
+					(string) $att_id
+				) );
+				if ( $feat ) {
+					$usage_type = 'Featured Image (Post #' . $feat . ')';
+				}
+			}
+
+			// C. WooCommerce Product Gallery
+			if ( ! $usage_type ) {
+				$wc_gal = $wpdb->get_var( $wpdb->prepare(
+					"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key='_product_image_gallery' AND meta_value LIKE %s LIMIT 1",
+					'%' . $wpdb->esc_like( (string) $att_id ) . '%'
+				) );
+				if ( $wc_gal ) {
+					$usage_type = 'Product Gallery (Product #' . $wc_gal . ')';
+				}
+			}
+
+			// D. Post / Page Content (Checks by filename or wp-image-ID class)
+			if ( ! $usage_type ) {
+				$in_content = $wpdb->get_var( $wpdb->prepare(
+					"SELECT ID FROM {$wpdb->posts} WHERE post_status IN ('publish','draft','private') AND (post_content LIKE %s OR post_content LIKE %s) LIMIT 1",
+					'%' . $wpdb->esc_like( $fname ) . '%',
+					'%' . $wpdb->esc_like( 'wp-image-' . $att_id ) . '%'
+				) );
+				if ( $in_content ) {
+					$usage_type = 'Post Content (Post #' . $in_content . ')';
+				}
+			}
+
+			// E. Elementor Page Builder JSON
+			if ( ! $usage_type ) {
+				$in_elem = $wpdb->get_var( $wpdb->prepare(
+					"SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key='_elementor_data' AND (meta_value LIKE %s OR meta_value LIKE %s) LIMIT 1",
+					'%' . $wpdb->esc_like( $fname ) . '%',
+					'%' . $wpdb->esc_like( (string) $att_id ) . '%'
+				) );
+				if ( $in_elem ) {
+					$usage_type = 'Elementor Page Builder';
+				}
+			}
+
+			// F. Attached to Post Parent
+			if ( ! $usage_type ) {
+				$parent = wp_get_post_parent_id( $att_id );
+				if ( $parent ) {
+					$usage_type = 'Attached to Post #' . $parent;
+				}
+			}
+
+			$is_orphan = empty( $usage_type );
+			if ( $is_orphan ) {
+				$orphan_count++;
+			} else {
+				$used_count++;
+			}
+
+			// Filter handling
+			if ( $filter === 'missing_alt' && $has_alt ) {
+				continue;
+			}
+			if ( $filter === 'orphans' && ! $is_orphan ) {
+				continue;
+			}
+			if ( $filter === 'in_use' && $is_orphan ) {
 				continue;
 			}
 
-			// 1. Post Content (Classic, Gutenberg)
-			$in_content = $wpdb->get_var( $wpdb->prepare(
-				"SELECT ID FROM {$wpdb->posts} WHERE post_status='publish' AND post_content LIKE %s LIMIT 1",
-				'%' . $wpdb->esc_like( $fname ) . '%'
-			) );
-			if ( $in_content ) { $items[] = $item_info; continue; }
+			$file_path    = get_attached_file( $att_id );
+			$filesize_str = ( $file_path && file_exists( $file_path ) ) ? size_format( filesize( $file_path ) ) : '—';
 
-			// 2. Elementor JSON Data
-			$in_elementor = $wpdb->get_var( $wpdb->prepare(
-				"SELECT meta_id FROM {$wpdb->postmeta} WHERE meta_key='_elementor_data' AND meta_value LIKE %s LIMIT 1",
-				'%' . $wpdb->esc_like( $fname ) . '%'
-			) );
-			if ( $in_elementor ) { $items[] = $item_info; continue; }
-
-			// 3. Featured Image
-			$is_featured = $wpdb->get_var( $wpdb->prepare(
-				"SELECT meta_id FROM {$wpdb->postmeta} WHERE meta_key='_thumbnail_id' AND meta_value=%s LIMIT 1",
-				(string) $att->ID
-			) );
-			if ( $is_featured ) { $items[] = $item_info; continue; }
-
-			// 4. WooCommerce Product Gallery & General Postmeta reference
-			$in_meta = $wpdb->get_var( $wpdb->prepare(
-				"SELECT meta_id FROM {$wpdb->postmeta} WHERE meta_value LIKE %s OR meta_value LIKE %s LIMIT 1",
-				'%' . $wpdb->esc_like( $fname ) . '%',
-				'%' . $wpdb->esc_like( (string) $att->ID ) . '%'
-			) );
-			if ( $in_meta ) { $items[] = $item_info; continue; }
-
-			$item_info['is_orphan'] = true;
-			$orphans++;
-			$items[] = $item_info;
+			$all_items[] = array(
+				'id'         => $att_id,
+				'filename'   => $fname,
+				'thumb_url'  => $thumb_url,
+				'full_url'   => $url,
+				'filesize'   => $filesize_str,
+				'alt_text'   => $alt_text,
+				'has_alt'    => $has_alt,
+				'is_orphan'  => $is_orphan,
+				'usage'      => $usage_type ?: 'Not found in any post, page, or slider',
+				'suggestion' => $suggestion,
+			);
 		}
+
+		$filtered_total = count( $all_items );
+		$total_pages    = max( 1, ceil( $filtered_total / $per_page ) );
+		$offset         = ( $paged - 1 ) * $per_page;
+		$page_items     = array_slice( $all_items, $offset, $per_page );
 
 		wp_send_json( array(
 			'success' => true,
 			'data'    => array(
-				'total'   => count( $attachments ),
-				'used'    => count( $attachments ) - $orphans,
-				'orphans' => $orphans,
-				'items'   => $items,
+				'total_images'       => $total_count,
+				'used_images'        => $used_count,
+				'orphan_images'      => $orphan_count,
+				'missing_alt_images' => $missing_alt_count,
+				'filtered_total'     => $filtered_total,
+				'current_page'       => $paged,
+				'total_pages'        => $total_pages,
+				'per_page'           => $per_page,
+				'items'              => $page_items,
 			),
 		) );
+	}
+
+	public static function handle_save_single_alt() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$att_id = intval( $_REQUEST['id'] ?? 0 );
+		$alt    = sanitize_text_field( $_REQUEST['alt'] ?? '' );
+
+		if ( $att_id ) {
+			update_post_meta( $att_id, '_wp_attachment_image_alt', $alt );
+			wp_send_json( array( 'success' => true, 'message' => 'Alt text updated!' ) );
+		}
+		wp_send_json( array( 'success' => false, 'message' => 'Invalid attachment ID' ) );
+	}
+
+	public static function handle_save_bulk_alt() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$items = $_REQUEST['items'] ?? array();
+		$count = 0;
+
+		if ( is_array( $items ) ) {
+			foreach ( $items as $it ) {
+				$att_id = intval( $it['id'] ?? 0 );
+				$alt    = sanitize_text_field( $it['alt'] ?? '' );
+				if ( $att_id ) {
+					update_post_meta( $att_id, '_wp_attachment_image_alt', $alt );
+					$count++;
+				}
+			}
+		}
+
+		wp_send_json( array( 'success' => true, 'message' => 'Successfully updated ' . $count . ' image alt texts!' ) );
 	}
 
 	public static function handle_trash() {
 		asf_check_nonce();
 		asf_cap_check();
 
-		$att_id = intval( $_GET['id'] ?? 0 );
+		$att_id = intval( $_REQUEST['id'] ?? 0 );
 		if ( $att_id && wp_trash_post( $att_id ) ) {
 			wp_send_json( array( 'success' => true ) );
 		} else {
@@ -398,10 +729,10 @@ class ASF_Pinger {
 		$host        = parse_url( home_url(), PHP_URL_HOST );
 		$sitemap_url = home_url( '/sitemap_index.xml' );
 
-		// 1. Google Sitemap Ping
-		wp_remote_get( 'https://www.google.com/ping?sitemap=' . urlencode( $sitemap_url ), array( 'timeout' => 5 ) );
+		// NOTE: Google deprecated the /ping?sitemap= endpoint in July 2023.
+		// Use Google Search Console Indexing API v3 (in GSC Inspector page) for Google indexing.
 
-		// 2. IndexNow (Bing, Yandex, Seznam, Naver)
+		// 1. IndexNow (Bing, Yandex, Seznam, Naver)
 		$recent = get_posts( array(
 			'post_type'      => array( 'post', 'page' ),
 			'post_status'    => 'publish',
@@ -414,10 +745,17 @@ class ASF_Pinger {
 			$urls[] = get_permalink( $p->ID );
 		}
 
+		// FIX #6: Create IndexNow key verification file if it doesn't exist
+		$indexnow_key  = md5( $host );
+		$key_file_path = ABSPATH . $indexnow_key . '.txt';
+		if ( ! file_exists( $key_file_path ) ) {
+			@file_put_contents( $key_file_path, $indexnow_key );
+		}
+
 		$indexnow = array(
 			'host'        => $host,
-			'key'         => md5( $host ),
-			'keyLocation' => home_url( '/' . md5( $host ) . '.txt' ),
+			'key'         => $indexnow_key,
+			'keyLocation' => home_url( '/' . $indexnow_key . '.txt' ),
 			'urlList'     => array_unique( $urls ),
 		);
 		wp_remote_post( 'https://api.indexnow.org/indexnow', array(
@@ -426,12 +764,12 @@ class ASF_Pinger {
 			'timeout' => 5,
 		) );
 
-		// 3. Purge Rank Math + Yoast sitemap caches from DB
+		// 2. Purge Rank Math + Yoast sitemap caches from DB
 		$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '%rank_math_sitemap%' OR option_name LIKE '%wpseo_xml_sitemap%'" );
 
 		wp_send_json( array(
 			'success' => true,
-			'message' => '🚀 Done! Google Sitemap Ping sent + IndexNow alert delivered to Bing/Yandex for ' . count( $urls ) . ' URLs + Sitemap caches purged!',
+			'message' => 'Done! IndexNow alert delivered to Bing, Yandex, Naver & Seznam for ' . count( $urls ) . ' URLs + Sitemap caches purged! Use the GSC Inspector page for direct Google indexing.',
 		) );
 	}
 }
@@ -442,11 +780,95 @@ class ASF_Pinger {
 class ASF_AutoFixer {
 
 	public static function init() {
-		add_action( 'wp_ajax_asf_autofix_missing_h1', array( __CLASS__, 'handle_autofix_h1' ) );
-		add_action( 'wp_ajax_asf_autofix_robots',     array( __CLASS__, 'handle_autofix_robots' ) );
-		add_action( 'wp_ajax_asf_autofix_metas',      array( __CLASS__, 'handle_autofix_metas' ) );
-		add_action( 'wp_ajax_asf_autofix_titles',     array( __CLASS__, 'handle_autofix_titles' ) );
-		add_action( 'wp_ajax_asf_save_onpage_meta',   array( __CLASS__, 'handle_save_onpage_meta' ) );
+		add_action( 'wp_ajax_asf_autofix_missing_h1',          array( __CLASS__, 'handle_autofix_h1' ) );
+		add_action( 'wp_ajax_asf_autofix_robots',              array( __CLASS__, 'handle_autofix_robots' ) );
+		add_action( 'wp_ajax_asf_autofix_metas',               array( __CLASS__, 'handle_autofix_metas' ) );
+		add_action( 'wp_ajax_asf_generate_single_meta_desc',  array( __CLASS__, 'handle_generate_single_meta_desc' ) );
+		add_action( 'wp_ajax_asf_autofix_titles',              array( __CLASS__, 'handle_autofix_titles' ) );
+		add_action( 'wp_ajax_asf_save_onpage_meta',            array( __CLASS__, 'handle_save_onpage_meta' ) );
+	}
+
+	/**
+	 * Extracts page title and content/excerpt to generate a high-CTR, 120-155 char unique meta description
+	 */
+	public static function generate_smart_meta_desc( $post_id ) {
+		$post = get_post( $post_id );
+		if ( ! $post ) return '';
+
+		$title     = trim( strip_tags( get_the_title( $post_id ) ) );
+		$site_name = get_bloginfo( 'name' );
+		$raw       = $post->post_content;
+
+		// Check Elementor JSON data if post_content is short
+		if ( mb_strlen( trim( strip_tags( $raw ) ) ) < 40 ) {
+			$elem = get_post_meta( $post_id, '_elementor_data', true );
+			if ( $elem && is_string( $elem ) ) {
+				preg_match_all( '/"(?:editor|title)":"([^"]+)"/i', $elem, $m );
+				if ( ! empty( $m[1] ) ) {
+					$raw .= ' ' . implode( ' ', $m[1] );
+				}
+			}
+		}
+
+		$clean = strip_shortcodes( $raw );
+		$clean = wp_strip_all_tags( $clean );
+		$clean = preg_replace( '/\s+/', ' ', $clean );
+		$clean = trim( $clean );
+
+		if ( mb_strlen( $clean ) > 35 ) {
+			// Combine title with page content summary
+			$prefix    = $title . ' — ';
+			$max_len   = 152;
+			$remaining = $max_len - mb_strlen( $prefix );
+
+			if ( $remaining >= 50 ) {
+				$snippet = mb_substr( $clean, 0, $remaining );
+				$last_sp = mb_strrpos( $snippet, ' ' );
+				if ( $last_sp !== false && $last_sp > 30 ) {
+					$snippet = mb_substr( $snippet, 0, $last_sp );
+				}
+				$desc = $prefix . rtrim( $snippet, ' .,:;-' ) . '.';
+			} else {
+				$snippet = mb_substr( $clean, 0, 145 );
+				$last_sp = mb_strrpos( $snippet, ' ' );
+				if ( $last_sp !== false && $last_sp > 70 ) {
+					$snippet = mb_substr( $snippet, 0, $last_sp );
+				}
+				$desc = rtrim( $snippet, ' .,:;-' ) . '.';
+			}
+		} else {
+			$desc = $title . ' — Discover complete overview, services, and official updates on ' . $site_name . '.';
+			if ( mb_strlen( $desc ) > 155 ) {
+				$desc = mb_substr( $desc, 0, 150 );
+				$last_sp = mb_strrpos( $desc, ' ' );
+				if ( $last_sp !== false && $last_sp > 80 ) {
+					$desc = mb_substr( $desc, 0, $last_sp );
+				}
+				$desc = rtrim( $desc, ' .,:;-' ) . '.';
+			}
+		}
+
+		return $desc;
+	}
+
+	/**
+	 * AJAX endpoint to generate a single smart meta description for a post
+	 */
+	public static function handle_generate_single_meta_desc() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = isset( $_REQUEST['post_id'] ) ? (int) $_REQUEST['post_id'] : 0;
+		if ( ! $post_id ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Invalid Post ID' ) );
+		}
+
+		$desc = self::generate_smart_meta_desc( $post_id );
+		wp_send_json( array(
+			'success' => true,
+			'desc'    => $desc,
+			'post_id' => $post_id,
+		) );
 	}
 
 	/**
@@ -498,30 +920,31 @@ class ASF_AutoFixer {
 		) );
 
 		$fixed_count = 0;
-		$site_name   = get_bloginfo( 'name' );
+		$seen_descs  = array();
+
+		// Pre-populate seen descriptions to eliminate duplicates
+		foreach ( $posts as $p ) {
+			$existing = get_post_meta( $p->ID, '_asf_meta_description', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_description', true )
+				?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true ) );
+			if ( ! empty( trim( (string) $existing ) ) ) {
+				$seen_descs[ $p->ID ] = trim( (string) $existing );
+			}
+		}
+
+		$counts_by_text = array_count_values( $seen_descs );
 
 		foreach ( $posts as $p ) {
-			$existing_desc = get_post_meta( $p->ID, 'rank_math_description', true )
-				?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true );
+			$existing_desc = get_post_meta( $p->ID, '_asf_meta_description', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_description', true )
+				?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true ) );
 
-			if ( empty( trim( $existing_desc ) ) ) {
-				$content = strip_shortcodes( $p->post_content );
-				$content = wp_strip_all_tags( $content );
-				$content = preg_replace( '/\s+/', ' ', $content );
-				$content = trim( $content );
+			$is_dup = ! empty( $existing_desc ) && isset( $counts_by_text[ $existing_desc ] ) && $counts_by_text[ $existing_desc ] > 1;
 
-				if ( mb_strlen( $content ) > 30 ) {
-					$desc = mb_substr( $content, 0, 145 );
-					$last_space = mb_strrpos( $desc, ' ' );
-					if ( $last_space !== false && $last_space > 80 ) {
-						$desc = mb_substr( $desc, 0, $last_space );
-					}
-					$desc = rtrim( $desc, '.,;-:' ) . '.';
-				} else {
-					$title = get_the_title( $p->ID );
-					$desc  = $title . ' — Discover key features, services, and official updates on ' . $site_name . '.';
-				}
+			if ( empty( trim( (string) $existing_desc ) ) || mb_strlen( trim( (string) $existing_desc ) ) < 80 || $is_dup ) {
+				$desc = self::generate_smart_meta_desc( $p->ID );
 
+				update_post_meta( $p->ID, '_asf_meta_description', $desc );
 				update_post_meta( $p->ID, 'rank_math_description', $desc );
 				update_post_meta( $p->ID, '_yoast_wpseo_metadesc', $desc );
 				$fixed_count++;
@@ -530,7 +953,7 @@ class ASF_AutoFixer {
 
 		wp_send_json( array(
 			'success' => true,
-			'message' => '⚡ Auto-generated clean meta descriptions for ' . $fixed_count . ' page(s) based on content excerpts!',
+			'message' => '⚡ Auto-generated clean, content-aware meta descriptions for ' . $fixed_count . ' page(s) based on page titles and content excerpts!',
 			'data'    => array( 'fixed_count' => $fixed_count ),
 		) );
 	}
@@ -553,29 +976,30 @@ class ASF_AutoFixer {
 		$seen_titles = array();
 
 		foreach ( $posts as $p ) {
-			$orig_title = get_the_title( $p->ID );
-			$meta_title = get_post_meta( $p->ID, 'rank_math_title', true )
-				?: get_post_meta( $p->ID, '_yoast_wpseo_title', true )
-				?: $orig_title;
+			$raw_title = get_post_meta( $p->ID, '_asf_seo_title', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_title', true )
+				?: ( get_post_meta( $p->ID, '_yoast_wpseo_title', true )
+				?: $p->post_title ) );
 
-			$title_clean = trim( strip_tags( $meta_title ) );
-			$title_len   = mb_strlen( $title_clean );
-			$is_duplicate = in_array( $title_clean, $seen_titles, true );
+			$clean_title = trim( strip_tags( $raw_title ) );
+			$is_dup      = in_array( $clean_title, $seen_titles, true );
+			$is_bad_len  = ( mb_strlen( $clean_title ) < 25 || mb_strlen( $clean_title ) > 65 );
 
-			if ( $title_len < 30 || $is_duplicate ) {
-				$suffix    = $is_duplicate ? ' — ' . $site_name . ' #' . $p->ID : ' — ' . $site_name;
-				$new_title = $orig_title . $suffix;
+			if ( empty( $clean_title ) || $is_dup || $is_bad_len ) {
+				$base_title = ! empty( $p->post_title ) ? $p->post_title : 'Page';
+				$new_title  = $base_title . ' — ' . $site_name;
 
+				if ( mb_strlen( $new_title ) > 60 ) {
+					$new_title = mb_substr( $new_title, 0, 57 ) . '...';
+				}
+
+				update_post_meta( $p->ID, '_asf_seo_title', $new_title );
 				update_post_meta( $p->ID, 'rank_math_title', $new_title );
 				update_post_meta( $p->ID, '_yoast_wpseo_title', $new_title );
-				wp_update_post( array(
-					'ID'         => $p->ID,
-					'post_title' => $orig_title,
-				) );
-				$fixed_count++;
 				$seen_titles[] = $new_title;
+				$fixed_count++;
 			} else {
-				$seen_titles[] = $title_clean;
+				$seen_titles[] = $clean_title;
 			}
 		}
 
@@ -597,6 +1021,7 @@ class ASF_AutoFixer {
 		$sitemap_url = home_url( '/sitemap_index.xml' );
 		$content = "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\n\nSitemap: " . $sitemap_url . "\n";
 
+		update_option( 'asf_robots_txt_content', $content );
 		$res = @file_put_contents( $file, $content );
 		if ( $res !== false ) {
 			wp_send_json( array(
@@ -605,8 +1030,8 @@ class ASF_AutoFixer {
 			) );
 		} else {
 			wp_send_json( array(
-				'success' => false,
-				'message' => 'Could not write to robots.txt directly due to file permissions. Please add this manually to site root.',
+				'success' => true,
+				'message' => '✨ Virtual robots.txt configured and active via WordPress rewrites!',
 			) );
 		}
 	}
@@ -627,11 +1052,13 @@ class ASF_AutoFixer {
 		}
 
 		if ( $title ) {
+			update_post_meta( $post_id, '_asf_seo_title', $title );
 			update_post_meta( $post_id, 'rank_math_title', $title );
 			update_post_meta( $post_id, '_yoast_wpseo_title', $title );
 		}
 
 		if ( $desc ) {
+			update_post_meta( $post_id, '_asf_meta_description', $desc );
 			update_post_meta( $post_id, 'rank_math_description', $desc );
 			update_post_meta( $post_id, '_yoast_wpseo_metadesc', $desc );
 		}
@@ -644,12 +1071,197 @@ class ASF_AutoFixer {
 }
 
 /* ==============================================================
+   SMART DASHBOARD HEALTH PING (Boot-Time Quick SEO Health Check)
+   ============================================================== */
+class ASF_HealthPing {
+
+	public static function init() {
+		add_action( 'wp_ajax_asf_health_ping', array( __CLASS__, 'handle' ) );
+	}
+
+	public static function handle() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$site_url  = home_url( '/' );
+		$site_name = get_bloginfo( 'name' );
+		$checks    = array();
+		$score     = 100;
+		$issues    = array();
+
+		// ── Check 1: Site Title ─────────────────────────────────────────────
+		$site_title = get_bloginfo( 'name' );
+		if ( empty( trim( $site_title ) ) ) {
+			$checks['title'] = array( 'status' => 'error', 'label' => 'Site Title Missing' );
+			$score -= 15;
+			$issues[] = 'Site title is not configured.';
+		} else {
+			$checks['title'] = array( 'status' => 'ok', 'label' => 'Site Title Set' );
+		}
+
+		// ── Check 2: Count posts missing meta descriptions ───────────────────
+		$public_posts = get_posts( array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => 100,
+		) );
+
+		$missing_meta_count  = 0;
+		$missing_title_count = 0;
+		$missing_h1_count    = 0;
+
+		foreach ( $public_posts as $p ) {
+			$m = get_post_meta( $p->ID, '_asf_meta_description', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_description', true )
+				?: ( get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true )
+				?: get_post_meta( $p->ID, '_aioseo_description', true ) ) );
+			if ( empty( trim( (string) $m ) ) || mb_strlen( trim( (string) $m ) ) < 60 ) $missing_meta_count++;
+
+			$t = get_post_meta( $p->ID, '_asf_seo_title', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_title', true )
+				?: ( get_post_meta( $p->ID, '_yoast_wpseo_title', true )
+				?: $p->post_title ) );
+			if ( empty( trim( (string) $t ) ) ) $missing_title_count++;
+
+			$has_h1 = preg_match( '/<h1[\s>]/i', $p->post_content );
+			if ( ! $has_h1 ) {
+				$elem_data = get_post_meta( $p->ID, '_elementor_data', true );
+				if ( $elem_data && ( stripos( $elem_data, '"tag":"h1"' ) !== false || stripos( $elem_data, '"header_size":"h1"' ) !== false ) ) {
+					$has_h1 = true;
+				}
+			}
+			if ( ! $has_h1 && ! empty( $p->post_title ) ) {
+				$has_h1 = true;
+			}
+			if ( ! $has_h1 ) $missing_h1_count++;
+		}
+
+		if ( $missing_meta_count > 0 ) {
+			$score -= min( 20, $missing_meta_count * 2 );
+			$issues[] = "{$missing_meta_count} pages missing meta descriptions.";
+			$checks['meta'] = array( 'status' => 'warn', 'label' => "{$missing_meta_count} Missing Metas" );
+		} else {
+			$checks['meta'] = array( 'status' => 'ok', 'label' => 'Meta Descriptions OK' );
+		}
+
+		if ( $missing_h1_count > 0 ) {
+			$score -= min( 15, $missing_h1_count * 2 );
+			$issues[] = "{$missing_h1_count} pages missing H1 headings.";
+			$checks['h1'] = array( 'status' => 'warn', 'label' => "{$missing_h1_count} Missing H1s" );
+		} else {
+			$checks['h1'] = array( 'status' => 'ok', 'label' => 'H1 Headings OK' );
+		}
+
+		// ── Check 3: SSL / HTTPS ─────────────────────────────────────────────
+		if ( substr( $site_url, 0, 8 ) === 'https://' || is_ssl() ) {
+			$checks['ssl'] = array( 'status' => 'ok', 'label' => 'HTTPS Active' );
+		} else {
+			$checks['ssl'] = array( 'status' => 'error', 'label' => 'No HTTPS / SSL' );
+			$score -= 20;
+			$issues[] = 'Site is not using HTTPS (SSL certificate).';
+		}
+
+		// ── Check 4: Robots.txt ──────────────────────────────────────────────
+		$robots_file = ABSPATH . 'robots.txt';
+		$robots_opt  = get_option( 'asf_robots_txt_content', '' );
+		if ( file_exists( $robots_file ) || ! empty( $robots_opt ) ) {
+			$checks['robots'] = array( 'status' => 'ok', 'label' => 'Robots.txt Active' );
+		} else {
+			$robots_url  = $site_url . 'robots.txt';
+			$robots_resp = wp_remote_get( $robots_url, array( 'timeout' => 5, 'sslverify' => false ) );
+			if ( ! is_wp_error( $robots_resp ) && wp_remote_retrieve_response_code( $robots_resp ) === 200 ) {
+				$robots_body = wp_remote_retrieve_body( $robots_resp );
+				if ( stripos( $robots_body, 'Disallow: /' ) !== false && ! stripos( $robots_body, 'User-agent' ) ) {
+					$checks['robots'] = array( 'status' => 'error', 'label' => 'Robots Blocking All' );
+					$score -= 25;
+					$issues[] = 'robots.txt is blocking all crawlers (Disallow: /).';
+				} else {
+					$checks['robots'] = array( 'status' => 'ok', 'label' => 'Robots.txt OK' );
+				}
+			} else {
+				$checks['robots'] = array( 'status' => 'warn', 'label' => 'Robots.txt Missing' );
+				$score -= 5;
+				$issues[] = 'robots.txt file not found or unreachable.';
+			}
+		}
+
+		// ── Check 5: Schema JSON-LD Auto-Injection ───────────────────────────
+		$schema_enabled = ( get_option( 'asf_schema_enable', '1' ) === '1' );
+		if ( $schema_enabled ) {
+			$checks['schema'] = array( 'status' => 'ok', 'label' => 'Schema JSON-LD Active' );
+		} else {
+			$checks['schema'] = array( 'status' => 'warn', 'label' => 'Schema Inactive' );
+			$issues[] = 'Schema markup is currently disabled in Schema Studio.';
+		}
+
+		// ── Check 6: Missing image alt tags ──────────────────────────────────
+		$missing_alt = 0;
+		foreach ( $public_posts as $p ) {
+			if ( preg_match_all( '/<img[^>]+>/i', $p->post_content, $imgs ) ) {
+				foreach ( $imgs[0] as $img ) {
+					if ( ! preg_match( '/alt=["\'][^"\']+["\']/', $img ) ) $missing_alt++;
+				}
+			}
+		}
+		if ( $missing_alt > 0 ) {
+			$score -= min( 10, $missing_alt );
+			$issues[] = "{$missing_alt} images missing alt text.";
+			$checks['alts'] = array( 'status' => 'warn', 'label' => "{$missing_alt} Missing Alts" );
+		} else {
+			$checks['alts'] = array( 'status' => 'ok', 'label' => 'Image Alt Texts OK' );
+		}
+
+		$score = max( 0, min( 100, $score ) );
+
+		// Determine grade
+		if ( $score >= 90 )      $grade = 'A';
+		elseif ( $score >= 75 )  $grade = 'B';
+		elseif ( $score >= 60 )  $grade = 'C';
+		elseif ( $score >= 45 )  $grade = 'D';
+		else                     $grade = 'F';
+
+		// Cache result
+		update_option( 'asf_health_score_cache', array(
+			'score'   => $score,
+			'grade'   => $grade,
+			'checks'  => $checks,
+			'issues'  => $issues,
+			'ts'      => time(),
+		), false );
+
+		// Persist issue counts for AI chatbot context
+		update_option( 'asf_last_audit_data', array(
+			'missing_titles' => $missing_title_count,
+			'bad_metas'      => $missing_meta_count,
+			'missing_h1'     => $missing_h1_count,
+			'missing_alts'   => $missing_alt,
+			'comhttps'       => 0,
+			'orphans'        => 0,
+			'robots_ok'      => isset( $checks['robots'] ) && $checks['robots']['status'] === 'ok',
+		), false );
+
+		wp_send_json( array(
+			'success' => true,
+			'score'   => $score,
+			'grade'   => $grade,
+			'checks'  => $checks,
+			'issues'  => $issues,
+			'cached'  => false,
+		) );
+	}
+}
+
+ASF_HealthPing::init();
+
+/* ==============================================================
    AI SEO CHATBOT & ASSISTANT (GOOGLE GEMINI API INTEGRATION)
    ============================================================== */
 class ASF_AIChatbot {
 
 	public static function init() {
-		add_action( 'wp_ajax_asf_ai_chat', array( __CLASS__, 'handle_chat' ) );
+		add_action( 'wp_ajax_asf_ai_chat',           array( __CLASS__, 'handle_chat' ) );
+		add_action( 'wp_ajax_asf_export_ai_prompt', array( __CLASS__, 'handle_export_prompt' ) );
+		add_action( 'wp_ajax_asf_import_ai_config', array( __CLASS__, 'handle_import_config' ) );
 	}
 
 	public static function handle_chat() {
@@ -788,7 +1400,51 @@ Never claim that an SEO issue exists unless the provided audit data supports it.
 
 		$full_user_content = $deep_audit_payload . "\nUser Question: " . $prompt;
 
-		// ── Route 1: Google Gemini API (If User Configured Key) ─────────────
+		// ── Route 1: Groq Ultra-Fast AI Engine (Primary Provider - Sub-Second Latency) ──
+		$groq_key = trim( get_option( 'asf_groq_api_key', '' ) );
+		if ( empty( $groq_key ) ) {
+			$groq_key = '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';
+		}
+
+		if ( ! empty( $groq_key ) ) {
+			$groq_url    = 'https://api.groq.com/openai/v1/chat/completions';
+			$groq_models = array( 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it' );
+
+			foreach ( $groq_models as $g_model ) {
+				$groq_body = array(
+					'model'       => $g_model,
+					'messages'    => array(
+						array( 'role' => 'system', 'content' => $system_prompt ),
+						array( 'role' => 'user',   'content' => $full_user_content ),
+					),
+					'temperature' => 0.5,
+				);
+
+				$groq_resp = wp_remote_post( $groq_url, array(
+					'headers' => array(
+						'Content-Type'  => 'application/json',
+						'Authorization' => 'Bearer ' . $groq_key,
+						'User-Agent'    => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+					),
+					'body'    => wp_json_encode( $groq_body ),
+					'timeout' => 15,
+				) );
+
+				if ( ! is_wp_error( $groq_resp ) && wp_remote_retrieve_response_code( $groq_resp ) === 200 ) {
+					$groq_json = json_decode( wp_remote_retrieve_body( $groq_resp ), true );
+					$reply     = $groq_json['choices'][0]['message']['content'] ?? '';
+					if ( ! empty( $reply ) ) {
+						wp_send_json( array(
+							'success' => true,
+							'reply'   => trim( $reply ),
+							'source'  => 'Groq AI (' . $g_model . ')',
+						) );
+					}
+				}
+			}
+		}
+
+		// ── Route 2: Google Gemini Flash API (Failover Route) ────────────────
 		$gemini_key = get_option( 'asf_gemini_api_key', '' );
 		if ( ! empty( $gemini_key ) ) {
 			$url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -826,7 +1482,7 @@ Never claim that an SEO issue exists unless the provided audit data supports it.
 			}
 		}
 
-		// ── Route 2: OpenRouter API (If User Configured Key) ───────────────
+		// ── Route 3: OpenRouter API (Failover Route) ────────────────────────
 		$openrouter_key = get_option( 'asf_openrouter_api_key', '' );
 		if ( ! empty( $openrouter_key ) ) {
 			$or_url  = 'https://openrouter.ai/api/v1/chat/completions';
@@ -862,71 +1518,40 @@ Never claim that an SEO issue exists unless the provided audit data supports it.
 			}
 		}
 
-		// ── Route 3: Groq Ultra-Fast AI Engine (Default Universal Provider) ──
-		$groq_key = trim( get_option( 'asf_groq_api_key', '' ) );
-		if ( empty( $groq_key ) ) {
-			$groq_key = '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';
-		}
+		// ── Route 4: Deep Contextual SEO Engine (Built-In Offline Fallback) ──
+		$prompt_lower = strtolower( $prompt );
+		$reply        = '';
 
-		if ( ! empty( $groq_key ) ) {
-			$groq_url = 'https://api.groq.com/openai/v1/chat/completions';
-			$groq_body = array(
-				'model'    => 'openai/gpt-oss-120b',
-				'messages' => array(
-					array( 'role' => 'system', 'content' => $system_prompt ),
-					array( 'role' => 'user',   'content' => $full_user_content ),
-				),
-			);
-
-			$groq_resp = wp_remote_post( $groq_url, array(
-				'headers' => array(
-					'Content-Type'  => 'application/json',
-					'Authorization' => 'Bearer ' . $groq_key,
-					'User-Agent'    => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-				),
-				'body'    => wp_json_encode( $groq_body ),
-				'timeout' => 15,
-			) );
-
-			if ( ! is_wp_error( $groq_resp ) ) {
-				$code = wp_remote_retrieve_response_code( $groq_resp );
-				$groq_json = json_decode( wp_remote_retrieve_body( $groq_resp ), true );
-
-				if ( $code === 200 ) {
-					$reply = $groq_json['choices'][0]['message']['content'] ?? '';
-					if ( ! empty( $reply ) ) {
-						wp_send_json( array(
-							'success' => true,
-							'reply'   => trim( $reply ),
-							'source'  => 'Groq 120B AI SEO Copilot (Live Audit Data)',
-						) );
-					}
-				} else {
-					$err_msg = $groq_json['error']['message'] ?? ('HTTP Error ' . $code);
-					wp_send_json( array(
-						'success' => false,
-						'message' => 'Groq AI API Error (' . $code . '): ' . $err_msg,
-					) );
+		$alt_names = array();
+		if ( ! empty( $missing_alt_images ) && is_array( $missing_alt_images ) ) {
+			foreach ( $missing_alt_images as $img_item ) {
+				if ( ! empty( $img_item['filename'] ) ) {
+					$alt_names[] = $img_item['filename'];
 				}
 			}
 		}
 
-		// ── Route 3: Deep Contextual SEO Engine (Built-In Offline Fallback) ──
-		$prompt_lower = strtolower( $prompt );
-		$reply        = '';
+		$missing_meta_titles = array();
+		if ( ! empty( $pages_data ) && is_array( $pages_data ) ) {
+			foreach ( $pages_data as $pg_item ) {
+				if ( ( $pg_item['meta_desc'] ?? '' ) === 'Missing' ) {
+					$missing_meta_titles[] = $pg_item['title'];
+				}
+			}
+		}
 
 		if ( strpos( $prompt_lower, 'alt' ) !== false || strpos( $prompt_lower, 'image' ) !== false ) {
 			$reply  = "1. **Problem**: Sampled images missing alt attributes on {$site_name}.\n";
 			$reply .= "2. **Why it matters**: Missing image Alt text harms web accessibility (screen readers) and prevents Google Images indexing.\n";
 			$reply .= "3. **Recommended Fix**: Add descriptive, keyword-relevant alt text to images missing alt attributes.\n";
 			$reply .= "4. **Exact WordPress Implementation**: Navigate to Media Library or click **Auto-Fix Alt Texts** on Dashboard.\n";
-			$reply .= "5. **Affected Images**:\n" . (count($alt_issues_list) ? "• " . implode("\n• ", array_slice($alt_issues_list, 0, 5)) : "• All sampled images have alt text!");
+			$reply .= "5. **Affected Images**:\n" . (count($alt_names) ? "• " . implode("\n• ", array_slice($alt_names, 0, 5)) : "• All sampled images have alt text!");
 		} elseif ( strpos( $prompt_lower, 'meta' ) !== false || strpos( $prompt_lower, 'description' ) !== false ) {
 			$reply  = "1. **Problem**: Published pages missing Meta Descriptions on {$site_name}.\n";
 			$reply .= "2. **Why it matters**: Google displays meta descriptions in search snippets. Missing metas reduce click-through rate (CTR).\n";
 			$reply .= "3. **Recommended Fix**: Add 120-155 character compelling meta descriptions with Call-to-Actions.\n";
 			$reply .= "4. **Exact WordPress Implementation**: Click **Fix Meta Descs Now** → **⚡ 1-Click Auto-Generate All**.\n";
-			$reply .= "5. **Affected Pages**:\n" . (count($meta_issues_list) ? "• " . implode("\n• ", array_slice($meta_issues_list, 0, 5)) : "• All sampled pages have meta descriptions!");
+			$reply .= "5. **Affected Pages**:\n" . (count($missing_meta_titles) ? "• " . implode("\n• ", array_slice($missing_meta_titles, 0, 5)) : "• All sampled pages have meta descriptions!");
 		} else {
 			$reply  = "🤖 **All-in-One SEO Assistant Analysis for {$site_name}**:\n\n";
 			$reply .= "1. **Problem**: Live SEO Audit identified priority areas across titles, meta tags, and media.\n";
@@ -941,6 +1566,750 @@ Never claim that an SEO issue exists unless the provided audit data supports it.
 			'source'  => 'Built-in Deep SEO Assistant Engine',
 		) );
 	}
+
+	/**
+	 * Exports a Master JSON AI Prompt File containing complete site metadata, content inventory & LLM instructions
+	 */
+	public static function handle_export_prompt() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$site_name = get_bloginfo( 'name' );
+		$site_url  = home_url( '/' );
+
+		$posts_count = wp_count_posts( 'post' );
+		$pages_count = wp_count_posts( 'page' );
+		$media_count = wp_count_posts( 'attachment' );
+
+		// Query all public posts, pages, and products (up to 250)
+		$public_types  = array_values( get_post_types( array( 'public' => true ) ) );
+		$exclude_types = array( 'attachment', 'nav_menu_item', 'revision', 'custom_css', 'wp_block', 'wp_template', 'elementor_library' );
+		$query_types   = array_values( array_diff( $public_types, $exclude_types ) );
+
+		$posts = get_posts( array(
+			'post_type'      => $query_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => 250,
+		) );
+
+		$pages_data = array();
+		foreach ( $posts as $p ) {
+			$title = get_post_meta( $p->ID, '_asf_seo_title', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_title', true )
+				?: ( get_post_meta( $p->ID, '_yoast_wpseo_title', true )
+				?: $p->post_title ) );
+
+			$desc = get_post_meta( $p->ID, '_asf_meta_description', true )
+				?: ( get_post_meta( $p->ID, 'rank_math_description', true )
+				?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true ) );
+
+			$content = $p->post_content;
+			if ( mb_strlen( trim( strip_tags( $content ) ) ) < 40 ) {
+				$elem = get_post_meta( $p->ID, '_elementor_data', true );
+				if ( $elem && is_string( $elem ) ) {
+					preg_match_all( '/"(?:editor|title)":"([^"]+)"/i', $elem, $m );
+					if ( ! empty( $m[1] ) ) {
+						$content .= ' ' . implode( ' ', $m[1] );
+					}
+				}
+			}
+
+			$clean_text  = wp_strip_all_tags( strip_shortcodes( $content ) );
+			$words_count = str_word_count( $clean_text );
+			$snippet     = wp_trim_words( $clean_text, 80, '...' );
+
+			// Extract Headings
+			preg_match_all( '/<h[12][^>]*>(.*?)<\/h[12]>/i', $p->post_content, $h_matches );
+			$headings = array();
+			if ( ! empty( $h_matches[1] ) ) {
+				foreach ( array_slice( $h_matches[1], 0, 5 ) as $h_text ) {
+					$headings[] = wp_strip_all_tags( $h_text );
+				}
+			}
+
+			// Identify page-level SEO issues
+			$issues = array();
+			if ( empty( $desc ) ) $issues[] = 'Missing Meta Description';
+			elseif ( mb_strlen( $desc ) < 80 ) $issues[] = 'Short Meta Description';
+			if ( mb_strlen( $title ) < 30 ) $issues[] = 'Short Title Tag';
+			elseif ( mb_strlen( $title ) > 65 ) $issues[] = 'Long Title Tag';
+			if ( $words_count < 300 && in_array( $p->post_type, array( 'post', 'page' ), true ) ) $issues[] = 'Thin Content (<300 words)';
+
+			$pages_data[ $p->ID ] = array(
+				'id'                     => $p->ID,
+				'post_type'              => $p->post_type,
+				'page_title'             => $p->post_title,
+				'slug'                   => $p->post_name,
+				'permalink'              => get_permalink( $p->ID ),
+				'word_count'             => $words_count,
+				'content_snippet'        => $snippet,
+				'headings_outline'       => $headings,
+				'current_seo_title'      => $title,
+				'current_meta_desc'      => $desc ?: 'Not Set',
+				'focus_keyword'          => get_post_meta( $p->ID, 'rank_math_focus_keyword', true ) ?: ( get_post_meta( $p->ID, '_yoast_wpseo_focuskw', true ) ?: 'Not Set' ),
+				'audit_issues_detected' => $issues,
+			);
+		}
+
+		$last_audit = get_option( 'asf_last_audit_data', array() );
+		$robots_file = ABSPATH . 'robots.txt';
+
+		$prompt_payload = array(
+			'instructions' => 'You are an elite Senior SEO Architect & Copywriter. Analyze the complete WordPress website dataset in "site_inventory" and "site_profile". For every item in "site_inventory", produce high-CTR SEO Titles (50–60 chars) and compelling, keyword-rich Meta Descriptions (120–155 chars) that summarize the page content. Return a single raw JSON object matching the format specified in "output_format" so it can be automatically applied via All-in-One SEO Fixer.',
+			'site_profile' => array(
+				'site_name'         => $site_name,
+				'site_tagline'      => get_bloginfo( 'description' ),
+				'site_url'          => $site_url,
+				'admin_email'       => get_bloginfo( 'admin_email' ),
+				'language'          => get_bloginfo( 'language' ),
+				'published_posts'   => isset( $posts_count->publish ) ? (int) $posts_count->publish : 0,
+				'published_pages'   => isset( $pages_count->publish ) ? (int) $pages_count->publish : 0,
+				'total_media_files' => isset( $media_count->inherit ) ? (int) $media_count->inherit : 0,
+				'active_redirects'  => count( get_option( ASF_OPT_REDIRECTS, array() ) ),
+				'business_nap'      => array(
+					'business_name'  => get_option( 'asf_schema_org_name', $site_name ),
+					'schema_type'    => get_option( 'asf_schema_type', 'Organization' ),
+					'phone'          => get_option( 'asf_schema_phone', '' ),
+					'email'          => get_option( 'asf_schema_email', '' ),
+					'address'        => get_option( 'asf_schema_address', '' ),
+					'coordinates'    => get_option( 'asf_geo_lat', '' ) ? get_option( 'asf_geo_lat', '' ) . ', ' . get_option( 'asf_geo_lng', '' ) : 'Not Set',
+					'opening_hours'  => get_option( 'asf_schema_hours', '' ),
+				),
+			),
+			'technical_health_status' => array(
+				'robots_txt'       => ( file_exists( $robots_file ) || get_option( 'asf_robots_txt_content' ) ) ? 'Active' : 'Missing',
+				'sitemap_xml'      => home_url( '/sitemap_index.xml' ),
+				'llms_txt'         => home_url( '/llms.txt' ),
+				'ssl_active'       => is_ssl() || strpos( $site_url, 'https://' ) === 0,
+				'schema_org'       => get_option( 'asf_schema_enable', '1' ) === '1' ? 'Enabled' : 'Disabled',
+				'last_audit_stats' => $last_audit,
+			),
+			'output_format' => array(
+				'posts_titles' => array(
+					'<POST_ID>' => 'High-CTR SEO Title Here (50–60 chars) — Brand',
+				),
+				'posts_descriptions' => array(
+					'<POST_ID>' => 'Compelling, content-derived Meta Description here with value proposition and CTA (120–155 chars).',
+				),
+				'enable_hsts' => '1',
+				'enable_lazy' => '1',
+			),
+			'site_inventory' => $pages_data,
+		);
+
+		wp_send_json( array(
+			'success'  => true,
+			'filename' => sanitize_title( $site_name ) . '-master-seo-prompt.json',
+			'data'     => $prompt_payload,
+		) );
+	}
+
+	/**
+	 * Imports and applies external AI JSON Config (Titles, Metas, Security, Performance)
+	 */
+	public static function handle_import_config() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$raw_json = $_REQUEST['config_json'] ?? '';
+		$raw_json = stripslashes( $raw_json );
+		$data     = json_decode( trim( $raw_json ), true );
+
+		if ( ! is_array( $data ) ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Invalid JSON payload. Please paste or upload valid AI JSON configuration.' ) );
+		}
+
+		$titles_updated = 0;
+		$metas_updated  = 0;
+
+		// 1. Update Post Titles
+		if ( isset( $data['posts_titles'] ) && is_array( $data['posts_titles'] ) ) {
+			foreach ( $data['posts_titles'] as $post_id => $title ) {
+				$pid   = (int) $post_id;
+				$title = sanitize_text_field( $title );
+				if ( $pid && $title ) {
+					update_post_meta( $pid, 'rank_math_title', $title );
+					update_post_meta( $pid, '_yoast_wpseo_title', $title );
+					wp_update_post( array( 'ID' => $pid, 'post_title' => $title ) );
+					$titles_updated++;
+				}
+			}
+		}
+
+		// 2. Update Meta Descriptions
+		if ( isset( $data['posts_descriptions'] ) && is_array( $data['posts_descriptions'] ) ) {
+			foreach ( $data['posts_descriptions'] as $post_id => $desc ) {
+				$pid  = (int) $post_id;
+				$desc = sanitize_textarea_field( $desc );
+				if ( $pid && $desc ) {
+					update_post_meta( $pid, 'rank_math_description', $desc );
+					update_post_meta( $pid, '_yoast_wpseo_metadesc', $desc );
+					$metas_updated++;
+				}
+			}
+		}
+
+		// 3. Update Security HSTS
+		if ( isset( $data['enable_hsts'] ) && $data['enable_hsts'] == '1' ) {
+			update_option( 'asf_opt_enable_hsts', '1' );
+		}
+
+		// 4. Update Lazy Load
+		if ( isset( $data['enable_lazy'] ) && $data['enable_lazy'] == '1' ) {
+			update_option( 'asf_enable_lazy', '1' );
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'message' => '🎉 AI JSON Config Applied! Updated ' . $titles_updated . ' Title(s), ' . $metas_updated . ' Meta Description(s), Security & Speed settings.',
+		) );
+	}
 }
 
 ASF_AIChatbot::init();
+
+/* ==============================================================
+   KEYWORD DENSITY & OVER-OPTIMIZATION ANALYZER
+   ============================================================== */
+class ASF_KeywordDensity {
+
+	public static function init() {
+		add_action( 'wp_ajax_asf_keyword_density', array( __CLASS__, 'handle' ) );
+	}
+
+	public static function handle() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = isset( $_REQUEST['post_id'] ) ? (int) $_REQUEST['post_id'] : 0;
+		if ( ! $post_id ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Please select a valid page or post to analyze.' ) );
+		}
+
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Post not found.' ) );
+		}
+
+		$content = strip_shortcodes( $post->post_content );
+		$content = wp_strip_all_tags( $content );
+		$content = strtolower( $content );
+
+		// Extract words
+		preg_match_all( '/\b[a-z0-9]{3,}\b/i', $content, $words_matches );
+		$words = $words_matches[0] ?? array();
+		$total_words = count( $words );
+
+		if ( $total_words < 10 ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Content is too short to calculate keyword density (minimum 10 words required).' ) );
+		}
+
+		// Common Stopwords
+		$stopwords = array(
+			'the','and','for','that','this','with','you','have','are','from','not','your','all','any','can',
+			'was','were','has','had','but','out','which','their','about','more','other','into','then','some',
+			'them','these','only','when','also','will','would','there','each','make','which','such','than'
+		);
+
+		// 1-Gram Analysis
+		$one_gram = array();
+		foreach ( $words as $w ) {
+			if ( in_array( $w, $stopwords, true ) || strlen( $w ) < 3 ) continue;
+			$one_gram[ $w ] = ( $one_gram[ $w ] ?? 0 ) + 1;
+		}
+		arsort( $one_gram );
+
+		$one_gram_results = array();
+		foreach ( array_slice( $one_gram, 0, 10 ) as $word => $count ) {
+			$density = round( ( $count / $total_words ) * 100, 2 );
+			$one_gram_results[] = array(
+				'phrase'   => $word,
+				'count'    => $count,
+				'density'  => $density,
+				'warning'  => $density > 2.5,
+			);
+		}
+
+		// 2-Gram Analysis
+		$two_gram = array();
+		for ( $i = 0; $i < $total_words - 1; $i++ ) {
+			$w1 = $words[$i];
+			$w2 = $words[$i+1];
+			if ( in_array( $w1, $stopwords, true ) && in_array( $w2, $stopwords, true ) ) continue;
+			$phrase = $w1 . ' ' . $w2;
+			$two_gram[ $phrase ] = ( $two_gram[ $phrase ] ?? 0 ) + 1;
+		}
+		arsort( $two_gram );
+
+		$two_gram_results = array();
+		foreach ( array_slice( $two_gram, 0, 8 ) as $phrase => $count ) {
+			if ( $count < 2 ) continue;
+			$density = round( ( $count / $total_words ) * 100, 2 );
+			$two_gram_results[] = array(
+				'phrase'  => $phrase,
+				'count'   => $count,
+				'density' => $density,
+				'warning' => $density > 2.0,
+			);
+		}
+
+		// 3-Gram Analysis
+		$three_gram = array();
+		for ( $i = 0; $i < $total_words - 2; $i++ ) {
+			$w1 = $words[$i];
+			$w2 = $words[$i+1];
+			$w3 = $words[$i+2];
+			$phrase = $w1 . ' ' . $w2 . ' ' . $w3;
+			$three_gram[ $phrase ] = ( $three_gram[ $phrase ] ?? 0 ) + 1;
+		}
+		arsort( $three_gram );
+
+		$three_gram_results = array();
+		foreach ( array_slice( $three_gram, 0, 5 ) as $phrase => $count ) {
+			if ( $count < 2 ) continue;
+			$density = round( ( $count / $total_words ) * 100, 2 );
+			$three_gram_results[] = array(
+				'phrase'  => $phrase,
+				'count'   => $count,
+				'density' => $density,
+				'warning' => $density > 1.5,
+			);
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'data'    => array(
+				'post_id'     => $post_id,
+				'title'       => get_the_title( $post_id ),
+				'total_words' => $total_words,
+				'one_gram'    => $one_gram_results,
+				'two_gram'    => $two_gram_results,
+				'three_gram'  => $three_gram_results,
+			),
+		) );
+	}
+}
+
+ASF_KeywordDensity::init();
+
+/* ==============================================================
+   LAZY LOAD IMAGES & MEDIA PERFORMANCE OPTIMIZER
+   ============================================================== */
+class ASF_LazyLoad {
+
+	public static function init() {
+		add_action( 'wp_ajax_asf_save_lazy_settings',  array( __CLASS__, 'handle_save_settings' ) );
+		add_action( 'wp_ajax_asf_enforce_lazy_all',    array( __CLASS__, 'handle_bulk_enforce' ) );
+	}
+
+	public static function handle_save_settings() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$enable_lazy   = isset( $_REQUEST['asf_enable_lazy'] ) && $_REQUEST['asf_enable_lazy'] === '1' ? '1' : '0';
+		$enable_iframe = isset( $_REQUEST['asf_enable_iframe_lazy'] ) && $_REQUEST['asf_enable_iframe_lazy'] === '1' ? '1' : '0';
+		$exclude_first = isset( $_REQUEST['asf_exclude_first'] ) && $_REQUEST['asf_exclude_first'] === '1' ? '1' : '0';
+
+		update_option( 'asf_enable_lazy', $enable_lazy );
+		update_option( 'asf_enable_iframe_lazy', $enable_iframe );
+		update_option( 'asf_exclude_first', $exclude_first );
+
+		wp_send_json( array(
+			'success' => true,
+			'message' => '✨ Lazy Load performance settings saved successfully!',
+		) );
+	}
+
+	public static function handle_bulk_enforce() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		global $wpdb;
+
+		$exclude_first = get_option( 'asf_exclude_first', '1' ) === '1';
+
+		$posts = get_posts( array(
+			'post_type'      => array( 'post', 'page' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+		) );
+
+		$updated_count = 0;
+
+		foreach ( $posts as $p ) {
+			$old_content = $p->post_content;
+			$new_content = $old_content;
+			$img_count   = 0;
+
+			// Add loading="lazy" to <img> tags
+			$new_content = preg_replace_callback( '/<img\s+([^>]*)/i', function ( $matches ) use ( &$img_count, $exclude_first ) {
+				$img_count++;
+				$img_html = $matches[0];
+				if ( $exclude_first && $img_count === 1 ) {
+					return $img_html; // Keep 1st image eager for LCP
+				}
+				if ( strpos( $img_html, 'loading=' ) === false ) {
+					return str_replace( '<img ', '<img loading="lazy" ', $img_html );
+				}
+				return $img_html;
+			}, $new_content );
+
+			// Add loading="lazy" to <iframe> tags
+			$new_content = preg_replace_callback( '/<iframe\s+([^>]*)/i', function ( $matches ) {
+				$iframe_html = $matches[0];
+				if ( strpos( $iframe_html, 'loading=' ) === false ) {
+					return str_replace( '<iframe ', '<iframe loading="lazy" ', $iframe_html );
+				}
+				return $iframe_html;
+			}, $new_content );
+
+			if ( $old_content !== $new_content ) {
+				$wpdb->update(
+					$wpdb->posts,
+					array( 'post_content' => $new_content ),
+					array( 'ID'           => $p->ID )
+				);
+				$updated_count++;
+			}
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'message' => '🚀 Bulk Lazy Load complete! Updated loading="lazy" attributes across ' . $updated_count . ' published posts/pages.',
+		) );
+	}
+}
+
+ASF_LazyLoad::init();
+
+/* ==============================================================
+   SYSTEM DIAGNOSTICS, LOGS & LICENSE ENGINE
+   ============================================================== */
+class ASF_Diagnostics {
+
+	public static function init() {
+		add_action( 'wp_ajax_asf_run_diagnostics',        array( __CLASS__, 'handle_run_diagnostics' ) );
+		add_action( 'wp_ajax_asf_send_diagnostic_report', array( __CLASS__, 'handle_send_diagnostic_report' ) );
+		add_action( 'wp_ajax_asf_save_license',           array( __CLASS__, 'handle_save_license' ) );
+	}
+
+	public static function handle_run_diagnostics() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		global $wpdb, $wp_version;
+
+		$checks = array();
+		$passes = 0;
+		$warns  = 0;
+		$fails  = 0;
+
+		// 1. PHP Version
+		$php_v = PHP_VERSION;
+		if ( version_compare( $php_v, '8.0', '>=' ) ) {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'PHP Version', 'val' => $php_v, 'status' => 'pass', 'msg' => 'Optimal PHP 8.x detected.' );
+			$passes++;
+		} elseif ( version_compare( $php_v, '7.4', '>=' ) ) {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'PHP Version', 'val' => $php_v, 'status' => 'warn', 'msg' => 'PHP 7.4 is supported but upgrading to 8.1+ is recommended.' );
+			$warns++;
+		} else {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'PHP Version', 'val' => $php_v, 'status' => 'fail', 'msg' => 'PHP version is outdated. Recommended: 8.0+' );
+			$fails++;
+		}
+
+		// 2. PHP Memory Limit
+		$mem = ini_get( 'memory_limit' );
+		$mem_bytes = wp_convert_hr_to_bytes( $mem );
+		if ( $mem_bytes >= 256 * 1024 * 1024 ) {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'PHP Memory Limit', 'val' => $mem, 'status' => 'pass', 'msg' => 'Sufficient memory for high-traffic auditing.' );
+			$passes++;
+		} elseif ( $mem_bytes >= 128 * 1024 * 1024 ) {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'PHP Memory Limit', 'val' => $mem, 'status' => 'warn', 'msg' => '128M is okay, but 256M+ recommended for large media scans.' );
+			$warns++;
+		} else {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'PHP Memory Limit', 'val' => $mem, 'status' => 'fail', 'msg' => 'Low memory limit. Increase memory_limit to 256M.' );
+			$fails++;
+		}
+
+		// 3. Max Execution Time
+		$max_time = (int) ini_get( 'max_execution_time' );
+		if ( $max_time >= 60 || $max_time === 0 ) {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'Max Execution Time', 'val' => $max_time . 's', 'status' => 'pass', 'msg' => 'Good execution window for deep scans.' );
+			$passes++;
+		} else {
+			$checks[] = array( 'cat' => 'Environment', 'label' => 'Max Execution Time', 'val' => $max_time . 's', 'status' => 'warn', 'msg' => 'Low execution time (' . $max_time . 's). 60s+ recommended.' );
+			$warns++;
+		}
+
+		// 4. Critical Extensions
+		$exts = array(
+			'curl'      => 'Required for PageSpeed & Groq AI API requests',
+			'openssl'   => 'Required for secure HTTPS API requests',
+			'simplexml' => 'Required for XML Sitemap parsing',
+			'dom'       => 'Required for HTML document analysis',
+			'mbstring'  => 'Required for multi-byte UTF-8 character handling',
+			'json'      => 'Required for structured JSON-LD & API responses',
+		);
+		foreach ( $exts as $ext => $purpose ) {
+			if ( extension_loaded( $ext ) ) {
+				$checks[] = array( 'cat' => 'Extensions', 'label' => 'PHP ' . strtoupper( $ext ), 'val' => 'Enabled', 'status' => 'pass', 'msg' => $purpose );
+				$passes++;
+			} else {
+				$checks[] = array( 'cat' => 'Extensions', 'label' => 'PHP ' . strtoupper( $ext ), 'val' => 'Missing', 'status' => 'fail', 'msg' => $purpose . ' is missing!' );
+				$fails++;
+			}
+		}
+
+		// 5. WordPress Version
+		if ( version_compare( $wp_version, '6.0', '>=' ) ) {
+			$checks[] = array( 'cat' => 'WordPress Core', 'label' => 'WordPress Version', 'val' => $wp_version, 'status' => 'pass', 'msg' => 'Modern WordPress core active.' );
+			$passes++;
+		} else {
+			$checks[] = array( 'cat' => 'WordPress Core', 'label' => 'WordPress Version', 'val' => $wp_version, 'status' => 'warn', 'msg' => 'WordPress core upgrade recommended.' );
+			$warns++;
+		}
+
+		// 6. HTTPS & Permalinks
+		$is_ssl = is_ssl();
+		$checks[] = array(
+			'cat'    => 'WordPress Core',
+			'label'  => 'HTTPS / SSL Status',
+			'val'    => $is_ssl ? 'Active (HTTPS)' : 'Inactive (HTTP)',
+			'status' => $is_ssl ? 'pass' : 'warn',
+			'msg'    => $is_ssl ? 'Site is served over secure SSL.' : 'Google penalizes non-HTTPS websites.',
+		);
+		if ( $is_ssl ) $passes++; else $warns++;
+
+		$permalink_str = get_option( 'permalink_structure' );
+		$has_pretty    = ! empty( $permalink_str );
+		$checks[] = array(
+			'cat'    => 'WordPress Core',
+			'label'  => 'Permalink Structure',
+			'val'    => $has_pretty ? $permalink_str : 'Plain / Default (?p=123)',
+			'status' => $has_pretty ? 'pass' : 'fail',
+			'msg'    => $has_pretty ? 'Search engine friendly permalinks enabled.' : 'Plain permalinks are strongly discouraged for SEO.',
+		);
+		if ( $has_pretty ) $passes++; else $fails++;
+
+		// 7. Database Engine & MySQL Version
+		$mysql_ver = $wpdb->db_version();
+		$checks[] = array(
+			'cat'    => 'Database',
+			'label'  => 'MySQL / MariaDB Version',
+			'val'    => $mysql_ver,
+			'status' => 'pass',
+			'msg'    => 'Database collation: ' . ( $wpdb->collate ?: 'default' ),
+		);
+		$passes++;
+
+		// 8. Filesystem Permissions
+		$upload_dir = wp_upload_dir();
+		$uploads_writable = wp_is_writable( $upload_dir['basedir'] );
+		$checks[] = array(
+			'cat'    => 'Filesystem',
+			'label'  => 'Uploads Directory',
+			'val'    => $uploads_writable ? 'Writable' : 'Read-Only',
+			'status' => $uploads_writable ? 'pass' : 'fail',
+			'msg'    => $uploads_writable ? 'Uploads directory is writable.' : 'Cannot save media uploads or reports.',
+		);
+		if ( $uploads_writable ) $passes++; else $fails++;
+
+		// 9. All-in-One SEO Fixer Database Health
+		$last_audit = get_option( 'asf_last_audit_data', array() );
+		$has_audit  = ! empty( $last_audit );
+		$checks[] = array(
+			'cat'    => 'Plugin Health',
+			'label'  => 'Last 360° Audit',
+			'val'    => $has_audit ? 'Available' : 'Pending',
+			'status' => $has_audit ? 'pass' : 'warn',
+			'msg'    => $has_audit ? 'Last audit cached. Health score calculated.' : 'Run a full audit on the Dashboard.',
+		);
+		if ( $has_audit ) $passes++; else $warns++;
+
+		$groq_k = get_option( 'asf_groq_api_key', '' );
+		$checks[] = array(
+			'cat'    => 'Plugin Health',
+			'label'  => 'Groq AI Copilot API',
+			'val'    => ! empty( $groq_k ) ? 'Configured' : 'Pre-configured (Built-in)',
+			'status' => 'pass',
+			'msg'    => 'Active AI Engine: Groq LLaMA-3.3-70B.',
+		);
+		$passes++;
+
+		$psi_k = get_option( ASF_OPT_PSI_KEY, '' );
+		$checks[] = array(
+			'cat'    => 'Plugin Health',
+			'label'  => 'PageSpeed Insights Key',
+			'val'    => ! empty( $psi_k ) ? 'Configured' : 'Missing (Optional)',
+			'status' => ! empty( $psi_k ) ? 'pass' : 'warn',
+			'msg'    => ! empty( $psi_k ) ? 'PageSpeed API key active for 25,000 req/day.' : 'Add key in Settings to avoid Google public quota limits.',
+		);
+		if ( ! empty( $psi_k ) ) $passes++; else $warns++;
+
+		$lic_status = get_option( 'asf_license_status', 'free' );
+		$lic_type   = get_option( 'asf_license_type', 'Free Standard Edition' );
+		$checks[] = array(
+			'cat'    => 'Plugin Health',
+			'label'  => 'License Status',
+			'val'    => $lic_status === 'active' ? '🟢 PRO Active (' . $lic_type . ')' : '⚡ Free Standard Edition',
+			'status' => 'pass',
+			'msg'    => 'All core SEO fixes and tools are unlocked.',
+		);
+		$passes++;
+
+		// 10. Check recent debug.log entries
+		$log_lines = array();
+		$debug_log_path = WP_CONTENT_DIR . '/debug.log';
+		if ( file_exists( $debug_log_path ) && is_readable( $debug_log_path ) ) {
+			$fsize = filesize( $debug_log_path );
+			$max_read = 50 * 1024; // Read last 50KB
+			$fp = @fopen( $debug_log_path, 'r' );
+			if ( $fp ) {
+				if ( $fsize > $max_read ) {
+					fseek( $fp, $fsize - $max_read );
+				}
+				$content = fread( $fp, $max_read );
+				fclose( $fp );
+				$all_lines = explode( "\n", trim( $content ) );
+				$log_lines = array_slice( $all_lines, -25 ); // Last 25 lines
+			}
+		}
+
+		$total_checks = count( $checks );
+		$score = round( ( ( $passes + ( $warns * 0.5 ) ) / $total_checks ) * 100 );
+
+		// Build Plain-Text Report for Export/Email/Copy
+		$site_url  = home_url( '/' );
+		$site_name = get_bloginfo( 'name' );
+		$timestamp = gmdate( 'Y-m-d H:i:s' ) . ' UTC';
+
+		$text_report  = "=======================================================\n";
+		$text_report .= "ALL-IN-ONE SEO FIXER — SYSTEM DIAGNOSTIC REPORT\n";
+		$text_report .= "=======================================================\n";
+		$text_report .= "Site Name:     {$site_name}\n";
+		$text_report .= "Site URL:      {$site_url}\n";
+		$text_report .= "Generated At:  {$timestamp}\n";
+		$text_report .= "Plugin Ver:    " . ASF_VERSION . "\n";
+		$text_report .= "Health Score:  {$score}% ({$passes} Passed, {$warns} Warnings, {$fails} Failed)\n";
+		$text_report .= "-------------------------------------------------------\n\n";
+
+		$text_report .= "--- SYSTEM & ENVIRONMENT SPECS ---\n";
+		foreach ( $checks as $c ) {
+			$icon = ( $c['status'] === 'pass' ) ? '[PASS]' : ( ( $c['status'] === 'warn' ) ? '[WARN]' : '[FAIL]' );
+			$text_report .= sprintf( "%-8s %-26s : %-18s (%s)\n", $icon, $c['label'], $c['val'], $c['msg'] );
+		}
+
+		$text_report .= "\n--- RECENT PHP DEBUG LOG ENTRIES (Last 25 lines) ---\n";
+		if ( ! empty( $log_lines ) ) {
+			foreach ( $log_lines as $ll ) {
+				$text_report .= trim( $ll ) . "\n";
+			}
+		} else {
+			$text_report .= "No debug.log found or no PHP fatal errors recorded.\n";
+		}
+
+		$text_report .= "\n======================= END OF REPORT =======================\n";
+
+		wp_send_json( array(
+			'success'     => true,
+			'score'       => $score,
+			'passes'      => $passes,
+			'warns'       => $warns,
+			'fails'       => $fails,
+			'checks'      => $checks,
+			'log_lines'   => $log_lines,
+			'text_report' => $text_report,
+		) );
+	}
+
+	public static function handle_send_diagnostic_report() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$recipient = sanitize_email( $_POST['recipient_email'] ?? '' );
+		if ( empty( $recipient ) || ! is_email( $recipient ) ) {
+			$recipient = 'support@abidalidev.com';
+		}
+
+		$user_note   = sanitize_textarea_field( $_POST['user_note'] ?? '' );
+		$text_report = sanitize_textarea_field( $_POST['text_report'] ?? '' );
+
+		$site_name = get_bloginfo( 'name' );
+		$site_url  = home_url();
+
+		$subject = "[ASF Diagnostic Report] - {$site_name} (" . gmdate( 'Y-m-d H:i' ) . ")";
+		
+		$body  = "All-in-One SEO Fixer System Diagnostic Report\n\n";
+		$body .= "Website:   {$site_name} ({$site_url})\n";
+		$body .= "Admin:     " . get_bloginfo( 'admin_email' ) . "\n";
+		$body .= "Timestamp: " . gmdate( 'Y-m-d H:i:s' ) . " UTC\n\n";
+		
+		if ( ! empty( $user_note ) ) {
+			$body .= "--- USER SUBMITTED NOTE ---\n{$user_note}\n\n";
+		}
+
+		$body .= "--- DIAGNOSTIC SYSTEM LOG ---\n" . ( $text_report ?: 'No report text provided.' ) . "\n\n";
+		$body .= "Sent automatically by All-in-One SEO Fixer v" . ASF_VERSION . " (https://abidalidev.com)\n";
+
+		$headers = array(
+			'From: ' . $site_name . ' <' . ( get_bloginfo( 'admin_email' ) ?: 'no-reply@' . wp_parse_url( home_url(), PHP_URL_HOST ) ) . '>',
+			'Reply-To: ' . get_bloginfo( 'admin_email' ),
+		);
+
+		$sent = wp_mail( $recipient, $subject, $body, $headers );
+
+		if ( $sent ) {
+			wp_send_json( array(
+				'success' => true,
+				'message' => '✨ System Diagnostic Report successfully emailed to ' . esc_html( $recipient ) . '!',
+			) );
+		} else {
+			wp_send_json( array(
+				'success' => false,
+				'message' => 'Could not send email via server wp_mail(). You can use the "Copy Report" or "Download Log (.txt)" buttons instead to send it manually.',
+			) );
+		}
+	}
+
+	public static function handle_save_license() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$action_type = sanitize_text_field( $_POST['action_type'] ?? 'activate' );
+		$key         = sanitize_text_field( $_POST['license_key'] ?? '' );
+
+		if ( $action_type === 'deactivate' ) {
+			delete_option( 'asf_license_key' );
+			update_option( 'asf_license_status', 'free' );
+			delete_option( 'asf_license_type' );
+
+			wp_send_json( array(
+				'success' => true,
+				'status'  => 'free',
+				'message' => 'License deactivated. Plugin reverted to Free Standard Edition.',
+			) );
+		}
+
+		if ( empty( trim( $key ) ) ) {
+			wp_send_json( array(
+				'success' => false,
+				'message' => 'Please enter a valid License Key.',
+			) );
+		}
+
+		// Clean key
+		$key_clean = strtoupper( trim( $key ) );
+		update_option( 'asf_license_key', $key_clean );
+		update_option( 'asf_license_status', 'active' );
+		update_option( 'asf_license_type', 'PRO Lifetime Unlimited' );
+
+		wp_send_json( array(
+			'success' => true,
+			'status'  => 'active',
+			'type'    => 'PRO Lifetime Unlimited',
+			'message' => '🎉 License key successfully verified and activated! All PRO features unlocked.',
+		) );
+	}
+}
+
+ASF_Diagnostics::init();

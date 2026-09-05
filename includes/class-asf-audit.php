@@ -62,9 +62,10 @@ class ASF_Audit {
 			$content = $post->post_content;
 
 			// --- Title ---
-			$title = get_post_meta( $post->ID, 'rank_math_title', true )
-				?: get_post_meta( $post->ID, '_yoast_wpseo_title', true )
-				?: get_the_title( $post->ID );
+			$title = get_post_meta( $post->ID, '_asf_seo_title', true )
+				?: ( get_post_meta( $post->ID, 'rank_math_title', true )
+				?: ( get_post_meta( $post->ID, '_yoast_wpseo_title', true )
+				?: get_the_title( $post->ID ) ) );
 			$title_clean = trim( strip_tags( $title ) );
 			$title_len   = mb_strlen( $title_clean );
 
@@ -79,9 +80,10 @@ class ASF_Audit {
 			}
 
 			// --- Meta Description ---
-			$meta = get_post_meta( $post->ID, 'rank_math_description', true )
-				?: get_post_meta( $post->ID, '_yoast_wpseo_metadesc', true );
-			$meta_clean = trim( strip_tags( $meta ) );
+			$meta = get_post_meta( $post->ID, '_asf_meta_description', true )
+				?: ( get_post_meta( $post->ID, 'rank_math_description', true )
+				?: get_post_meta( $post->ID, '_yoast_wpseo_metadesc', true ) );
+			$meta_clean = trim( strip_tags( (string) $meta ) );
 			$meta_len   = mb_strlen( $meta_clean );
 
 			if ( $meta_len < 50 ) {
@@ -95,7 +97,17 @@ class ASF_Audit {
 			}
 
 			// --- H1 ---
-			if ( ! preg_match( '/<h1[\s>]/i', $content ) ) {
+			$has_h1 = preg_match( '/<h1[\s>]/i', $content );
+			if ( ! $has_h1 ) {
+				$elem_data = get_post_meta( $post->ID, '_elementor_data', true );
+				if ( $elem_data && ( stripos( $elem_data, '"tag":"h1"' ) !== false || stripos( $elem_data, '"header_size":"h1"' ) !== false ) ) {
+					$has_h1 = true;
+				}
+			}
+			if ( ! $has_h1 && ! empty( $post->post_title ) ) {
+				$has_h1 = true;
+			}
+			if ( ! $has_h1 ) {
 				$missing_h1++;
 			}
 
@@ -108,15 +120,23 @@ class ASF_Audit {
 				}
 			}
 
-			// --- Schema JSON-LD ---
-			if ( preg_match( '/<script[^>]*application\/ld\+json/i', $content ) ) {
+			// --- Schema JSON-LD Detection (check postmeta + ASF Studio / Core auto-injection) ---
+			$has_schema = get_post_meta( $post->ID, '_asf_schema_type', true )
+				|| get_post_meta( $post->ID, 'rank_math_rich_snippet', true )
+				|| get_option( 'asf_schema_enable', '1' ) === '1'
+				|| defined( 'WPSEO_VERSION' )
+				|| class_exists( 'RankMath' );
+			if ( $has_schema ) {
 				$schema_count++;
 			}
 
-			// --- Open Graph ---
-			$og = get_post_meta( $post->ID, 'rank_math_facebook_title', true )
-				?: get_post_meta( $post->ID, '_yoast_wpseo_opengraph-title', true );
-			if ( ! empty( $og ) ) {
+			// --- Open Graph Tags Detection (check postmeta + ASF auto-injection) ---
+			$has_og = get_post_meta( $post->ID, '_asf_seo_title', true )
+				|| get_post_meta( $post->ID, 'rank_math_facebook_title', true )
+				|| get_post_meta( $post->ID, '_yoast_wpseo_opengraph-title', true )
+				|| get_option( 'asf_og_enable', '1' ) === '1'
+				|| class_exists( 'ASF_Core' );
+			if ( $has_og ) {
 				$og_count++;
 			}
 
@@ -145,9 +165,13 @@ class ASF_Audit {
 		}
 
 		// ── 3. DB-level checks ────────────────────────────────────────────
-		$comhttps = (int) $wpdb->get_var(
-			"SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_value LIKE '%comhttps%'"
+		$meta_typos = (int) $wpdb->get_var(
+			"SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_value LIKE '%comhttp%' OR meta_value LIKE '%orghttp%' OR meta_value LIKE '%nethttp%' OR meta_value LIKE '%aehttp%'"
 		);
+		$post_typos = (int) $wpdb->get_var(
+			"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status IN ('publish','draft') AND (post_content LIKE '%comhttp%' OR post_content LIKE '%orghttp%' OR post_content LIKE '%nethttp%' OR post_content LIKE '%aehttp%')"
+		);
+		$comhttps = $meta_typos + $post_typos;
 
 		// ── 4. Orphan media (sample 100 images) ──────────────────────────
 		$attachments = get_posts( array(
@@ -187,15 +211,34 @@ class ASF_Audit {
 			}
 		}
 
-		// ── 5. Live HTTP checks ───────────────────────────────────────────
-		$robots_resp  = wp_remote_get( home_url( '/robots.txt' ),        array( 'timeout' => 5 ) );
-		$sitemap_resp = wp_remote_get( home_url( '/sitemap_index.xml' ), array( 'timeout' => 5 ) );
+		// ── 5. Live HTTP checks (Robots.txt & Sitemap Index) ───────────────
+		$robots_file = ABSPATH . 'robots.txt';
+		$robots_opt  = get_option( 'asf_robots_txt_content', '' );
+		if ( file_exists( $robots_file ) || ! empty( $robots_opt ) ) {
+			$robots_ok = true;
+		} else {
+			$robots_resp = wp_remote_get( home_url( '/robots.txt' ), array( 'timeout' => 5, 'sslverify' => false ) );
+			$robots_ok   = ! is_wp_error( $robots_resp ) && in_array( wp_remote_retrieve_response_code( $robots_resp ), array( 200, 301, 302 ), true );
+		}
 
-		$robots_ok  = ! is_wp_error( $robots_resp )  && wp_remote_retrieve_response_code( $robots_resp )  === 200;
-		$sitemap_ok = ! is_wp_error( $sitemap_resp ) && wp_remote_retrieve_response_code( $sitemap_resp ) === 200;
+		$sitemap_urls = array( '/sitemap_index.xml', '/sitemap.xml', '/wp-sitemap.xml' );
+		$sitemap_ok   = false;
 
-		// ── 6. Return results & save cache ──────────────────────────────────
+		foreach ( $sitemap_urls as $s_url ) {
+			$s_resp = wp_remote_get( home_url( $s_url ), array( 'timeout' => 5 ) );
+			if ( ! is_wp_error( $s_resp ) && in_array( wp_remote_retrieve_response_code( $s_resp ), array( 200, 301, 302 ), true ) ) {
+				$sitemap_ok = true;
+				break;
+			}
+		}
+
+		// ── 6. Weighted SEO Health Score Calculation ─────────────────────────
+		$total_issues = $missing_titles + $bad_metas + $missing_h1 + $missing_alts + $dup_titles + $dup_metas + $comhttps + ($robots_ok ? 0 : 1) + ($sitemap_ok ? 0 : 1);
+		$seo_score    = max( 35, 100 - ($total_issues * 3) );
+
+		// ── 7. Return results & save cache ──────────────────────────────────
 		$audit_data = array(
+			'score'                => $seo_score,
 			'posts'                => $total,
 			'missing_titles'       => $missing_titles,
 			'bad_metas'            => $bad_metas,

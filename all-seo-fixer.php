@@ -3,7 +3,7 @@
  * Plugin Name: All-in-One SEO Fixer & Auditor
  * Plugin URI:  https://github.com/abidalidevv/all-seo-fixer
  * Description: Free, open-source 360° SEO Diagnostic & Auto-Fixer for ANY WordPress site. On-page SEO checker, broken link cleaner, PageSpeed Insights, Schema detector, Social Meta checker, Robots.txt & Sitemap validator, 301 Redirect Manager, and IndexNow auto-pinger. No subscription, no upsells — 100% free forever.
- * Version:     2.1.0
+ * Version:     3.0.0
  * Author:      Abid Ali Dev
  * Author URI:  https://abidalidev.com
  * Text Domain: all-seo-fixer
@@ -69,7 +69,7 @@ if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
 }
 
 /* ─── Version & Path Constants ─────────────────────────────── */
-define( 'ASF_VERSION',     '2.1.0' );
+define( 'ASF_VERSION',     '3.0.0' );
 define( 'ASF_PLUGIN_DIR',  plugin_dir_path( __FILE__ ) );
 define( 'ASF_PLUGIN_URL',  plugin_dir_url( __FILE__ ) );
 define( 'ASF_PLUGIN_FILE', __FILE__ );
@@ -141,7 +141,11 @@ $asf_includes = array(
 	ASF_PLUGIN_DIR . 'includes/class-asf-builder.php',
 	ASF_PLUGIN_DIR . 'includes/class-asf-gsc.php',
 	ASF_PLUGIN_DIR . 'includes/class-asf-w3c.php',
+	ASF_PLUGIN_DIR . 'includes/class-asf-error-doctor.php',
 	ASF_PLUGIN_DIR . 'includes/class-asf-handlers.php',
+	ASF_PLUGIN_DIR . 'includes/class-asf-swiss-tools.php',
+	ASF_PLUGIN_DIR . 'includes/class-asf-schema.php',
+	ASF_PLUGIN_DIR . 'includes/class-asf-geo.php',
 	ASF_PLUGIN_DIR . 'admin/class-asf-admin.php',
 );
 
@@ -162,11 +166,20 @@ add_action( 'plugins_loaded', function () {
 	ASF_Builder::init();
 	ASF_GSC::init();
 	ASF_W3C::init();
+	ASF_ErrorDoctor::init();
+	ASF_AIChatbot::init();
+	ASF_KeywordDensity::init();
+	ASF_LazyLoad::init();
 	ASF_OnPage::init();
 	ASF_LinkCleaner::init();
 	ASF_Media::init();
 	ASF_Pinger::init();
 	ASF_AutoFixer::init();
+	ASF_HealthPing::init();
+	ASF_SwissTools::init();
+	ASF_Schema::init();
+	ASF_GEO::init();
+	ASF_Diagnostics::init();
 
 	if ( is_admin() ) {
 		ASF_Admin::init();

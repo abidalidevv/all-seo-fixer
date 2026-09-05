@@ -8,9 +8,12 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! current_user_can( 'manage_options' ) ) return;
 
-$total_posts = (int) wp_count_posts('post')->publish;
-$total_pages = (int) wp_count_posts('page')->publish;
-$total_media = (int) wp_count_attachments();
+$posts_count = wp_count_posts( 'post' );
+$total_posts = isset( $posts_count->publish ) ? (int) $posts_count->publish : 0;
+$pages_count = wp_count_posts( 'page' );
+$total_pages = isset( $pages_count->publish ) ? (int) $pages_count->publish : 0;
+$media_count = wp_count_posts( 'attachment' );
+$total_media = isset( $media_count->inherit ) ? (int) $media_count->inherit : 0;
 $redirects   = count( get_option( ASF_OPT_REDIRECTS, array() ) );
 $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 ?>
@@ -25,6 +28,7 @@ $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 		<div class="asf-header-actions">
 			<button type="button" class="button button-primary" id="asf-run-full-btn"><span class="dashicons dashicons-update" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Run Full 360° SEO Audit</button>
 			<button type="button" class="button button-secondary" id="asf-download-pdf-btn"><span class="dashicons dashicons-pdf" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Download Audit PDF Report</button>
+			<a href="<?php echo esc_url( admin_url('admin.php?page=asf-ai-assistant') ); ?>" class="button button-secondary"><span class="dashicons dashicons-rest-api" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> AI SEO Copilot</a>
 			<button type="button" class="button button-secondary" id="asf-ping-btn">Ping Search Engines</button>
 		</div>
 	</div>
@@ -62,6 +66,25 @@ $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 	</div>
 
 	<div id="asf-dash-status"></div>
+	<div id="asf-dash-results" style="margin-top:16px;"></div>
+
+	<!-- SMART HEALTH BANNER (auto-runs on load) -->
+	<div id="asf-health-banner" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+		<div style="display:flex;align-items:center;gap:16px;">
+			<div id="asf-score-ring" style="width:64px;height:64px;border-radius:50%;border:5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+				<span id="asf-score-num" style="font-size:18px;font-weight:800;color:#64748b;">?</span>
+			</div>
+			<div>
+				<div style="font-size:15px;font-weight:700;color:#1e293b;">&#x1F6E1; Site SEO Health Score</div>
+				<div id="asf-health-checks" style="font-size:12px;color:#475569;margin-top:4px;">Running quick health check...</div>
+				<div id="asf-health-issues" style="font-size:12px;color:#dc2626;margin-top:4px;"></div>
+			</div>
+		</div>
+		<div style="display:flex;gap:8px;align-items:center;">
+			<span id="asf-health-grade" style="font-size:28px;font-weight:900;color:#cbd5e1;">?</span>
+			<button type="button" class="button" id="asf-health-recheck-btn" style="font-size:12px;">&#x21BB; Re-check Now</button>
+		</div>
+	</div>
 
 	<!-- API NOTICE IF KEY NOT SET -->
 	<?php if ( ! $psi_key ) : ?>
@@ -115,28 +138,6 @@ $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 				</tr>
 			</tbody>
 		</table>
-	</div>
-
-	<!-- AI SEO ASSISTANT CHATBOT WIDGET -->
-	<div class="asf-card">
-		<h2><span class="dashicons dashicons-rest-api" style="font-size:22px;vertical-align:middle;color:#2271b1;"></span> AI SEO Assistant & Copilot</h2>
-		<p>Ask custom questions or generate instant SEO recommendations powered by Groq AI / Google Gemini AI:</p>
-
-		<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-			<button type="button" class="button button-secondary asf-ai-prompt-pill" data-prompt="Analyze my site's SEO Health Audit and list top 3 priority fixes."><span class="dashicons dashicons-lightbulb" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Audit Priority Analysis</button>
-			<button type="button" class="button button-secondary asf-ai-prompt-pill" data-prompt="How do I optimize meta descriptions to increase Google click-through rate (CTR)?"><span class="dashicons dashicons-edit" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Meta Description Tips</button>
-			<button type="button" class="button button-secondary asf-ai-prompt-pill" data-prompt="How to fix Largest Contentful Paint (LCP) and Total Blocking Time (TBT) on WordPress?"><span class="dashicons dashicons-performance" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Speed & CWV Guide</button>
-			<button type="button" class="button button-secondary asf-ai-prompt-pill" data-prompt="How to generate schema JSON-LD for a local business website?"><span class="dashicons dashicons-location" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Local SEO Schema Guide</button>
-		</div>
-
-		<div id="asf-ai-chat-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:14px;max-height:280px;overflow-y:auto;margin-bottom:12px;font-size:13px;line-height:1.6;">
-			<div style="color:#64748b;">👋 Hello! I am your AI SEO Assistant. Ask me any SEO question or click a quick prompt pill above!</div>
-		</div>
-
-		<div style="display:flex;gap:8px;">
-			<input type="text" id="asf-ai-input" class="asf-input" style="flex:1;" placeholder="Ask AI SEO Assistant a question (e.g. How to rank for local keywords?)..." />
-			<button type="button" class="button button-primary" id="asf-ai-send-btn">Ask AI Assistant</button>
-		</div>
 	</div>
 
 	<!-- SEO COMMAND CENTER & QUICK TOOLS GRID (BOTTOM POSITION) -->
@@ -269,6 +270,51 @@ $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 					<p style="font-size:12px;color:#646970;margin:4px 0 12px;">Manage 301 redirect rules & monitor 404 error logs in real-time.</p>
 				</div>
 				<a href="<?php echo esc_url( admin_url('admin.php?page=asf-redirects') ); ?>" class="button button-primary button-small" style="text-align:center;">Manage Redirects →</a>
+			</div>
+
+			<div class="asf-tool-card" style="border:1px solid #dcdcde;border-radius:6px;padding:16px;background:#ffffff;display:flex;flex-direction:column;justify-content:space-between;">
+				<div>
+					<span class="dashicons dashicons-editor-code" style="font-size:28px;width:28px;height:28px;color:#2271b1;margin-bottom:8px;display:block;"></span>
+					<strong style="font-size:14px;color:#1d2327;">Schema JSON-LD Studio</strong>
+					<p style="font-size:12px;color:#646970;margin:4px 0 12px;">Organization, LocalBusiness, FAQ, Article, Product &amp; Breadcrumb rich structured data.</p>
+				</div>
+				<a href="<?php echo esc_url( admin_url('admin.php?page=asf-schema') ); ?>" class="button button-primary button-small" style="text-align:center;">Configure Schema →</a>
+			</div>
+
+			<div class="asf-tool-card" style="border:1px solid #dcdcde;border-radius:6px;padding:16px;background:#ffffff;display:flex;flex-direction:column;justify-content:space-between;">
+				<div>
+					<span class="dashicons dashicons-rest-api" style="font-size:28px;width:28px;height:28px;color:#2271b1;margin-bottom:8px;display:block;"></span>
+					<strong style="font-size:14px;color:#1d2327;">GEO &amp; AI Search Hub</strong>
+					<p style="font-size:12px;color:#646970;margin:4px 0 12px;">Generative Engine Optimization for ChatGPT, Perplexity &amp; Gemini with live llms.txt standard.</p>
+				</div>
+				<a href="<?php echo esc_url( admin_url('admin.php?page=asf-geo') ); ?>" class="button button-primary button-small" style="text-align:center;">Open GEO Hub →</a>
+			</div>
+
+			<div class="asf-tool-card" style="border:1px solid #dcdcde;border-radius:6px;padding:16px;background:#ffffff;display:flex;flex-direction:column;justify-content:space-between;">
+				<div>
+					<span class="dashicons dashicons-warning" style="font-size:28px;width:28px;height:28px;color:#2271b1;margin-bottom:8px;display:block;"></span>
+					<strong style="font-size:14px;color:#1d2327;">Console &amp; Error Doctor</strong>
+					<p style="font-size:12px;color:#646970;margin:4px 0 12px;">Monitor live front-end JS console errors &amp; PHP debug logs with AI one-click fix assistant.</p>
+				</div>
+				<a href="<?php echo esc_url( admin_url('admin.php?page=asf-error-doctor') ); ?>" class="button button-primary button-small" style="text-align:center;">Diagnose Errors →</a>
+			</div>
+
+			<div class="asf-tool-card" style="border:1px solid #dcdcde;border-radius:6px;padding:16px;background:#ffffff;display:flex;flex-direction:column;justify-content:space-between;">
+				<div>
+					<span class="dashicons dashicons-admin-tools" style="font-size:28px;width:28px;height:28px;color:#2271b1;margin-bottom:8px;display:block;"></span>
+					<strong style="font-size:14px;color:#1d2327;">🛠️ Swiss-Knife Multi-Tools</strong>
+					<p style="font-size:12px;color:#646970;margin:4px 0 12px;">19+ network, DNS, WHOIS, IP lookup, robots, and HTTP diagnostic utilities in one unified suite.</p>
+				</div>
+				<a href="<?php echo esc_url( admin_url('admin.php?page=asf-swiss-tools') ); ?>" class="button button-primary button-small" style="text-align:center;">Launch Swiss Tools →</a>
+			</div>
+
+			<div class="asf-tool-card" style="border:1px solid #dcdcde;border-radius:6px;padding:16px;background:#ffffff;display:flex;flex-direction:column;justify-content:space-between;">
+				<div>
+					<span class="dashicons dashicons-rest-api" style="font-size:28px;width:28px;height:28px;color:#2271b1;margin-bottom:8px;display:block;"></span>
+					<strong style="font-size:14px;color:#1d2327;">AI Assistant &amp; Copilot</strong>
+					<p style="font-size:12px;color:#646970;margin:4px 0 12px;">Real-time AI chatbot powered by Groq LLaMA-3.3 with master JSON export/import.</p>
+				</div>
+				<a href="<?php echo esc_url( admin_url('admin.php?page=asf-ai-assistant') ); ?>" class="button button-primary button-small" style="text-align:center;">Launch AI Copilot →</a>
 			</div>
 
 			<div class="asf-tool-card" style="border:1px solid #dcdcde;border-radius:6px;padding:16px;background:#ffffff;display:flex;flex-direction:column;justify-content:space-between;">

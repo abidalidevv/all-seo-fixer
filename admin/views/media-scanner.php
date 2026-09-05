@@ -19,10 +19,19 @@ if ( ! current_user_can('manage_options') ) return;
 	</div>
 
 	<div class="asf-card">
-		<h2>Scan Media Library & Alt Text Health</h2>
-		<div class="asf-action-bar" style="margin-top:0;">
-			<button class="button button-primary asf-media-scan-trigger" id="asf-media-scan-btn">Scan Media Library (Alt Text & Orphans)</button>
-			<button class="button button-secondary" id="asf-media-auto-alt-btn">⚡ 1-Click Auto-Fill Missing Alt Texts</button>
+		<h2>Scan Media Library &amp; Alt Text Health</h2>
+		<div class="asf-action-bar" style="margin-top:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+			<button class="button button-primary asf-media-scan-trigger" id="asf-media-scan-btn">Scan Media Library (All Images)</button>
+			<button class="button button-secondary" id="asf-media-auto-alt-btn">⚡ 1-Click Scan &amp; Fill Missing Alt Texts</button>
+			<div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+				<label for="asf-media-filter" style="font-weight:600;font-size:13px;">Filter View:</label>
+				<select id="asf-media-filter" class="asf-select" style="min-width:180px;">
+					<option value="all">All Images</option>
+					<option value="missing_alt">Missing Alt Text Only</option>
+					<option value="orphans">Unused / Orphan Images Only</option>
+					<option value="in_use">In-Use Images Only</option>
+				</select>
+			</div>
 		</div>
 		<div id="asf-media-status" style="margin-top:16px;"></div>
 	</div>

@@ -19,9 +19,19 @@ if ( ! current_user_can('manage_options') ) return;
 	</div>
 
 	<div class="asf-card">
-		<h2>Scan All Published Pages</h2>
-		<div class="asf-action-bar" style="margin-top:0;">
+		<h2>Scan Published Pages &amp; Posts</h2>
+		<div class="asf-action-bar" style="margin-top:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
 			<button type="button" class="button button-primary asf-onpage-scan-trigger" id="asf-onpage-btn">Scan All Pages for SEO Errors</button>
+			<button type="button" class="button button-secondary" id="asf-onpage-bulk-autofix-btn">⚡ 1-Click Auto-Fix Missing Meta Descriptions &amp; Titles</button>
+			<div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+				<label for="asf-onpage-type-filter" style="font-weight:600;font-size:13px;">Post Type:</label>
+				<select id="asf-onpage-type-filter" class="asf-select" style="min-width:140px;">
+					<option value="all">All Public Pages &amp; Posts</option>
+					<option value="page">Pages Only</option>
+					<option value="post">Posts Only</option>
+					<option value="product">Products Only</option>
+				</select>
+			</div>
 		</div>
 		<div id="asf-onpage-status" style="margin-top:16px;"></div>
 	</div>

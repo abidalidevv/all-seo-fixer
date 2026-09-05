@@ -647,3 +647,262 @@
 	.asf-grid-2, .asf-grid-3 { grid-template-columns: 1fr; }
 	.asf-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ============================================================
+   16. FLOATING AI COPILOT BUBBLE & DRAWER (ALL ASF PAGES)
+   ============================================================ */
+#asf-floating-ai-trigger {
+	position: fixed;
+	bottom: 24px;
+	right: 24px;
+	width: 54px;
+	height: 54px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+	box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	z-index: 999990;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	animation: asfFloatPulse 3s infinite ease-in-out;
+}
+#asf-floating-ai-trigger:hover {
+	transform: scale(1.08) translateY(-2px);
+	box-shadow: 0 12px 30px rgba(37, 99, 235, 0.55);
+}
+#asf-floating-ai-trigger .dashicons {
+	color: #ffffff;
+	font-size: 26px;
+	width: 26px;
+	height: 26px;
+}
+.asf-ai-badge-dot {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #10b981;
+	border: 2px solid #ffffff;
+	animation: asfBadgePulse 2s infinite;
+}
+@keyframes asfFloatPulse {
+	0%, 100% {
+		transform: translateY(0px) scale(1);
+		box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+	}
+	50% {
+		transform: translateY(-4px) scale(1.03);
+		box-shadow: 0 14px 30px rgba(37, 99, 235, 0.55);
+	}
+}
+@keyframes asfBadgePulse {
+	0%, 100% { opacity: 1; transform: scale(1); }
+	50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+#asf-floating-ai-drawer {
+	position: fixed;
+	bottom: 88px;
+	right: 24px;
+	width: 390px;
+	max-width: calc(100vw - 36px);
+	height: 540px;
+	max-height: calc(100vh - 110px);
+	background: #ffffff;
+	border-radius: 14px;
+	box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.08);
+	display: none;
+	flex-direction: column;
+	overflow: hidden;
+	z-index: 999995;
+	animation: asfSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes asfSlideUp {
+	from { opacity: 0; transform: translateY(16px) scale(0.96); }
+	to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.asf-floating-header {
+	background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+	padding: 12px 16px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.asf-floating-chips {
+	display: flex;
+	gap: 6px;
+	padding: 10px 14px;
+	background: #f8fafc;
+	border-bottom: 1px solid #e2e8f0;
+	overflow-x: auto;
+	white-space: nowrap;
+}
+.asf-floating-chip {
+	background: #ffffff;
+	border: 1px solid #cbd5e1;
+	color: #334155;
+	padding: 4px 10px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: all 0.15s;
+}
+.asf-floating-chip:hover {
+	background: #e0f2fe;
+	color: #0369a1;
+	border-color: #7dd3fc;
+}
+#asf-floating-chat-box {
+	flex: 1;
+	padding: 14px;
+	background: #ffffff;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	font-size: 13px;
+	line-height: 1.55;
+}
+.asf-ai-msg {
+	max-width: 88%;
+	padding: 10px 14px;
+	border-radius: 12px;
+	font-size: 12.5px;
+	word-break: break-word;
+}
+.asf-ai-msg-bot {
+	align-self: flex-start;
+	background: #f1f5f9;
+	color: #1e293b;
+	border: 1px solid #e2e8f0;
+	border-top-left-radius: 3px;
+}
+.asf-ai-msg-user {
+	align-self: flex-end;
+	background: #2563eb;
+	color: #ffffff;
+	border-top-right-radius: 3px;
+}
+.asf-floating-footer {
+	padding: 10px 12px;
+	background: #f8fafc;
+	border-top: 1px solid #e2e8f0;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+#asf-floating-ai-input {
+	flex: 1;
+	height: 36px;
+	padding: 0 10px;
+	border: 1px solid #cbd5e1;
+	border-radius: 6px;
+	font-size: 12.5px;
+}
+
+/* Diagnostic Badges */
+.asf-diag-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 2px 8px;
+	border-radius: 10px;
+	font-size: 11px;
+	font-weight: 600;
+}
+.asf-diag-pass {
+	background: #ecfdf5;
+	color: #047857;
+	border: 1px solid #a7f3d0;
+}
+.asf-diag-warn {
+	background: #fef3c7;
+	color: #92400e;
+	border: 1px solid #fde68a;
+}
+.asf-diag-fail {
+	background: #fef2f2;
+	color: #b91c1c;
+	border: 1px solid #fecaca;
+}
+
+/* ============================================================
+   17. MODERN CUSTOM NOTIFICATION & TOAST ALERT SYSTEM
+   ============================================================ */
+#asf-toast-container {
+	position: fixed;
+	top: 45px;
+	right: 24px;
+	z-index: 10000000;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	pointer-events: none;
+	max-width: 440px;
+	width: calc(100vw - 48px);
+}
+.asf-toast {
+	pointer-events: auto;
+	background: #ffffff;
+	border-radius: 10px;
+	box-shadow: 0 14px 35px -8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.08);
+	padding: 14px 16px;
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	animation: asfToastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+	transition: all 0.3s ease;
+	border-left: 5px solid #2271b1;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+.asf-toast-success { border-left-color: #10b981; }
+.asf-toast-error   { border-left-color: #ef4444; }
+.asf-toast-warn    { border-left-color: #f59e0b; }
+.asf-toast-info    { border-left-color: #2563eb; }
+
+@keyframes asfToastSlide {
+	from { opacity: 0; transform: translateX(50px) scale(0.95); }
+	to { opacity: 1; transform: translateX(0) scale(1); }
+}
+.asf-toast-icon {
+	font-size: 22px;
+	line-height: 1;
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+.asf-toast-content {
+	flex: 1;
+	min-width: 0;
+}
+.asf-toast-title {
+	font-weight: 700;
+	font-size: 13px;
+	color: #0f172a;
+	margin-bottom: 3px;
+	line-height: 1.3;
+}
+.asf-toast-msg {
+	font-size: 12.5px;
+	color: #475569;
+	line-height: 1.5;
+	word-break: break-word;
+}
+.asf-toast-close {
+	background: none;
+	border: none;
+	color: #94a3b8;
+	font-size: 16px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 2px;
+	flex-shrink: 0;
+	transition: color 0.15s;
+}
+.asf-toast-close:hover {
+	color: #0f172a;
+}

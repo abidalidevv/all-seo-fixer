@@ -1,27 +1,36 @@
 === All-in-One SEO Fixer & Auditor ===
 Contributors: abidalidev
-Tags: seo, seo audit, pagespeed, broken links, redirect manager, on-page seo, core web vitals, orphan media, schema, sitemap, lazy load, pdf audit report, ai assistant
+Tags: seo, seo audit, pagespeed, console errors, broken links, redirect manager, on-page seo, core web vitals, orphan media, schema, sitemap, lazy load, pdf audit report, ai assistant, diagnostics
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 2.1.0
+Stable tag: 2.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Free, open-source 360° SEO Diagnostic & Auto-Fixer. PageSpeed Insights, On-Page Checker, Broken Link Cleaner, 301 Redirects, Lazy Loading, PDF Reports & AI Copilot. No upsells.
+Free, open-source 360° SEO Diagnostic & Auto-Fixer. Console Error Doctor, PageSpeed Insights, On-Page Checker, Broken Link Cleaner, 301 Redirects, Lazy Loading, PDF Reports, Groq AI Copilot, Floating AI Widget, System Diagnostics & 19 Swiss-Knife Tools.
 
 == Description ==
 
-**All-in-One SEO Fixer & Auditor** is a completely free, open-source WordPress SEO plugin built for developers and site owners who want a real, comprehensive SEO toolkit — without monthly fees, artificial limitations, or premium upsells.
+**All-in-One SEO Fixer & Auditor** is a completely free, open-source WordPress SEO & technical performance plugin built for developers and site owners who want a real, comprehensive SEO toolkit — without monthly fees, artificial limitations, or premium upsells.
+
+= 🤖 Dedicated AI SEO Assistant & Global Floating Copilot =
+Real-time conversational SEO intelligence powered primarily by ultra-fast **Groq LLaMA-3.3-70B AI** (with Google Gemini Flash & OpenRouter failovers). Features a dedicated AI Assistant console with Master AI Prompt JSON export/import and a global **Floating AI Assistant Bubble Widget** on every plugin admin screen for instant assistance.
+
+= ⚙️ Settings Hub with Horizontal Tabs & System Diagnostics =
+Complete settings reorganization into 7 native horizontal tabs: General & APIs, AI Engine & Keys, Local & GEO SEO, Robots & LLMs.txt, System Diagnostics & Logs, Pro License & Plans, and About Developer. Includes a 16-point server environment health scanner with 1-click **Email Diagnostic Report to Developer Support**.
 
 = 🛡️ 360° SEO Dashboard & Executive PDF Reports =
 One-click full audit covering 24+ SEO factors: missing titles, meta descriptions, H1 headings, alt texts, duplicate content, schema markup, open graph tags, robots.txt, sitemap, broken links, and orphan media — with 1-click **Download Executive Audit PDF Report** for clients.
+
+= 🩺 Console & Error Doctor (Script & Debug Log Fixer) =
+Real-time front-end JavaScript runtime error monitor, 1-click **Mixed Content (HTTP on HTTPS) auto-fixer**, safe **jQuery Compatibility Layer** (`$ is not a function` fixer), `wp-content/debug.log` parser, and **AI Error Doctor** with instant root-cause analysis and code fixes.
 
 = 🖼️ Lazy Load Images & Media Speed Optimizer =
 Enforces native HTML5 `loading="lazy"` on all content images (`<img>`) and video embeds (`<iframe>`), with LCP Hero Guard to preserve above-the-fold PageSpeed scores.
 
 = 🤖 AI SEO Assistant & Copilot =
-Integrated Groq AI & Google Gemini AI chatbot assistant providing instant custom SEO recommendations, meta tag optimization, and Core Web Vitals diagnostic guides.
+Multi-provider AI engine (Groq LLaMA 3.3, Google Gemini Flash, OpenRouter) providing instant custom SEO recommendations, JSON schema generators, and Core Web Vitals diagnostic guides.
 
 = ⚡ Google PageSpeed Insights & Core Web Vitals =
 Integrated with the free Google PageSpeed Insights API v5. Test any URL for Performance, Accessibility, Best Practices, and SEO scores (0–100) plus LCP, TBT, CLS, FCP, and Speed Index.
@@ -47,16 +56,21 @@ Cross-references every image against post content, Elementor JSON, featured imag
 Manage permanent 301 redirects for old URLs, renamed slugs, or Google Search Console 404 errors — no .htaccess editing required.
 
 = 🚀 IndexNow & Sitemap Pinger =
-Instantly alert Google (sitemap ping), Bing, Yandex, and Naver (IndexNow) to re-crawl your most recently updated pages and purge cached sitemaps.
+Instantly alert Bing, Yandex, Naver & Seznam (IndexNow) to re-crawl your most recently updated pages and purge cached sitemaps.
 
 = 🛡️ Always-On Protections =
+* Front-end `<link rel="canonical">` generation across all page types
+* `<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">` for Google Discover eligibility
+* Automatic `BreadcrumbList` JSON-LD schema
+* `LocalBusiness` schema with NAP, Geo Coordinates & Opening Hours
 * RSS/Atom feed pages: `X-Robots-Tag: noindex, follow`
 * Elementor, Divi, Oxygen, Beaver Builder template CPTs automatically excluded from XML Sitemap index
 
 = Free APIs Used =
 * Google PageSpeed Insights v5 (25,000 free requests/day)
+* Google Search Console Indexing API v3
 * IndexNow API (Bing, Yandex, Seznam, Naver)
-* Google Sitemap Ping
+* Groq AI / Google Gemini / OpenRouter
 * Chart.js via jsDelivr CDN (score visualization)
 
 = Works With =
@@ -96,35 +110,23 @@ Yes. It only modifies `postmeta` rows containing the specific `comhttps` typo pa
 = Is it safe to trash orphan images? =
 Yes. Images are moved to WordPress Trash, not permanently deleted. You can restore them anytime from **Media → Trash**.
 
-== Screenshots ==
-
-1. 360° SEO Dashboard — full site health overview with action plan
-2. Google PageSpeed Insights with Chart.js score rings and Core Web Vitals
-3. On-Page SEO Checker — per-page issue table with direct edit links
-4. 301 Redirect Manager — manage rules without editing .htaccess
-5. Settings page with robots.txt guide and sitemap submission helper
-
 == Changelog ==
 
+= 2.2.0 =
+* Added Console & Error Doctor Module (`asf-error-doctor`): front-end JavaScript console error monitor, 1-click Mixed Content HTTPS rewriter, safe jQuery compatibility wrapper, and PHP debug.log inspector with AI diagnosis.
+* Added Canonical URL Engine for all page types.
+* Added Google Discover Robots Meta (`max-image-preview:large`).
+* Added BreadcrumbList JSON-LD Schema.
+* Added Article E-E-A-T Schema with author (Person), dates, and mainEntityOfPage.
+* Enriched LocalBusiness Schema with GeoCoordinates, Opening Hours, Price Range, and sameAs.
+* Added auto-creation of IndexNow verification key file in site root.
+* Refactored Schema detection to evaluate postmeta rich snippet settings and auto-injected schema.
+
 = 2.1.0 =
-* Added Lazy Load Images & Media Speed Optimizer module (asf-lazy-load) with LCP Hero Guard
+* Added Lazy Load Images & Media Speed Optimizer module with LCP Hero Guard
 * Added 1-Click Executive Audit PDF Report Generator for client presentations
 * Added AI SEO Assistant & Copilot powered by Groq AI and Google Gemini AI
-* Added Native WordPress Dashicons Design System across all 13+ admin module cards
-* Upgraded Media Scanner with 48x48 thumbnail image lightbox preview & intelligent fallback Alt text generator for numeric filenames
-* Upgraded Double-Domain Link Typo Cleaner to scan both wp_posts and wp_postmeta across .com, .org, .net, and .ae TLDs
+* Added Native WordPress Dashicons Design System across all module cards
+* Upgraded Media Scanner with 48x48 thumbnail lightbox preview & intelligent fallback Alt text generator
+* Upgraded Double-Domain Link Typo Cleaner across .com, .org, .net, and .ae TLDs
 * Fixed core wp_update_post title tag synchronization alongside Rank Math and Yoast
-* Fixed parameter compatibility on ASF_W3C HTML Validator
-* Product Hunt Launch Ready — 100% Free Open Source WordPress SEO Engine
-
-= 2.0.0 =
-* Generalized from Orbix-specific plugin to universal WordPress plugin
-* Added 360° audit dashboard
-* Added IndexNow pinger
-* Added Media orphan scanner
-* Added 301 Redirect Manager
-
-== Upgrade Notice ==
-
-= 2.1.0 =
-Major restructure to proper plugin architecture. Recommend fresh install by deactivating 2.0.0 first, then activating 2.1.0.

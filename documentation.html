@@ -258,18 +258,19 @@
 		<div class="doc-brand">
 			<span>🛡️ All-in-One SEO Fixer</span>
 		</div>
-		<div class="doc-version">v2.1.0 · Open Source GPL-2.0</div>
+		<div class="doc-version">v2.2.0 · Open Source GPL-2.0</div>
 
 		<div class="doc-nav-section">Getting Started</div>
 		<ul class="doc-nav">
 			<li><a href="#overview">Overview & Purpose</a></li>
-			<li><a href="#key-features">Key Features Index</a></li>
+			<li><a href="#key-features">17 Pro Modules Index</a></li>
 			<li><a href="#installation">Installation Guide</a></li>
 		</ul>
 
 		<div class="doc-nav-section">User Manual</div>
 		<ul class="doc-nav">
-			<li><a href="#dashboard">360° Audit Dashboard & PDF Reports</a></li>
+			<li><a href="#dashboard">360° Audit Dashboard & PDF</a></li>
+			<li><a href="#error-doctor">Console & Error Doctor</a></li>
 			<li><a href="#ai-assistant">AI SEO Assistant & Copilot</a></li>
 			<li><a href="#lazy-load">Lazy Load Images & Media</a></li>
 			<li><a href="#gsc-indexing">GSC & Indexing API</a></li>
@@ -303,13 +304,13 @@
 		<!-- SECTION 1: OVERVIEW -->
 		<section id="overview" class="doc-section">
 			<h2>🚀 Overview & Purpose</h2>
-			<p><strong>All-in-One SEO Fixer & Auditor</strong> is a comprehensive, professional-grade WordPress SEO diagnostic, speed optimization, and security plugin. Built specifically to eliminate expensive monthly subscription paywalls, it provides 100% free access to enterprise SEO diagnostics under the open-source GPL-2.0 license.</p>
-			<p>It combines 360° site audits, real-time 404 URL monitoring, Google Indexing API v3 direct submissions, Google Search Console keyword rank tracking, PageSpeed Insights v5 integration, Page Builder bloat reduction, and 1-click automatic fixers into a unified WordPress Admin Native interface.</p>
+			<p><strong>All-in-One SEO Fixer & Auditor</strong> is a comprehensive, professional-grade WordPress SEO diagnostic, console error doctor, speed optimization, and security plugin. Built specifically to eliminate expensive monthly subscription paywalls, it provides 100% free access to enterprise SEO diagnostics under the open-source GPL-2.0 license.</p>
+			<p>It combines 360° site audits, real-time JavaScript console error monitoring, Google Indexing API v3 direct submissions, Google Search Console keyword rank tracking, PageSpeed Insights v5 integration, Page Builder bloat reduction, and 1-click automatic fixers into a unified WordPress Admin Native interface.</p>
 		</section>
 
 		<!-- SECTION 2: KEY FEATURES INDEX -->
 		<section id="key-features" class="doc-section">
-			<h2>🌟 Key Features Index</h2>
+			<h2>🌟 17 Pro Modules Index</h2>
 			<table class="doc-table">
 				<thead>
 					<tr>
@@ -323,6 +324,11 @@
 						<td><strong>360° SEO Audit</strong></td>
 						<td>Performs a full site diagnostic across titles, metas, headings, media alt text, schema, and security.</td>
 						<td><span class="badge badge-green">1-Click Auto-Fixers</span></td>
+					</tr>
+					<tr>
+						<td><strong>Console & Error Doctor</strong></td>
+						<td>Monitors front-end JavaScript errors, auto-fixes mixed content (HTTP on HTTPS), and provides AI code fixes for PHP debug.log errors.</td>
+						<td><span class="badge badge-green">1-Click Script Fixers</span></td>
 					</tr>
 					<tr>
 						<td><strong>GSC Rank Tracker</strong></td>
@@ -356,7 +362,7 @@
 					</tr>
 					<tr>
 						<td><strong>Local SEO & NAP Schema</strong></td>
-						<td>Configures Business Name, Address, Phone and auto-injects <code>LocalBusiness</code> JSON-LD schema on homepage.</td>
+						<td>Configures Business Name, Address, Phone, Geo Coordinates, and auto-injects <code>LocalBusiness</code> JSON-LD schema.</td>
 						<td><span class="badge badge-green">Auto JSON-LD Injector</span></td>
 					</tr>
 				</tbody>
@@ -393,8 +399,11 @@
 		<section id="dashboard" class="doc-section">
 			<h2>⚙️ User Manual & Module Guide</h2>
 
-			<h3>360° Audit Dashboard</h3>
-			<p>Click <strong>Run Full 360° SEO Audit</strong> to scan published pages. The engine generates a clean <em>Live SEO Health Status</em> table and an <em>Action Plan & Recommended Fixes</em> list with 1-click resolution buttons.</p>
+			<h3>360° Audit Dashboard & PDF Reports</h3>
+			<p>Click <strong>Run Full 360° SEO Audit</strong> to scan published pages. Generates a live health status table and an action plan with 1-click resolution buttons. Click <strong>Download PDF Audit Report</strong> for executive client presentations.</p>
+
+			<h3 id="error-doctor">Console & Error Doctor (Script & Debug Log Fixer)</h3>
+			<p>Detects client-side JavaScript runtime exceptions and unhandled promise rejections. Enables 1-click Mixed Content HTTPS rewrites, injects safe jQuery compatibility layers (`window.$ = jQuery`), parses <code>wp-content/debug.log</code>, and provides <strong>🤖 Ask AI to Fix</strong> buttons for instant PHP/JS code solutions.</p>
 
 			<h3>Google Indexing & Live Rank Tracker</h3>
 			<p>Use the Instant Indexing input to push newly published or updated URLs directly to Google's indexing queue. Use <strong>Fetch Live Keyword Ranks</strong> to inspect search terms, impressions, and average rank positions.</p>
@@ -412,29 +421,30 @@
 			<h3>File Structure</h3>
 			<pre>
 all-seo-fixer/
-├── all-seo-fixer.php           # Main bootstrap file & DB creation
-├── README.md                   # Single Master Documentation
-├── documentation.html          # HTML User & Developer Manual
+├── all-seo-fixer.php              # Main bootstrap file & DB creation
+├── README.md                      # Single Master Documentation
+├── documentation.html             # HTML User & Developer Manual
 ├── assets/
-│   ├── css/admin.css           # WordPress Admin Native CSS
-│   └── js/admin.js             # Central AJAX & Modal JavaScript Engine
+│   ├── css/admin.css              # WordPress Admin Native CSS
+│   └── js/admin.js                # Central AJAX & Modal JavaScript Engine
 ├── includes/
-│   ├── class-asf-core.php      # 404 logger, duplicate guard & Schema/OG injector
-│   ├── class-asf-audit.php     # 360° SEO audit & E-E-A-T inspector
-│   ├── class-asf-pagespeed.php # PageSpeed Insights API v5 controller
-│   ├── class-asf-security.php  # Security headers & DNSBL lookup controller
-│   ├── class-asf-performance.php # Batched DB optimizer
-│   ├── class-asf-gsc.php       # GSC OAuth RS256 JWT assertion controller
-│   └── class-asf-handlers.php  # OnPage, LinkCleaner & AutoFixer handlers
+│   ├── class-asf-core.php         # Canonical tags, Discover robots, 404 logger & Schema/OG injector
+│   ├── class-asf-audit.php        # 360° SEO audit & E-E-A-T inspector
+│   ├── class-asf-error-doctor.php # Console monitor, HTTPS rewriter, jQuery wrapper & debug log parser
+│   ├── class-asf-pagespeed.php    # PageSpeed Insights API v5 controller
+│   ├── class-asf-security.php     # Security headers & DNSBL lookup controller
+│   ├── class-asf-performance.php  # Batched DB optimizer
+│   ├── class-asf-gsc.php          # GSC OAuth RS256 JWT assertion controller
+│   └── class-asf-handlers.php     # OnPage, LinkCleaner & AutoFixer handlers
 └── admin/
-    ├── class-asf-admin.php     # Menu registration & asset loader
-    └── views/                  # 15 HTML view templates
+    ├── class-asf-admin.php        # 17-Menu registration & asset loader
+    └── views/                     # 17 HTML view templates
 			</pre>
 
 			<h3 id="security-standards">Security & Sanitization Protocols</h3>
 			<ul>
 				<li><strong>Capability Check</strong>: Every AJAX action executes <code>asf_cap_check()</code> checking <code>manage_options</code>.</li>
-				<li><strong>CSRF Nonce Check</strong>: Every request executes <code>asf_check_nonce()</code> validating <code>asf_admin_nonce</code>.</li>
+				<li><strong>CSRF Nonce Check</strong>: Every request executes <code>asf_check_nonce()</code> validating <code>asf_nonce</code>.</li>
 				<li><strong>SQL Security</strong>: Custom queries use <code>$wpdb->prepare()</code> with strict type placeholders (`%s`, `%d`).</li>
 				<li><strong>Batched DB Execution</strong>: Deletions run in 50-item loops via core <code>wp_delete_post()</code> APIs to respect PHP memory limits.</li>
 			</ul>
@@ -468,6 +478,11 @@ all-seo-fixer/
 						<td>Free (25,000 requests/day quota)</td>
 					</tr>
 					<tr>
+						<td><strong>Groq AI / Gemini / OpenRouter</strong></td>
+						<td>Groq, Google AI Studio, OpenRouter</td>
+						<td>Free tiers available</td>
+					</tr>
+					<tr>
 						<td><strong>W3C Nu HTML Checker API</strong></td>
 						<td>W3C Organization</td>
 						<td>Free open API</td>
@@ -494,7 +509,7 @@ all-seo-fixer/
 
 		<!-- FOOTER -->
 		<footer class="doc-footer">
-			All-in-One SEO Fixer v2.1.0 · Official User & Developer Documentation · GPL-2.0 License
+			All-in-One SEO Fixer v2.2.0 · Official User & Developer Documentation · GPL-2.0 License
 		</footer>
 
 	</main>

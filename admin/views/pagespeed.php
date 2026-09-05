@@ -23,28 +23,50 @@ $psi_key = get_option( ASF_OPT_PSI_KEY, '' );
 		</div>
 	</div>
 
-	<?php if ( ! $psi_key ) : ?>
-	<div class="asf-notice asf-notice-error">
-		<strong>PageSpeed API Key Required:</strong> Please configure your free Google PageSpeed Insights API key in <a href="<?php echo esc_url(admin_url('admin.php?page=asf-settings')); ?>">Settings</a> to run diagnostics. Free quota is 25,000 requests/day.
-	</div>
-	<?php endif; ?>
-
+	<!-- CARD 1: INSTANT SERVER SPEED BENCHMARK (FREE / OFFLINE / ZERO-KEY) -->
 	<div class="asf-card">
-		<h2>Test URL Performance</h2>
-		<div class="asf-action-bar" style="margin-top:0;">
-			<input id="asf-psi-url" type="url" class="asf-input" value="<?php echo esc_attr(home_url('/')); ?>" style="max-width:400px;" placeholder="https://example.com/page/" />
-			<select id="asf-psi-strategy" class="asf-input">
+		<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+			<h2 style="margin:0;"><span class="dashicons dashicons-dashboard" style="font-size:22px;vertical-align:middle;color:#2271b1;"></span> ⚡ Instant Server Speed &amp; TTFB Benchmark <span class="asf-badge asf-badge-green" style="font-size:11px;">Free / No Key Needed</span></h2>
+			<span style="font-size:12px;color:#64748b;">Measures TTFB, download speed, Gzip/Brotli, document payload size &amp; server latency</span>
+		</div>
+		<div class="asf-action-bar" style="margin-top:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+			<input id="asf-benchmark-url" type="url" class="asf-input" value="<?php echo esc_attr(home_url('/')); ?>" style="flex:1;min-width:280px;" placeholder="https://example.com/page/" />
+			<button class="button button-primary" id="asf-benchmark-run-btn">
+				⚡ Run Instant Speed Benchmark
+			</button>
+		</div>
+		<div id="asf-benchmark-status" style="margin-top:14px;"></div>
+		<div id="asf-benchmark-results" style="margin-top:14px;"></div>
+	</div>
+
+	<!-- CARD 2: GOOGLE PAGESPEED INSIGHTS V5 API -->
+	<div class="asf-card">
+		<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+			<h2 style="margin:0;"><span class="dashicons dashicons-google" style="font-size:22px;vertical-align:middle;color:#ea4335;"></span> Google PageSpeed Insights &amp; Core Web Vitals <span class="asf-badge asf-badge-blue" style="font-size:11px;">Google Cloud API</span></h2>
+			<?php if ( ! $psi_key ) : ?>
+				<span class="asf-badge asf-badge-yellow" style="font-size:11px;">Optional API Key Missing</span>
+			<?php endif; ?>
+		</div>
+
+		<?php if ( ! $psi_key ) : ?>
+		<div class="asf-notice asf-notice-info" style="margin-bottom:14px;">
+			ℹ️ <strong>Google PSI Key:</strong> You can run tests directly, but adding a free Google Cloud API key in <a href="<?php echo esc_url(admin_url('admin.php?page=asf-settings')); ?>">Settings</a> ensures higher quota (25,000 requests/day).
+		</div>
+		<?php endif; ?>
+
+		<div class="asf-action-bar" style="margin-top:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+			<input id="asf-psi-url" type="url" class="asf-input" value="<?php echo esc_attr(home_url('/')); ?>" style="flex:1;min-width:280px;" placeholder="https://example.com/page/" />
+			<select id="asf-psi-strategy" class="asf-input" style="min-width:120px;">
 				<option value="MOBILE">Mobile</option>
 				<option value="DESKTOP">Desktop</option>
 			</select>
-			<button class="button button-primary" id="asf-psi-run-btn" <?php echo !$psi_key ? 'disabled title="Add API key in Settings first"' : ''; ?>>
-				Run PageSpeed Audit
+			<button class="button button-secondary" id="asf-psi-run-btn">
+				Run Official Google Audit
 			</button>
 		</div>
-		<div id="asf-psi-status" style="margin-top:16px;"></div>
+		<div id="asf-psi-status" style="margin-top:14px;"></div>
+		<div id="asf-psi-results" style="margin-top:14px;"></div>
 	</div>
-
-	<div id="asf-psi-results"></div>
 
 	<div class="asf-footer">
 		All-in-One SEO Fixer v<?php echo esc_html( ASF_VERSION ); ?> · Built by <a href="https://abidalidev.com" target="_blank">Abid Ali Dev</a>

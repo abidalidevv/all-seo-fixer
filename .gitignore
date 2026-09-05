@@ -1,0 +1,13 @@
+# Ignore heavy third-party extra data
+plugin extra data/
+plugin\ extra\ data/
+
+# Ignore scratch debug test scripts
+scratch/
+
+# OS and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
