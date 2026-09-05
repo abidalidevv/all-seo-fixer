@@ -1,0 +1,506 @@
+[
+  {
+    "view": "ai-assistant.php",
+    "text": "Download Master AI Prompt (JSON)",
+    "id": "asf-export-prompt-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-export-prompt-btn'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "Clear Chat History",
+    "id": "asf-ai-clear-btn",
+    "class": "button button-link-delete",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-ai-clear-btn'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "&#x1F4A1; Audit Priority Analysis",
+    "id": null,
+    "class": "button button-secondary asf-ai-prompt-pill",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-ai-prompt-pill'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "&#x270F; Meta Description Tips",
+    "id": null,
+    "class": "button button-secondary asf-ai-prompt-pill",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-ai-prompt-pill'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "&#x26A1; Speed &amp; CWV Guide",
+    "id": null,
+    "class": "button button-secondary asf-ai-prompt-pill",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-ai-prompt-pill'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "&#x1F4CD; Local SEO Schema",
+    "id": null,
+    "class": "button button-secondary asf-ai-prompt-pill",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-ai-prompt-pill'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "&#x1F504; Duplicate Metadata Fix",
+    "id": null,
+    "class": "button button-secondary asf-ai-prompt-pill",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-ai-prompt-pill'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "&#x1F916; Crawl Budget &amp; Robots.txt",
+    "id": null,
+    "class": "button button-secondary asf-ai-prompt-pill",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-ai-prompt-pill'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "Ask AI",
+    "id": "asf-ai-send-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-ai-send-btn'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "Download Master Prompt (JSON)",
+    "id": "asf-export-prompt-btn-2",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-export-prompt-btn-2'"
+  },
+  {
+    "view": "ai-assistant.php",
+    "text": "\u26a1 Apply AI JSON Settings to Site",
+    "id": "asf-import-json-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-import-json-btn'"
+  },
+  {
+    "view": "authority.php",
+    "text": "",
+    "id": "asf-auth-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-auth-btn'"
+  },
+  {
+    "view": "builder-analyzer.php",
+    "text": "",
+    "id": "asf-builder-scan-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-builder-scan-btn'"
+  },
+  {
+    "view": "dashboard.php",
+    "text": "Run Full 360\u00b0 SEO Audit",
+    "id": "asf-run-full-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-run-full-btn'"
+  },
+  {
+    "view": "dashboard.php",
+    "text": "Download Audit PDF Report",
+    "id": "asf-download-pdf-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-download-pdf-btn'"
+  },
+  {
+    "view": "dashboard.php",
+    "text": "Ping Search Engines",
+    "id": "asf-ping-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-ping-btn'"
+  },
+  {
+    "view": "dashboard.php",
+    "text": "&#x21BB; Re-check Now",
+    "id": "asf-health-recheck-btn",
+    "class": "button",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-health-recheck-btn'"
+  },
+  {
+    "view": "domain-security.php",
+    "text": "Audit Security Headers & DNSBL Blacklists",
+    "id": "asf-security-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-security-btn'"
+  },
+  {
+    "view": "error-doctor.php",
+    "text": "",
+    "id": "asf-error-scan-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-error-scan-btn'"
+  },
+  {
+    "view": "error-doctor.php",
+    "text": "\">",
+    "id": null,
+    "class": "button button-small asf-toggle-btn",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-toggle-btn'"
+  },
+  {
+    "view": "error-doctor.php",
+    "text": "\">",
+    "id": null,
+    "class": "button button-small asf-toggle-btn",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-toggle-btn'"
+  },
+  {
+    "view": "error-doctor.php",
+    "text": "\">",
+    "id": null,
+    "class": "button button-small asf-toggle-btn",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-toggle-btn'"
+  },
+  {
+    "view": "geo-hub.php",
+    "text": "\ud83d\udd0d Run AI Readiness Audit",
+    "id": "asf-geo-audit-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-geo-audit-btn'"
+  },
+  {
+    "view": "geo-hub.php",
+    "text": "\ud83d\udcbe Save AI Crawler Directives",
+    "id": "asf-save-geo-bots-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-save-geo-bots-btn'"
+  },
+  {
+    "view": "geo-hub.php",
+    "text": "\ud83d\udd04 1-Click Auto-Regenerate /llms.txt",
+    "id": "asf-regen-llms-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-regen-llms-btn'"
+  },
+  {
+    "view": "geo-hub.php",
+    "text": "\ud83d\udccb Copy Markdown",
+    "id": null,
+    "class": "button button-small asf-copy-btn",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-copy-btn'"
+  },
+  {
+    "view": "gsc-inspector.php",
+    "text": "Submit URL to Google",
+    "id": "asf-gsc-submit-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-gsc-submit-btn'"
+  },
+  {
+    "view": "gsc-inspector.php",
+    "text": "Fetch Live Keyword Ranks",
+    "id": "asf-gsc-rank-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-gsc-rank-btn'"
+  },
+  {
+    "view": "keyword-analyzer.php",
+    "text": "Run Keyword Density Scan",
+    "id": "asf-kw-run-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-kw-run-btn'"
+  },
+  {
+    "view": "lazy-load.php",
+    "text": "Save Lazy Load Settings",
+    "id": "asf-save-lazy-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-save-lazy-btn'"
+  },
+  {
+    "view": "lazy-load.php",
+    "text": "1-Click Apply Lazy Load to All Existing Posts",
+    "id": "asf-enforce-lazy-all-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-enforce-lazy-all-btn'"
+  },
+  {
+    "view": "link-cleaner.php",
+    "text": "Scan Database for URL Typos",
+    "id": "asf-link-btn",
+    "class": "button button-primary asf-link-scan-trigger",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-link-btn'"
+  },
+  {
+    "view": "media-scanner.php",
+    "text": "Scan Media Library (All Images)",
+    "id": "asf-media-scan-btn",
+    "class": "button button-primary asf-media-scan-trigger",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-media-scan-btn'"
+  },
+  {
+    "view": "media-scanner.php",
+    "text": "\u26a1 1-Click Scan &amp; Fill Missing Alt Texts",
+    "id": "asf-media-auto-alt-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-media-auto-alt-btn'"
+  },
+  {
+    "view": "onpage.php",
+    "text": "Scan All Pages for SEO Errors",
+    "id": "asf-onpage-btn",
+    "class": "button button-primary asf-onpage-scan-trigger",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-onpage-btn'"
+  },
+  {
+    "view": "onpage.php",
+    "text": "\u26a1 1-Click Auto-Fix Missing Meta Descriptions &amp; Titles",
+    "id": "asf-onpage-bulk-autofix-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-onpage-bulk-autofix-btn'"
+  },
+  {
+    "view": "pagespeed.php",
+    "text": "\u26a1 Run Instant Speed Benchmark",
+    "id": "asf-benchmark-run-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-benchmark-run-btn'"
+  },
+  {
+    "view": "pagespeed.php",
+    "text": "Run Official Google Audit",
+    "id": "asf-psi-run-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-psi-run-btn'"
+  },
+  {
+    "view": "performance.php",
+    "text": "Run 1-Click Database Optimization",
+    "id": "asf-db-opt-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-db-opt-btn'"
+  },
+  {
+    "view": "redirects.php",
+    "text": "+ Add Redirect Rule",
+    "id": "asf-add-row",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-add-row'"
+  },
+  {
+    "view": "redirects.php",
+    "text": "\u2715",
+    "id": null,
+    "class": "asf-btn-danger asf-btn-xs asf-remove-row",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-remove-row'"
+  },
+  {
+    "view": "redirects.php",
+    "text": "\u2715",
+    "id": null,
+    "class": "asf-btn-danger asf-btn-xs asf-remove-row",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-remove-row'"
+  },
+  {
+    "view": "redirects.php",
+    "text": "+ Add Rule",
+    "id": "asf-add-row-bottom",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-add-row-bottom'"
+  },
+  {
+    "view": "redirects.php",
+    "text": "",
+    "id": null,
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "Form Submit (name: asf_save_redirects)"
+  },
+  {
+    "view": "schema-studio.php",
+    "text": "\ud83d\udcbe Save Schema Configurations",
+    "id": "asf-save-schema-settings-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-save-schema-settings-btn'"
+  },
+  {
+    "view": "schema-studio.php",
+    "text": "\ud83d\udd04 Generate Preview",
+    "id": "asf-schema-preview-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-schema-preview-btn'"
+  },
+  {
+    "view": "schema-studio.php",
+    "text": "\ud83d\udccb Copy JSON-LD",
+    "id": null,
+    "class": "button button-small asf-copy-btn",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-copy-btn'"
+  },
+  {
+    "view": "schema-studio.php",
+    "text": "\ud83e\uddea Test with Google",
+    "id": "asf-google-test-btn",
+    "class": "button button-small button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-google-test-btn'"
+  },
+  {
+    "view": "schema-studio.php",
+    "text": "\ud83d\udd0d Schema.org Validator",
+    "id": "asf-schemaorg-test-btn",
+    "class": "button button-small button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-schemaorg-test-btn'"
+  },
+  {
+    "view": "serp-preview.php",
+    "text": "\ud83d\udcbe Save Meta Title & Description to Page",
+    "id": "asf-serp-save-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-serp-save-btn'"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": "asf-settings-tab-bar",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "Form Submit (name: asf_save_settings)"
+  },
+  {
+    "view": "settings.php",
+    "text": "\ud83d\udccd Auto-Detect via Browser GPS",
+    "id": "asf-btn-detect-gps",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-btn-detect-gps'"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": "asf-diag-score-ring",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "Form Submit (name: asf_save_settings)"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": "asf-diag-copy-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-diag-copy-btn'"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": "asf-diag-download-btn",
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-diag-download-btn'"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": "asf-diag-send-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-diag-send-btn'"
+  },
+  {
+    "view": "settings.php",
+    "text": "\u26a1 Activate License",
+    "id": "asf-license-activate-btn",
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-license-activate-btn'"
+  },
+  {
+    "view": "settings.php",
+    "text": "Deactivate",
+    "id": "asf-license-deactivate-btn",
+    "class": "button",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-license-deactivate-btn'"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": null,
+    "class": "button button-primary",
+    "status": "WORKING",
+    "handling": "Direct Navigation: https://abidalidev.com"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": null,
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "Direct Navigation: mailto:support@abidalidev.com"
+  },
+  {
+    "view": "settings.php",
+    "text": "",
+    "id": null,
+    "class": "button button-secondary",
+    "status": "WORKING",
+    "handling": "Direct Navigation: https://github.com/abidalidevv/all-seo-fixer"
+  },
+  {
+    "view": "swiss-tools.php",
+    "text": "' . esc_html( $label ) . '",
+    "id": null,
+    "class": "asf-tab-btn",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '.asf-tab-btn'"
+  },
+  {
+    "view": "w3c-validator.php",
+    "text": "Run W3C HTML Audit",
+    "id": "asf-w3c-btn",
+    "class": "button button-primary asf-w3c-scan-trigger",
+    "status": "WORKING",
+    "handling": "JS Click Handler on '#asf-w3c-btn'"
+  }
+]
