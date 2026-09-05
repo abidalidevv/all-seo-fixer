@@ -59,26 +59,31 @@ if ( ! current_user_can( 'manage_options' ) ) return;
 			✓ Native WordPress <code>loading="lazy"</code> is active on <code>img</code> and <code>iframe</code> elements in <strong><?php echo esc_html( parse_url( home_url(), PHP_URL_HOST ) ); ?></strong>.
 		</div>
 
+<?php
+$enable_lazy   = get_option( 'asf_enable_lazy', '1' );
+$enable_iframe = get_option( 'asf_enable_iframe_lazy', '1' );
+$exclude_first = get_option( 'asf_exclude_first', '1' );
+?>
 		<form id="asf-lazy-form">
 			<table class="form-table">
 				<tr>
 					<th scope="row"><label for="asf_enable_lazy">Enable Content Image Lazy Load</label></th>
 					<td>
-						<input type="checkbox" id="asf_enable_lazy" name="asf_enable_lazy" value="1" checked />
+						<input type="checkbox" id="asf_enable_lazy" name="asf_enable_lazy" value="1" <?php checked( $enable_lazy, '1' ); ?> />
 						<span class="description">Automatically add <code>loading="lazy"</code> to all inline content images in published posts & pages.</span>
 					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="asf_enable_iframe_lazy">Enable Video/Iframe Lazy Load</label></th>
 					<td>
-						<input type="checkbox" id="asf_enable_iframe_lazy" name="asf_enable_iframe_lazy" value="1" checked />
+						<input type="checkbox" id="asf_enable_iframe_lazy" name="asf_enable_iframe_lazy" value="1" <?php checked( $enable_iframe, '1' ); ?> />
 						<span class="description">Defer offscreen YouTube, Vimeo, and Google Maps iframe embeds until user scrolls.</span>
 					</td>
 				</tr>
 				<tr>
 					<th scope="row"><label for="asf_exclude_first">LCP Hero Guard (Exclude 1st Image)</label></th>
 					<td>
-						<input type="checkbox" id="asf_exclude_first" name="asf_exclude_first" value="1" checked />
+						<input type="checkbox" id="asf_exclude_first" name="asf_exclude_first" value="1" <?php checked( $exclude_first, '1' ); ?> />
 						<span class="description">Keep 1st above-the-fold image eager-loaded so Google PageSpeed LCP score remains 90+.</span>
 					</td>
 				</tr>

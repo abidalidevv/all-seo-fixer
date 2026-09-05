@@ -68,20 +68,55 @@ $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 	<div id="asf-dash-status"></div>
 	<div id="asf-dash-results" style="margin-top:16px;"></div>
 
-	<!-- SMART HEALTH BANNER (auto-runs on load) -->
+	<!-- SMART HEALTH BANNER (auto-runs on load & hydrates from saved state) -->
+	<?php
+	$cached_health = get_option( 'asf_health_score_cache', array() );
+	$has_cache     = ! empty( $cached_health ) && isset( $cached_health['score'] );
+	$cache_score   = $has_cache ? (int) $cached_health['score'] : '?';
+	$cache_grade   = $has_cache ? 'Grade ' . (string) ( $cached_health['grade'] ?? 'A' ) : '?';
+	$cache_col     = $has_cache ? ( $cache_score >= 80 ? '#10b981' : ( $cache_score >= 50 ? '#f59e0b' : '#ef4444' ) ) : '#cbd5e1';
+	$cache_num_col = $has_cache ? $cache_col : '#64748b';
+	?>
 	<div id="asf-health-banner" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
 		<div style="display:flex;align-items:center;gap:16px;">
-			<div id="asf-score-ring" style="width:64px;height:64px;border-radius:50%;border:5px solid #cbd5e1;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-				<span id="asf-score-num" style="font-size:18px;font-weight:800;color:#64748b;">?</span>
+			<div id="asf-score-ring" style="width:64px;height:64px;border-radius:50%;border:5px solid <?php echo esc_attr( $cache_col ); ?>;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+				<span id="asf-score-num" style="font-size:18px;font-weight:800;color:<?php echo esc_attr( $cache_num_col ); ?>;"><?php echo esc_html( $cache_score ); ?></span>
 			</div>
 			<div>
 				<div style="font-size:15px;font-weight:700;color:#1e293b;">&#x1F6E1; Site SEO Health Score</div>
-				<div id="asf-health-checks" style="font-size:12px;color:#475569;margin-top:4px;">Running quick health check...</div>
-				<div id="asf-health-issues" style="font-size:12px;color:#dc2626;margin-top:4px;"></div>
+				<div id="asf-health-checks" style="font-size:12px;color:#475569;margin-top:4px;">
+					<?php
+					if ( $has_cache && ! empty( $cached_health['checks'] ) && is_array( $cached_health['checks'] ) ) {
+						foreach ( $cached_health['checks'] as $chk ) {
+							$st   = $chk['status'] ?? 'ok';
+							$icon = ( $st === 'ok' ) ? '✓' : ( ( $st === 'warn' ) ? '⚠' : '✕' );
+							$pcol = ( $st === 'ok' ) ? '#10b981' : ( ( $st === 'warn' ) ? '#f59e0b' : '#ef4444' );
+							echo '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;font-size:11px;font-weight:600;margin-right:6px;margin-bottom:4px;"><span style="color:' . esc_attr( $pcol ) . ';">' . esc_html( $icon ) . '</span> ' . esc_html( $chk['label'] ?? '' ) . '</span>';
+						}
+					} else {
+						echo 'Running quick health check...';
+					}
+					?>
+				</div>
+				<div id="asf-health-issues" style="font-size:12px;color:#dc2626;margin-top:4px;">
+					<?php
+					if ( $has_cache ) {
+						if ( ! empty( $cached_health['issues'] ) && is_array( $cached_health['issues'] ) ) {
+							echo '<ul style="margin:4px 0 0;padding-left:18px;color:#dc2626;font-size:12px;line-height:1.5;">';
+							foreach ( $cached_health['issues'] as $iss ) {
+								echo '<li>' . esc_html( $iss ) . '</li>';
+							}
+							echo '</ul>';
+						} else {
+							echo '<span style="color:#10b981;font-weight:600;font-size:12px;">✓ All vital checks passing cleanly!</span>';
+						}
+					}
+					?>
+				</div>
 			</div>
 		</div>
 		<div style="display:flex;gap:8px;align-items:center;">
-			<span id="asf-health-grade" style="font-size:28px;font-weight:900;color:#cbd5e1;">?</span>
+			<span id="asf-health-grade" style="font-size:28px;font-weight:900;color:<?php echo esc_attr( $cache_col ); ?>;"><?php echo esc_html( $cache_grade ); ?></span>
 			<button type="button" class="button" id="asf-health-recheck-btn" style="font-size:12px;">&#x21BB; Re-check Now</button>
 		</div>
 	</div>

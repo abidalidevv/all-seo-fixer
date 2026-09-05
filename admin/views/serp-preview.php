@@ -35,8 +35,8 @@ if ( ! current_user_can('manage_options') ) return;
 						'posts_per_page' => 100,
 					) );
 					foreach ( $all_pages as $p ) {
-						$m_title = get_post_meta( $p->ID, 'rank_math_title', true ) ?: get_post_meta( $p->ID, '_yoast_wpseo_title', true ) ?: $p->post_title;
-						$m_desc  = get_post_meta( $p->ID, 'rank_math_description', true ) ?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true );
+						$m_title = get_post_meta( $p->ID, '_asf_seo_title', true ) ?: ( get_post_meta( $p->ID, 'rank_math_title', true ) ?: ( get_post_meta( $p->ID, '_yoast_wpseo_title', true ) ?: $p->post_title ) );
+						$m_desc  = get_post_meta( $p->ID, '_asf_meta_description', true ) ?: ( get_post_meta( $p->ID, 'rank_math_description', true ) ?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true ) );
 						echo '<option value="' . esc_attr( $p->ID ) . '" data-url="' . esc_url( get_permalink( $p->ID ) ) . '" data-title="' . esc_attr( $m_title ) . '" data-desc="' . esc_attr( $m_desc ) . '">' . esc_html( $p->post_title ) . ' (#' . $p->ID . ')</option>';
 					}
 					?>
