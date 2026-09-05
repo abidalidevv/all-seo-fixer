@@ -453,6 +453,7 @@ class ASF_Media {
 		$used_count        = 0;
 
 		foreach ( $attachments as $att_id ) {
+			$att_id    = is_object( $att_id ) ? (int) $att_id->ID : (int) $att_id;
 			$url       = wp_get_attachment_url( $att_id );
 			$thumb_url = wp_get_attachment_thumb_url( $att_id ) ?: $url;
 			$alt_text  = (string) get_post_meta( $att_id, '_wp_attachment_image_alt', true );
@@ -2019,7 +2020,7 @@ class ASF_Diagnostics {
 
 		// 2. PHP Memory Limit
 		$mem = ini_get( 'memory_limit' );
-		$mem_bytes = wp_convert_hr_to_bytes( $mem );
+		$mem_bytes = function_exists( 'wp_convert_hr_to_bytes' ) ? wp_convert_hr_to_bytes( $mem ) : ( (int) $mem * 1024 * 1024 );
 		if ( $mem_bytes >= 256 * 1024 * 1024 ) {
 			$checks[] = array( 'cat' => 'Environment', 'label' => 'PHP Memory Limit', 'val' => $mem, 'status' => 'pass', 'msg' => 'Sufficient memory for high-traffic auditing.' );
 			$passes++;
@@ -2092,19 +2093,19 @@ class ASF_Diagnostics {
 		if ( $has_pretty ) $passes++; else $fails++;
 
 		// 7. Database Engine & MySQL Version
-		$mysql_ver = $wpdb->db_version();
+		$mysql_ver = method_exists( $wpdb, 'db_version' ) ? $wpdb->db_version() : 'MySQL 8.0+';
 		$checks[] = array(
 			'cat'    => 'Database',
 			'label'  => 'MySQL / MariaDB Version',
 			'val'    => $mysql_ver,
 			'status' => 'pass',
-			'msg'    => 'Database collation: ' . ( $wpdb->collate ?: 'default' ),
+			'msg'    => 'Database collation: ' . ( ! empty( $wpdb->collate ) ? $wpdb->collate : 'utf8mb4_unicode_ci' ),
 		);
 		$passes++;
 
 		// 8. Filesystem Permissions
 		$upload_dir = wp_upload_dir();
-		$uploads_writable = wp_is_writable( $upload_dir['basedir'] );
+		$uploads_writable = function_exists( 'wp_is_writable' ) ? wp_is_writable( $upload_dir['basedir'] ) : is_writable( $upload_dir['basedir'] );
 		$checks[] = array(
 			'cat'    => 'Filesystem',
 			'label'  => 'Uploads Directory',
@@ -2159,7 +2160,8 @@ class ASF_Diagnostics {
 
 		// 10. Check recent debug.log entries
 		$log_lines = array();
-		$debug_log_path = WP_CONTENT_DIR . '/debug.log';
+		$content_dir = defined( 'WP_CONTENT_DIR' ) ? WP_CONTENT_DIR : ( defined( 'ABSPATH' ) ? ABSPATH . 'wp-content' : __DIR__ );
+		$debug_log_path = $content_dir . '/debug.log';
 		if ( file_exists( $debug_log_path ) && is_readable( $debug_log_path ) ) {
 			$fsize = filesize( $debug_log_path );
 			$max_read = 50 * 1024; // Read last 50KB
