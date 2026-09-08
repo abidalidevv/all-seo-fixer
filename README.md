@@ -16,6 +16,36 @@
 
 ---
 
+## 📑 Master Navigation & Module Index
+
+The plugin registers a top-level menu in the WordPress Admin sidebar titled **"All SEO Fixer"** with the following submenus:
+
+| # | Menu Item Title | Admin Slug (`page=`) | Primary Function |
+|---|-----------------|----------------------|------------------|
+| 1 | **360° SEO Audit** | `asf-panel` | Site-wide technical audit, health score, and 4-page PDF exporter |
+| 2 | **🤖 AI Assistant** | `asf-ai-assistant` | Full-page AI Copilot, prompt pills, and Master JSON Importer |
+| 3 | **On-Page Checker** | `asf-onpage` | Per-page title/meta audit, thin content detector, and bulk auto-fixer |
+| 4 | **PageSpeed Insights** | `asf-pagespeed` | Google Lighthouse API v5, Core Web Vitals (LCP, CLS, TBT) metrics |
+| 5 | **Lazy Load Images** | `asf-lazy-load` | Native HTML5 lazy loading with LCP Hero Guard protection |
+| 6 | **Media Scanner** | `asf-media` | Missing image alt text finder, auto-alt generator & orphan cleaner |
+| 7 | **Speed & DB Optimizer**| `asf-performance` | Batched (50/batch) revision pruner, transient cleaner, table optimizer |
+| 8 | **Page Builder Optimizer**| `asf-builder-analyzer` | Elementor JSON payload size inspector and DOM complexity reducer |
+| 9 | **Google Search Console**| `asf-gsc-inspector` | OAuth 2.0 / Service Account ranking queries & Indexing API v3 |
+| 10| **W3C HTML Validator** | `asf-w3c-validator` | Official Nu HTML Checker integration with line-by-line syntax logs |
+| 11| **Keyword Density** | `asf-keyword-analyzer` | N-gram phrase counter and keyword stuffing/density evaluator |
+| 12| **On-Page SEO Health** | `asf-authority` | Flesch-Kincaid readability, E-E-A-T signals, and heading hierarchy |
+| 13| **SERP Simulator** | `asf-serp-preview` | Live Desktop/Mobile Google search snippet & Facebook OG card preview |
+| 14| **Security & Headers** | `asf-security` | HTTP Security Headers (HSTS, CSP), SSL check, DNSBL scanner |
+| 15| **Console & Error Doctor**| `asf-error-doctor` | Front-end JS crash detector, mixed content fixer, debug.log solver |
+| 16| **Broken Link Cleaner** | `asf-link-cleaner` | 404 broken hyperlink finder & malformed double-domain typo repair |
+| 17| **301 Redirects** | `asf-redirects` | Visual permanent redirect manager & live 404 error hit logger |
+| 18| **Schema JSON-LD Studio**| `asf-schema` | Visual graph builder for Organization, LocalBusiness, Breadcrumbs |
+| 19| **GEO & AI Search Hub** | `asf-geo` | Generative Engine Optimization for SearchGPT, Perplexity & `/llms.txt` |
+| 20| **🛠️ Swiss-Knife Tools** | `asf-swiss-tools` | 19-in-1 network, DNS, WHOIS, IP lookup & diagnostic toolkit |
+| 21| **Settings Hub** | `asf-settings` | 7 horizontal tabs: APIs, AI, Local SEO, Robots, Diagnostics, License |
+
+---
+
 ## 🌟 Feature Modules
 
 ### 🧙 Setup Wizard (New in v3.0)
@@ -50,7 +80,7 @@ One-click site audit covering **24+ critical SEO parameters** with weighted scor
 
 ### 🔧 On-Page SEO Checker
 Per-page deep analysis for all published posts & pages:
-- Title tag: missing, too short (<30), too long (>65), **duplicate pair highlighting** (shows both original & duplicate)
+- Title tag: missing, too short (<30), too long (>65), **duplicate pair highlighting** (shows both original & duplicate with visual badges)
 - Meta description: missing, short (<70), long (>160), duplicate
 - H1: missing, multiple, Elementor JSON detection
 - H2 structure for long content
@@ -109,7 +139,7 @@ Visual builder for:
 - Safe trash (moves to WordPress trash, never irreversible deletion)
 
 ### 🛠️ Swiss-Knife Diagnostic Tools (19 Live Tools)
-DNS Lookup, WHOIS, SSL Check, IP Lookup, Reverse IP, Redirect Chain, HTTP Headers, Broken Link Scanner, Email Extractor, Page Source Viewer, Class-C IP, Blacklist Checker, Keyword Suggester, Page Size Analyzer.
+DNS Lookup, WHOIS, SSL Check, IP Lookup, Reverse IP, Redirect Chain, HTTP Headers, Broken Link Scanner, Email Extractor, Page Source Viewer, Class-C IP, Blacklist Checker, Keyword Suggester, Page Size Analyzer, Password Generator, User-Agent Parser, Credit Card Validator, JSON Formatter, HTML Entity Encoder.
 
 ### 🔒 Security Module
 - Security Headers audit (HSTS, X-Frame-Options, Referrer-Policy, CSP)
@@ -128,6 +158,53 @@ DNS Lookup, WHOIS, SSL Check, IP Lookup, Reverse IP, Redirect Chain, HTTP Header
 
 ### 🧹 Speed & Database Optimizer
 - Batched (50-item batches) cleanup for revisions, auto-drafts, trashed posts, and spam comments
+
+---
+
+## 💾 Data Persistence Architecture
+
+All-in-One SEO Fixer is built with strict, permanent database persistence:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      WORDPRESS DATABASE STORAGE                         │
+├──────────────────────────┬──────────────────────┬───────────────────────┤
+│ TABLE: wp_postmeta       │ TABLE: wp_options    │ TABLE: wp_asf_404_logs│
+├──────────────────────────┼──────────────────────┼───────────────────────┤
+│ • _asf_seo_title         │ • asf_settings       │ • id (auto_increment) │
+│ • _asf_meta_description  │ • asf_redirects      │ • url (varchar 255)   │
+│ • _asf_focus_keyword     │ • asf_robots_content │ • hits (int)          │
+│ • _wp_attachment_img_alt │ • asf_llms_content   │ • last_seen (bigint)  │
+│ • rank_math_title        │ • asf_schema_*       │                       │
+│ • _yoast_wpseo_metadesc  │ • asf_health_cache   │                       │
+└──────────────────────────┴──────────────────────┴───────────────────────┘
+```
+
+### Dual-Engine Disk vs Virtual Architecture
+- **Engine 1: Physical File Mode (When Writable)**: Writes physical `robots.txt` and `llms.txt` directly to disk so Nginx/Apache serve static text files with maximum performance.
+- **Engine 2: Virtual Filter Mode (When Read-Only)**: Falls back gracefully to `robots_txt` WordPress filter and `template_redirect` action for dynamic serving without requiring disk write permissions.
+
+---
+
+## ⚡ Developer API & AJAX Endpoints
+
+All AJAX communication is secured via WordPress nonces and administrative capability checks (`manage_options`).
+
+| Endpoint Action | Class Handler | Function |
+|-----------------|---------------|----------|
+| `asf_run_audit` | `ASF_Audit` | Executes 360° technical site crawl |
+| `asf_health_ping` | `ASF_HealthPing` | Quick boot-time SEO health score calculation |
+| `asf_ai_chat` | `ASF_AIChatbot` | Dispatches Groq LLaMA-3.3 query with site context |
+| `asf_export_ai_prompt` | `ASF_AIChatbot` | Exports Master AI Prompt JSON file |
+| `asf_import_ai_config` | `ASF_AIChatbot` | Bulk-applies external AI JSON settings |
+| `asf_run_diagnostics` | `ASF_Diagnostics` | Runs 16-point server environment health check |
+| `asf_send_diagnostic_report` | `ASF_Diagnostics` | Dispatches diagnostic email via `wp_mail()` |
+| `asf_onpage_scan` | `ASF_OnPage` | Audits published posts for metadata and titles |
+| `asf_bulk_autofix` | `ASF_OnPage` | Auto-generates missing titles and meta descriptions |
+| `asf_media_scan` | `ASF_Media` | Scans media library for alt text and orphans |
+| `asf_save_schema_studio` | `ASF_Schema` | Persists visual schema definitions |
+| `asf_save_geo_bots` | `ASF_GEO` | Updates AI crawler permissions |
+| `asf_tool_*` | `ASF_SwissTools` | 19 separate network diagnostic endpoints |
 
 ---
 
@@ -194,7 +271,6 @@ Yes. Images flagged as unreferenced are moved to the standard WordPress Media Tr
 all-seo-fixer/
 ├── all-seo-fixer.php              ← Bootstrap, activation, constants
 ├── README.md                      ← Master documentation & quick-start
-├── DOCUMENTATION.md               ← Full technical architecture guide
 ├── documentation.html             ← Standalone interactive HTML docs
 ├── assets/
 │   ├── css/admin.css              ← Premium admin stylesheet
