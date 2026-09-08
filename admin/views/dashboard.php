@@ -16,6 +16,8 @@ $media_count = wp_count_posts( 'attachment' );
 $total_media = isset( $media_count->inherit ) ? (int) $media_count->inherit : 0;
 $redirects   = count( get_option( ASF_OPT_REDIRECTS, array() ) );
 $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
+$lifetime_stats = class_exists( 'ASF_StatsTracker' ) ? ASF_StatsTracker::get_stats() : array();
+$total_fixes    = (int) ( $lifetime_stats['total_fixes'] ?? 0 );
 ?>
 <div class="wrap asf-wrap">
 
@@ -35,6 +37,10 @@ $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 
 	<!-- COMPACT STATS GRID -->
 	<div class="asf-stats-grid">
+		<div class="asf-stat-box" style="border-top:3px solid #10b981;">
+			<div class="asf-stat-num" id="asf-stat-total-fixes" style="color:#059669;font-weight:800;"><?php echo esc_html( $total_fixes ); ?></div>
+			<div class="asf-stat-label">SEO Fixes Applied</div>
+		</div>
 		<div class="asf-stat-box">
 			<div class="asf-stat-num"><?php echo esc_html( $total_posts ); ?></div>
 			<div class="asf-stat-label">Published Posts</div>
@@ -119,6 +125,71 @@ $psi_key     = get_option( ASF_OPT_PSI_KEY, '' );
 			<span id="asf-health-grade" style="font-size:28px;font-weight:900;color:<?php echo esc_attr( $cache_col ); ?>;"><?php echo esc_html( $cache_grade ); ?></span>
 			<button type="button" class="button" id="asf-health-recheck-btn" style="font-size:12px;">&#x21BB; Re-check Now</button>
 		</div>
+	</div>
+
+	<!-- APPLIED SEO FIXES & ACTIVITY TRACKER -->
+	<?php
+	$fixes_total = (int) ( $lifetime_stats['total_fixes'] ?? 0 );
+	$recent_logs = $lifetime_stats['recent_activity'] ?? array();
+	?>
+	<div class="asf-card" style="margin-bottom:16px;">
+		<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+			<h2 style="margin:0;display:flex;align-items:center;gap:8px;">
+				<span class="dashicons dashicons-yes-alt" style="color:#10b981;font-size:20px;"></span>
+				Applied SEO Fixes &amp; Optimization Tracker
+			</h2>
+			<span class="asf-badge asf-badge-green" style="font-size:12px;padding:4px 10px;">
+				<strong id="asf-tracker-badge"><?php echo esc_html( $fixes_total ); ?></strong> Fixes Saved in Database
+			</span>
+		</div>
+
+		<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:10px;margin-bottom:16px;">
+			<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;text-align:center;">
+				<div style="font-size:18px;font-weight:800;color:#2563eb;" id="asf-stat-titles"><?php echo esc_html( $lifetime_stats['titles_fixed'] ?? 0 ); ?></div>
+				<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">Titles Fixed</div>
+			</div>
+			<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;text-align:center;">
+				<div style="font-size:18px;font-weight:800;color:#059669;" id="asf-stat-metas"><?php echo esc_html( $lifetime_stats['metas_fixed'] ?? 0 ); ?></div>
+				<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">Metas Generated</div>
+			</div>
+			<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;text-align:center;">
+				<div style="font-size:18px;font-weight:800;color:#0284c7;" id="asf-stat-links"><?php echo esc_html( $lifetime_stats['links_generated'] ?? 0 ); ?></div>
+				<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">Internal Links Built</div>
+			</div>
+			<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;text-align:center;">
+				<div style="font-size:18px;font-weight:800;color:#d97706;" id="asf-stat-alts"><?php echo esc_html( $lifetime_stats['alts_fixed'] ?? 0 ); ?></div>
+				<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">Image ALTs Fixed</div>
+			</div>
+			<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;text-align:center;">
+				<div style="font-size:18px;font-weight:800;color:#7c3aed;" id="asf-stat-typos"><?php echo esc_html( $lifetime_stats['typos_fixed'] ?? 0 ); ?></div>
+				<div style="font-size:11px;color:#64748b;font-weight:600;margin-top:2px;">URL Typos Cleaned</div>
+			</div>
+		</div>
+
+		<?php if ( ! empty( $recent_logs ) && is_array( $recent_logs ) ) : ?>
+			<div style="border-top:1px solid #f1f5f9;padding-top:12px;">
+				<div style="font-size:12px;font-weight:700;color:#334155;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Recent Optimization Activity</div>
+				<div style="max-height:160px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:6px;background:#fff;">
+					<table class="widefat striped" style="border:none;font-size:12px;">
+						<tbody>
+							<?php foreach ( array_slice( $recent_logs, 0, 8 ) as $log ) : ?>
+								<tr>
+									<td style="width:140px;color:#64748b;white-space:nowrap;padding:6px 10px;">
+										<span class="dashicons dashicons-clock" style="font-size:13px;vertical-align:middle;margin-right:2px;"></span>
+										<?php echo esc_html( $log['date'] ?? '' ); ?>
+									</td>
+									<td style="padding:6px 10px;">
+										<strong><?php echo esc_html( $log['message'] ?? '' ); ?></strong>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		<?php else : ?>
+			<p style="margin:0;font-size:12px;color:#64748b;">No optimizations performed yet. Open <a href="<?php echo esc_url( admin_url('admin.php?page=asf-onpage') ); ?>">On-Page SEO Checker</a> or <a href="<?php echo esc_url( admin_url('admin.php?page=asf-broken-links') ); ?>">Link Cleaner</a> to start optimizing.</p>
+		<?php endif; ?>
 	</div>
 
 	<!-- API NOTICE IF KEY NOT SET -->

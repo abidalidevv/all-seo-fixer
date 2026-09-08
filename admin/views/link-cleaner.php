@@ -56,6 +56,30 @@ if ( ! current_user_can('manage_options') ) return;
 
 	<div id="asf-link-results"></div>
 
+	<!-- SMART INTERNAL LINKING & CATEGORY SILO HUB -->
+	<?php
+	$silo_stats = class_exists( 'ASF_StatsTracker' ) ? ASF_StatsTracker::get_stats() : array();
+	?>
+	<div class="asf-card">
+		<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+			<h2 style="margin:0;">Smart Internal Linking &amp; Category Silo Hub</h2>
+			<span class="asf-badge asf-badge-green" style="font-size:12px;padding:4px 10px;">
+				🔗 <strong id="asf-silo-links-count"><?php echo esc_html( $silo_stats['links_generated'] ?? 0 ); ?></strong> Contextual Links Generated
+			</span>
+		</div>
+		<p style="margin-top:10px;">Automatically scans all published pages, posts, and WooCommerce products. Matches text against your category names (e.g. <em>iPhone Repair</em>, <em>MacBook Screen</em>) and pillar services to intelligently insert contextual <code>&lt;a href="..."&gt;</code> internal links without modifying headings or existing links.</p>
+		<div class="asf-action-bar" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+			<button type="button" class="button button-primary" id="asf-silo-autolink-btn">⚡ Auto-Generate Internal Links Site-Wide (Silo Engine)</button>
+			<button type="button" class="button button-secondary" id="asf-view-targets-btn">👁️ View Indexed Category Targets &amp; Keywords</button>
+		</div>
+		<div id="asf-silo-progress-bar" style="display:none;margin-top:14px;background:#e2e8f0;border-radius:4px;overflow:hidden;height:10px;">
+			<div id="asf-silo-progress-fill" style="background:#10b981;height:100%;width:0%;transition:width 0.2s;"></div>
+		</div>
+		<div id="asf-silo-status" style="margin-top:16px;"></div>
+	</div>
+
+	<div id="asf-silo-results"></div>
+
 	<div class="asf-footer">
 		All-in-One SEO Fixer v<?php echo esc_html( ASF_VERSION ); ?> · Built by <a href="https://abidalidev.com" target="_blank">Abid Ali Dev</a>
 	</div>

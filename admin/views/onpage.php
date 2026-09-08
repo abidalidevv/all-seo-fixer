@@ -22,7 +22,8 @@ if ( ! current_user_can('manage_options') ) return;
 		<h2>Scan Published Pages &amp; Posts</h2>
 		<div class="asf-action-bar" style="margin-top:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
 			<button type="button" class="button button-primary asf-onpage-scan-trigger" id="asf-onpage-btn">Scan All Pages for SEO Errors</button>
-			<button type="button" class="button button-secondary" id="asf-onpage-bulk-autofix-btn">⚡ 1-Click Auto-Fix Missing Meta Descriptions &amp; Titles</button>
+			<button type="button" class="button button-secondary" id="asf-onpage-bulk-autofix-btn">⚡ 1-Click Auto-Fix via AI (Missing Metas, Titles &amp; Focus Keywords)</button>
+			<button type="button" class="button button-secondary" id="asf-onpage-autolink-all-btn">🔗 Auto-Generate Internal Links</button>
 			<div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
 				<label for="asf-onpage-type-filter" style="font-weight:600;font-size:13px;">Post Type:</label>
 				<select id="asf-onpage-type-filter" class="asf-select" style="min-width:140px;">
@@ -32,6 +33,9 @@ if ( ! current_user_can('manage_options') ) return;
 					<option value="product">Products Only</option>
 				</select>
 			</div>
+		</div>
+		<div id="asf-onpage-progress-bar" style="display:none;margin-top:14px;background:#e2e8f0;border-radius:4px;overflow:hidden;height:10px;">
+			<div id="asf-onpage-progress-fill" style="background:#10b981;height:100%;width:0%;transition:width 0.2s;"></div>
 		</div>
 		<div id="asf-onpage-status" style="margin-top:16px;"></div>
 	</div>

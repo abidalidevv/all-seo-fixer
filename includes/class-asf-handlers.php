@@ -16,10 +16,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 class ASF_OnPage {
 
 	public static function init() {
-		add_action( 'wp_ajax_asf_onpage_scan',          array( __CLASS__, 'handle' ) );
-		add_action( 'wp_ajax_asf_onpage_bulk_autofix', array( __CLASS__, 'handle_bulk_autofix' ) );
-		add_action( 'wp_ajax_asf_onpage_get_post_meta',array( __CLASS__, 'handle_get_post_meta' ) );
-		add_action( 'wp_ajax_asf_onpage_save_post_meta',array( __CLASS__, 'handle_save_post_meta' ) );
+		add_action( 'wp_ajax_asf_onpage_scan',                array( __CLASS__, 'handle' ) );
+		add_action( 'wp_ajax_asf_onpage_bulk_autofix',       array( __CLASS__, 'handle_bulk_autofix' ) );
+		add_action( 'wp_ajax_asf_onpage_autofix_single_ai',  array( __CLASS__, 'handle_autofix_single_ai' ) );
+		add_action( 'wp_ajax_asf_onpage_generate_single_seo',array( __CLASS__, 'handle_generate_single_seo' ) );
+		add_action( 'wp_ajax_asf_onpage_get_post_meta',      array( __CLASS__, 'handle_get_post_meta' ) );
+		add_action( 'wp_ajax_asf_onpage_save_post_meta',     array( __CLASS__, 'handle_save_post_meta' ) );
 	}
 
 	public static function handle() {
@@ -81,7 +83,7 @@ class ASF_OnPage {
 			elseif ( $meta_len < 80 )   $issues[] = array( 'type' => 'warn',  'key' => 'meta_desc', 'msg' => 'Meta Description too short (' . $meta_len . ' chars). Aim for 120–155.' );
 			elseif ( $meta_len > 160 )  $issues[] = array( 'type' => 'warn',  'key' => 'meta_desc', 'msg' => 'Meta Description too long (' . $meta_len . ' chars). Keep under 160.' );
 
-			// ── H1 check (checks both content and Elementor JSON data) ──
+			// ── H1 check (checks content, Elementor JSON, theme title, and native WooCommerce single-product template) ──
 			$has_h1 = preg_match( '/<h1[\s>]/i', $content );
 			if ( ! $has_h1 ) {
 				$elem_data = get_post_meta( $post->ID, '_elementor_data', true );
@@ -89,20 +91,45 @@ class ASF_OnPage {
 					$has_h1 = true;
 				}
 			}
+			// WordPress themes and WooCommerce templates render the page/product title as H1 in single/page templates
+			if ( ! $has_h1 && ( $post->post_type === 'product' || ! empty( $post->post_title ) ) ) {
+				$has_h1 = true;
+			}
 
 			if ( ! $has_h1 ) {
 				$issues[] = array( 'type' => 'error', 'key' => 'h1', 'msg' => 'Missing H1 heading — every page needs exactly one H1 tag with the primary keyword.' );
-			} elseif ( preg_match_all( '/<h1[\s>]/i', $content ) > 1 ) {
+			} elseif ( $post->post_type !== 'product' && preg_match_all( '/<h1[\s>]/i', $content ) > 1 ) {
 				$issues[] = array( 'type' => 'warn', 'key' => 'h1', 'msg' => 'Multiple H1 tags detected — a page should have only one H1.' );
 			}
 
-			// ── H2 check ─────────────────────────────────────────────
-			if ( ! preg_match( '/<h2[\s>]/i', $content ) && mb_strlen( strip_tags( $content ) ) > 300 ) {
+			// ── Content length & Depth (with Elementor page builder text extraction) ──
+			$full_text = $content;
+			if ( ! empty( $post->post_excerpt ) ) {
+				$full_text .= ' ' . $post->post_excerpt;
+			}
+			$elem_data = get_post_meta( $post->ID, '_elementor_data', true );
+			if ( ! empty( $elem_data ) && is_string( $elem_data ) ) {
+				$elem_parsed = json_decode( $elem_data, true );
+				if ( is_array( $elem_parsed ) ) {
+					$elem_extracted = array();
+					array_walk_recursive( $elem_parsed, function( $v, $k ) use ( &$elem_extracted ) {
+						if ( in_array( $k, array( 'title', 'editor', 'text', 'heading_title', 'html', 'description' ), true ) && is_string( $v ) ) {
+							$elem_extracted[] = $v;
+						}
+					} );
+					if ( ! empty( $elem_extracted ) ) {
+						$full_text .= ' ' . implode( ' ', $elem_extracted );
+					}
+				}
+			}
+
+			// ── H2 check (applies to long informational articles and pages) ──
+			if ( in_array( $post->post_type, array( 'post', 'page' ), true ) && ! preg_match( '/<h2[\s>]/i', $full_text ) && mb_strlen( strip_tags( $full_text ) ) > 450 ) {
 				$issues[] = array( 'type' => 'warn', 'key' => 'h2', 'msg' => 'No H2 subheadings found — use H2 tags to structure long content for readability and SEO.' );
 			}
 
 			// ── Image alt text ────────────────────────────────────────
-			if ( preg_match_all( '/<img[^>]+>/i', $content, $imgs ) ) {
+			if ( preg_match_all( '/<img[^>]+>/i', $full_text, $imgs ) ) {
 				$no_alt = 0;
 				foreach ( $imgs[0] as $img ) {
 					if ( ! preg_match( '/alt=["\'][^"\']+["\']/', $img ) ) $no_alt++;
@@ -112,9 +139,8 @@ class ASF_OnPage {
 				}
 			}
 
-			// ── Content length ────────────────────────────────────────
-			$content_words = str_word_count( strip_tags( $content ) );
-			if ( $content_words < 300 && in_array( $post->post_type, array( 'post', 'page' ), true ) ) {
+			$content_words = str_word_count( strip_tags( $full_text ) );
+			if ( $content_words < 300 && $post->post_type === 'post' ) {
 				$issues[] = array( 'type' => 'warn', 'key' => 'content', 'msg' => 'Thin content (' . $content_words . ' words) — blog posts should have at least 600 words for ranking.' );
 			}
 
@@ -128,17 +154,19 @@ class ASF_OnPage {
 				$issues[] = array( 'type' => 'warn', 'key' => 'schema', 'msg' => 'No Schema JSON-LD markup — add Organization/Article schema for rich snippets.' );
 			}
 
-			// ── Internal links ────────────────────────────────────────
-			preg_match_all( '/<a[^>]+href=["\']([^"\']*)["\'][^>]*>/i', $content, $links );
+			// ── Internal links (checks full text including Elementor links) ──
+			preg_match_all( '/<a[^>]+href=["\']([^"\']*)["\'][^>]*>/i', $full_text, $links );
 			$internal_links = 0;
 			$site_host      = parse_url( home_url(), PHP_URL_HOST );
-			foreach ( $links[1] as $link ) {
-				$link_host = parse_url( $link, PHP_URL_HOST );
-				if ( ! $link_host || $link_host === $site_host || strpos( $link, '/' ) === 0 ) {
-					$internal_links++;
+			if ( ! empty( $links[1] ) ) {
+				foreach ( $links[1] as $link ) {
+					$link_host = parse_url( $link, PHP_URL_HOST );
+					if ( ! $link_host || $link_host === $site_host || strpos( $link, '/' ) === 0 ) {
+						$internal_links++;
+					}
 				}
 			}
-			if ( $internal_links === 0 && mb_strlen( strip_tags( $content ) ) > 200 ) {
+			if ( $internal_links === 0 && mb_strlen( strip_tags( $full_text ) ) > 250 && $post->post_type !== 'product' ) {
 				$issues[] = array( 'type' => 'warn', 'key' => 'links', 'msg' => 'No internal links found — add links to related pages to improve crawlability.' );
 			}
 
@@ -148,7 +176,7 @@ class ASF_OnPage {
 				'post_type'      => esc_html( $post->post_type ),
 				'url'            => get_permalink( $post->ID ),
 				'edit_url'       => get_edit_post_link( $post->ID ),
-				'snippet'        => wp_trim_words( wp_strip_all_tags( strip_shortcodes( $content ) ), 40, '...' ),
+				'snippet'        => wp_trim_words( wp_strip_all_tags( strip_shortcodes( $full_text ) ), 40, '...' ),
 				'word_count'     => $content_words,
 				'internal_links' => $internal_links,
 				'issues'         => $issues,
@@ -196,13 +224,9 @@ class ASF_OnPage {
 				?: ( get_post_meta( $p->ID, 'rank_math_description', true )
 				?: get_post_meta( $p->ID, '_yoast_wpseo_metadesc', true ) );
 
-			if ( empty( trim( (string) $desc ) ) ) {
-				$clean_content = wp_strip_all_tags( strip_shortcodes( $p->post_content ) );
-				if ( mb_strlen( $clean_content ) >= 80 ) {
-					$gen_desc = wp_html_excerpt( $clean_content, 145, '…' );
-				} else {
-					$gen_desc = sprintf( 'Discover %s on %s. Get reliable information, services, and fast support today.', get_the_title( $p->ID ), $site_name );
-				}
+			if ( empty( trim( (string) $desc ) ) || mb_strlen( trim( (string) $desc ) ) < 80 ) {
+				$seo_data = ASF_AIChatbot::generate_seo_data( $p->ID, 'meta' );
+				$gen_desc = $seo_data['meta_desc'];
 
 				update_post_meta( $p->ID, '_asf_meta_description', sanitize_text_field( $gen_desc ) );
 				update_post_meta( $p->ID, 'rank_math_description', sanitize_text_field( $gen_desc ) );
@@ -216,11 +240,10 @@ class ASF_OnPage {
 				?: ( get_post_meta( $p->ID, '_yoast_wpseo_title', true )
 				?: get_the_title( $p->ID ) ) );
 
-			if ( mb_strlen( trim( (string) $title ) ) < 25 ) {
-				$gen_title = get_the_title( $p->ID ) . ' — ' . $site_name;
-				if ( mb_strlen( $gen_title ) < 40 ) {
-					$gen_title .= ' | Official';
-				}
+			if ( mb_strlen( trim( (string) $title ) ) < 30 || mb_strlen( trim( (string) $title ) ) > 65 ) {
+				$seo_data = ASF_AIChatbot::generate_seo_data( $p->ID, 'title' );
+				$gen_title = $seo_data['title'];
+
 				update_post_meta( $p->ID, '_asf_seo_title', sanitize_text_field( $gen_title ) );
 				update_post_meta( $p->ID, 'rank_math_title', sanitize_text_field( $gen_title ) );
 				update_post_meta( $p->ID, '_yoast_wpseo_title', sanitize_text_field( $gen_title ) );
@@ -228,14 +251,100 @@ class ASF_OnPage {
 			}
 
 			if ( $modified ) {
+				if ( ! empty( $seo_data['focus_keyword'] ) ) {
+					update_post_meta( $p->ID, '_asf_focus_keyword', sanitize_text_field( $seo_data['focus_keyword'] ) );
+					update_post_meta( $p->ID, 'rank_math_focus_keyword', sanitize_text_field( $seo_data['focus_keyword'] ) );
+					update_post_meta( $p->ID, '_yoast_wpseo_focuskw', sanitize_text_field( $seo_data['focus_keyword'] ) );
+				}
 				$fixed_count++;
 			}
 		}
 
+		$stats = null;
+		if ( $fixed_count > 0 ) {
+			$stats = ASF_StatsTracker::record_fix( 'title_and_meta', $fixed_count, 'Bulk Auto-Fix', 'Bulk AI: Optimized ' . $fixed_count . ' pages with SEO Titles, Meta Descriptions & Focus Keywords' );
+		}
+
 		wp_send_json( array(
-			'success' => true,
-			'message' => 'Successfully auto-fixed and generated SEO titles & meta descriptions for ' . $fixed_count . ' pages!',
+			'success'     => true,
+			'message'     => 'Successfully auto-fixed and generated SEO titles, meta descriptions & focus keywords for ' . $fixed_count . ' pages!',
 			'fixed_count' => $fixed_count,
+			'stats'       => $stats,
+		) );
+	}
+
+	/**
+	 * 1-Click AI Auto-Fix for a single page
+	 * Generates SEO Title (48-60 chars), Meta Description (120-155 chars) & Primary Focus Keyword
+	 * Saves directly to _asf_* and syncs with Rank Math & Yoast
+	 */
+	public static function handle_autofix_single_ai() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = intval( $_REQUEST['post_id'] ?? 0 );
+		$post    = get_post( $post_id );
+		if ( ! $post_id || ! $post ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Invalid Post ID.' ) );
+		}
+
+		$seo   = ASF_AIChatbot::generate_seo_data( $post_id, 'all' );
+		$title = sanitize_text_field( $seo['title'] ?? '' );
+		$desc  = sanitize_text_field( $seo['meta_desc'] ?? '' );
+		$kw    = sanitize_text_field( $seo['focus_keyword'] ?? '' );
+
+		if ( ! empty( $title ) ) {
+			update_post_meta( $post_id, '_asf_seo_title', $title );
+			update_post_meta( $post_id, 'rank_math_title', $title );
+			update_post_meta( $post_id, '_yoast_wpseo_title', $title );
+		}
+		if ( ! empty( $desc ) ) {
+			update_post_meta( $post_id, '_asf_meta_description', $desc );
+			update_post_meta( $post_id, 'rank_math_description', $desc );
+			update_post_meta( $post_id, '_yoast_wpseo_metadesc', $desc );
+		}
+		if ( ! empty( $kw ) ) {
+			update_post_meta( $post_id, '_asf_focus_keyword', $kw );
+			update_post_meta( $post_id, 'rank_math_focus_keyword', $kw );
+			update_post_meta( $post_id, '_yoast_wpseo_focuskw', $kw );
+		}
+
+		$p_title = get_the_title( $post_id );
+		$stats   = ASF_StatsTracker::record_fix( 'title_and_meta', 1, $p_title, 'AI 1-Click: SEO Title, Meta Description & Focus Keyword generated for "' . $p_title . '"' );
+
+		wp_send_json( array(
+			'success'       => true,
+			'post_id'       => $post_id,
+			'title'         => $title,
+			'meta_desc'     => $desc,
+			'focus_keyword' => $kw,
+			'source'        => $seo['source'] ?? 'AI',
+			'stats'         => $stats,
+			'message'       => '✓ Page SEO metadata successfully optimized with AI!',
+		) );
+	}
+
+	/**
+	 * Generates preview AI metadata (Title, Meta Description, Focus Keyword) for modal auto-fill without saving
+	 */
+	public static function handle_generate_single_seo() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = intval( $_REQUEST['post_id'] ?? 0 );
+		$post    = get_post( $post_id );
+		if ( ! $post_id || ! $post ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Invalid Post ID.' ) );
+		}
+
+		$seo = ASF_AIChatbot::generate_seo_data( $post_id, 'all' );
+		wp_send_json( array(
+			'success'       => true,
+			'post_id'       => $post_id,
+			'title'         => $seo['title'] ?? '',
+			'meta_desc'     => $seo['meta_desc'] ?? '',
+			'focus_keyword' => $seo['focus_keyword'] ?? '',
+			'source'        => $seo['source'] ?? 'AI',
 		) );
 	}
 
@@ -323,9 +432,16 @@ class ASF_OnPage {
 		update_post_meta( $post_id, '_yoast_wpseo_metadesc', $meta_desc );
 		update_post_meta( $post_id, '_yoast_wpseo_focuskw', $keyword );
 
+		$p_title     = get_the_title( $post_id );
+		$title_saved = ! empty( $seo_title );
+		$desc_saved  = ! empty( $meta_desc );
+		$fix_type    = ( $title_saved && $desc_saved ) ? 'title_and_meta' : ( $title_saved ? 'title' : 'meta' );
+		$stats       = ASF_StatsTracker::record_fix( $fix_type, 1, $p_title, 'Quick-Fix: SEO Title & Meta Description saved for "' . $p_title . '"' );
+
 		wp_send_json( array(
 			'success' => true,
 			'message' => 'SEO metadata successfully saved for Post #' . $post_id . '!',
+			'stats'   => $stats,
 		) );
 	}
 }
@@ -403,7 +519,524 @@ class ASF_LinkCleaner {
 			}
 		}
 
+		if ( ! empty( $results['fixed'] ) ) {
+			ASF_StatsTracker::record_fix( 'typo', $results['fixed'], 'Broken Link Cleaner', 'Cleaned ' . $results['fixed'] . ' broken URL typo(s)' );
+		}
+
 		wp_send_json( array( 'success' => true, 'data' => $results ) );
+	}
+}
+
+/* ==============================================================
+   SMART INTERNAL LINKING & CATEGORY SILO ENGINE
+   ============================================================== */
+class ASF_InternalLinks {
+
+	public static function init() {
+		add_action( 'wp_ajax_asf_autolink_single_page',       array( __CLASS__, 'handle_autolink_single_page' ) );
+		add_action( 'wp_ajax_asf_autolink_bulk_pages',        array( __CLASS__, 'handle_autolink_bulk_pages' ) );
+		add_action( 'wp_ajax_asf_get_internal_link_targets',  array( __CLASS__, 'handle_get_targets' ) );
+		add_action( 'wp_ajax_asf_get_internal_linking_stats', array( __CLASS__, 'handle_get_stats' ) );
+	}
+
+	/**
+	 * Builds indexed dictionary of target categories, landing pages and focus keywords
+	 */
+	public static function build_target_dictionary( $exclude_id = 0 ) {
+		$targets   = array();
+		$seen_urls = array();
+
+		// 1. WooCommerce Product Categories
+		if ( taxonomy_exists( 'product_cat' ) ) {
+			$prod_cats = get_terms( array(
+				'taxonomy'   => 'product_cat',
+				'hide_empty' => false,
+			) );
+			if ( ! is_wp_error( $prod_cats ) && ! empty( $prod_cats ) ) {
+				foreach ( $prod_cats as $cat ) {
+					$link = get_term_link( $cat );
+					if ( is_wp_error( $link ) || empty( $link ) ) continue;
+					if ( isset( $seen_urls[ $link ] ) ) continue;
+					$seen_urls[ $link ] = true;
+
+					$name = trim( $cat->name );
+					if ( mb_strlen( $name ) >= 3 ) {
+						$targets[] = array(
+							'keyword' => $name,
+							'url'     => $link,
+							'name'    => $name,
+							'type'    => 'product_cat',
+							'term_id' => $cat->term_id,
+						);
+					}
+				}
+			}
+		}
+
+		// 2. Standard Post Categories
+		if ( taxonomy_exists( 'category' ) ) {
+			$post_cats = get_terms( array(
+				'taxonomy'   => 'category',
+				'hide_empty' => false,
+			) );
+			if ( ! is_wp_error( $post_cats ) && ! empty( $post_cats ) ) {
+				foreach ( $post_cats as $cat ) {
+					if ( in_array( strtolower( $cat->name ), array( 'uncategorized', 'general' ), true ) ) continue;
+					$link = get_term_link( $cat );
+					if ( is_wp_error( $link ) || empty( $link ) ) continue;
+					if ( isset( $seen_urls[ $link ] ) ) continue;
+					$seen_urls[ $link ] = true;
+
+					$name = trim( $cat->name );
+					if ( mb_strlen( $name ) >= 3 ) {
+						$targets[] = array(
+							'keyword' => $name,
+							'url'     => $link,
+							'name'    => $name,
+							'type'    => 'category',
+							'term_id' => $cat->term_id,
+						);
+					}
+				}
+			}
+		}
+
+		// 3. High-Value Pillar Service Pages & Top Products with Focus Keywords
+		$key_pages = get_posts( array(
+			'post_type'      => array( 'page', 'product' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => 150,
+			'exclude'        => $exclude_id ? array( $exclude_id ) : array(),
+		) );
+
+		foreach ( $key_pages as $kp ) {
+			$link = get_permalink( $kp->ID );
+			if ( ! $link || isset( $seen_urls[ $link ] ) ) continue;
+
+			$kw = get_post_meta( $kp->ID, '_asf_focus_keyword', true );
+			if ( empty( $kw ) ) {
+				$raw_title = trim( $kp->post_title );
+				if ( mb_strlen( $raw_title ) >= 4 && mb_strlen( $raw_title ) <= 35 && ! in_array( strtolower( $raw_title ), array( 'home', 'cart', 'checkout', 'my account', 'sample page' ), true ) ) {
+					$kw = $raw_title;
+				}
+			}
+
+			if ( ! empty( $kw ) && mb_strlen( $kw ) >= 3 ) {
+				$seen_urls[ $link ] = true;
+				$targets[] = array(
+					'keyword' => $kw,
+					'url'     => $link,
+					'name'    => get_the_title( $kp->ID ),
+					'type'    => $kp->post_type,
+					'post_id' => $kp->ID,
+				);
+			}
+		}
+
+		// Sort descending by keyword length so specific multi-word phrases match before short words
+		usort( $targets, function( $a, $b ) {
+			return mb_strlen( $b['keyword'] ) - mb_strlen( $a['keyword'] );
+		} );
+
+		return $targets;
+	}
+
+	/**
+	 * Counts internal links in given HTML content
+	 */
+	public static function count_internal_links( $content ) {
+		if ( empty( $content ) ) return 0;
+		preg_match_all( '/<a[^>]+href=["\']([^"\']*)["\'][^>]*>/i', $content, $links );
+		$internal_links = 0;
+		$site_host      = parse_url( home_url(), PHP_URL_HOST );
+		if ( ! empty( $links[1] ) ) {
+			foreach ( $links[1] as $link ) {
+				$link_host = parse_url( $link, PHP_URL_HOST );
+				if ( ! $link_host || $link_host === $site_host || strpos( $link, '/' ) === 0 ) {
+					$internal_links++;
+				}
+			}
+		}
+		return $internal_links;
+	}
+
+	/**
+	 * Safely replaces target category/service keywords in body text with contextual internal links
+	 * Strictly skips existing <a>, <h1-h6>, tag attributes, scripts, buttons, and self-links.
+	 */
+	public static function auto_link_content( $content, $targets, $exclude_url = '', $max_links = 3 ) {
+		if ( empty( $content ) || empty( $targets ) ) {
+			return array( 'content' => $content, 'links_added' => 0, 'added_links' => array() );
+		}
+
+		$tokens = preg_split( '/(<\/?[a-zA-Z0-9]+(?:\s+[^>]*?)?>|<!--[\s\S]*?-->)/i', $content, -1, PREG_SPLIT_DELIM_CAPTURE );
+		if ( ! is_array( $tokens ) ) {
+			return array( 'content' => $content, 'links_added' => 0, 'added_links' => array() );
+		}
+
+		$forbidden_tags = array( 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'script', 'style', 'button', 'input', 'textarea', 'select' );
+		$in_forbidden   = 0;
+		$links_added    = 0;
+		$used_targets   = array();
+		$added_details  = array();
+		$new_tokens     = array();
+
+		$exclude_path = $exclude_url ? rtrim( (string) parse_url( $exclude_url, PHP_URL_PATH ), '/' ) : '';
+
+		foreach ( $tokens as $token ) {
+			if ( $token === '' ) continue;
+
+			if ( preg_match( '/^<(\/)?([a-zA-Z0-9]+)/', $token, $tm ) ) {
+				$is_closing = ! empty( $tm[1] );
+				$tag_name   = strtolower( $tm[2] );
+				if ( in_array( $tag_name, $forbidden_tags, true ) ) {
+					if ( $is_closing ) {
+						$in_forbidden = max( 0, $in_forbidden - 1 );
+					} else {
+						$in_forbidden++;
+					}
+				}
+				$new_tokens[] = $token;
+			} else {
+				// Text node outside forbidden tags
+				if ( $in_forbidden === 0 && $links_added < $max_links ) {
+					foreach ( $targets as $target ) {
+						if ( $links_added >= $max_links ) break;
+
+						$kw = trim( $target['keyword'] );
+						if ( empty( $kw ) || mb_strlen( $kw ) < 3 ) continue;
+
+						$lower_kw = mb_strtolower( $kw );
+						if ( isset( $used_targets[ $lower_kw ] ) ) continue;
+
+						// Avoid self-linking to the same page or category
+						if ( $exclude_path ) {
+							$target_path = rtrim( (string) parse_url( $target['url'], PHP_URL_PATH ), '/' );
+							if ( $target_path && $target_path === $exclude_path ) {
+								continue;
+							}
+						}
+
+						$pattern = '/\b(' . preg_quote( $kw, '/' ) . ')\b/i';
+						if ( preg_match( $pattern, $token ) ) {
+							$target_url   = esc_url( $target['url'] );
+							$target_title = esc_attr( $target['name'] );
+
+							$token = preg_replace_callback( $pattern, function( $m ) use ( $target_url, $target_title, $lower_kw, &$links_added, &$used_targets, &$added_details ) {
+								if ( isset( $used_targets[ $lower_kw ] ) ) {
+									return $m[0];
+								}
+								$links_added++;
+								$used_targets[ $lower_kw ] = true;
+								$added_details[] = array(
+									'keyword' => $m[1],
+									'url'     => $target_url,
+									'title'   => $target_title,
+								);
+								return '<a href="' . $target_url . '" title="' . $target_title . '">' . $m[1] . '</a>';
+							}, $token, 1 );
+						}
+					}
+				}
+				$new_tokens[] = $token;
+			}
+		}
+
+		return array(
+			'content'     => implode( '', $new_tokens ),
+			'links_added' => $links_added,
+			'added_links' => $added_details,
+		);
+	}
+
+	/**
+	 * AJAX: Auto-link a single page/post/product
+	 */
+	public static function handle_autolink_single_page() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = intval( $_REQUEST['post_id'] ?? 0 );
+		$post    = get_post( $post_id );
+		if ( ! $post_id || ! $post ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Invalid Post ID.' ) );
+		}
+
+		$targets = self::build_target_dictionary( $post_id );
+		if ( empty( $targets ) ) {
+			wp_send_json( array( 'success' => false, 'message' => 'No target category pages or focus keywords indexed.' ) );
+		}
+
+		$permalink = get_permalink( $post_id );
+		$res       = self::auto_link_content( $post->post_content, $targets, $permalink, 3 );
+
+		if ( $res['links_added'] > 0 ) {
+			wp_update_post( array(
+				'ID'           => $post_id,
+				'post_content' => $res['content'],
+			) );
+
+			$total_internal = self::count_internal_links( $res['content'] );
+			$p_title        = get_the_title( $post_id );
+			$stats          = ASF_StatsTracker::record_fix( 'internal_link', $res['links_added'], $p_title, 'Smart Silo: Added ' . $res['links_added'] . ' internal link(s) to "' . $p_title . '"' );
+
+			wp_send_json( array(
+				'success'        => true,
+				'post_id'        => $post_id,
+				'links_added'    => $res['links_added'],
+				'added_links'    => $res['added_links'],
+				'total_internal' => $total_internal,
+				'stats'          => $stats,
+				'message'        => '✓ Contextually generated ' . $res['links_added'] . ' internal link(s) to related categories & services!',
+			) );
+		} else {
+			$total_internal = self::count_internal_links( $post->post_content );
+			wp_send_json( array(
+				'success'        => true,
+				'post_id'        => $post_id,
+				'links_added'    => 0,
+				'added_links'    => array(),
+				'total_internal' => $total_internal,
+				'stats'          => ASF_StatsTracker::get_stats(),
+				'message'        => 'No matching category keywords found in body text, or max links already reached.',
+			) );
+		}
+	}
+
+	/**
+	 * AJAX: Bulk auto-link multiple pages
+	 */
+	public static function handle_autolink_bulk_pages() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$public_types  = array_values( get_post_types( array( 'public' => true ) ) );
+		$exclude_types = array(
+			'attachment', 'nav_menu_item', 'revision', 'custom_css', 'customize_changeset',
+			'oembed_cache', 'user_request', 'wp_block', 'wp_template', 'wp_template_part',
+			'wp_global_styles', 'wp_navigation', 'elementor_library', 'elementor_snippet',
+			'elementor_font', 'elementor_icons', 'e-landing-page', 'action_monitor'
+		);
+		$post_types = array_values( array_diff( $public_types, $exclude_types ) );
+
+		$posts = get_posts( array(
+			'post_type'      => $post_types,
+			'post_status'    => 'publish',
+			'posts_per_page' => 150,
+		) );
+
+		$targets      = self::build_target_dictionary();
+		$total_linked = 0;
+		$pages_fixed  = 0;
+
+		foreach ( $posts as $p ) {
+			$cur_links = self::count_internal_links( $p->post_content );
+			if ( $cur_links >= 3 ) continue;
+
+			$permalink = get_permalink( $p->ID );
+			$res       = self::auto_link_content( $p->post_content, $targets, $permalink, ( 3 - $cur_links ) );
+
+			if ( $res['links_added'] > 0 ) {
+				wp_update_post( array(
+					'ID'           => $p->ID,
+					'post_content' => $res['content'],
+				) );
+				$total_linked += $res['links_added'];
+				$pages_fixed++;
+			}
+		}
+
+		$stats = null;
+		if ( $total_linked > 0 ) {
+			$stats = ASF_StatsTracker::record_fix( 'internal_link', $total_linked, 'Site-Wide Silo Engine', 'Smart Silo: Added ' . $total_linked . ' internal links across ' . $pages_fixed . ' page(s)' );
+		}
+
+		wp_send_json( array(
+			'success'      => true,
+			'total_linked' => $total_linked,
+			'pages_fixed'  => $pages_fixed,
+			'stats'        => $stats ?: ASF_StatsTracker::get_stats(),
+			'message'      => "✓ Smart Link Silo Engine generated {$total_linked} internal links across {$pages_fixed} pages!",
+		) );
+	}
+
+	/**
+	 * AJAX: Returns targets dictionary for preview modal/table
+	 */
+	public static function handle_get_targets() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$targets = self::build_target_dictionary();
+		wp_send_json( array(
+			'success' => true,
+			'total'   => count( $targets ),
+			'targets' => array_slice( $targets, 0, 100 ),
+		) );
+	}
+
+	/**
+	 * AJAX: Returns internal linking stats
+	 */
+	public static function handle_get_stats() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$targets = self::build_target_dictionary();
+		$posts   = get_posts( array(
+			'post_type'      => array( 'page', 'post', 'product' ),
+			'post_status'    => 'publish',
+			'posts_per_page' => 200,
+		) );
+
+		$needs_links = 0;
+		$total_links = 0;
+		foreach ( $posts as $p ) {
+			$c = self::count_internal_links( $p->post_content );
+			$total_links += $c;
+			if ( $c === 0 ) {
+				$needs_links++;
+			}
+		}
+
+		wp_send_json( array(
+			'success'     => true,
+			'categories'  => count( $targets ),
+			'total_posts' => count( $posts ),
+			'total_links' => $total_links,
+			'needs_links' => $needs_links,
+		) );
+	}
+}
+
+/* ==============================================================
+   PERSISTENT LIFETIME SEO STATS & OPTIMIZATION TRACKER
+   ============================================================== */
+class ASF_StatsTracker {
+
+	const OPT_STATS = 'asf_lifetime_stats';
+
+	public static function init() {
+		add_action( 'wp_ajax_asf_get_live_stats', array( __CLASS__, 'handle_get_live_stats' ) );
+		add_action( 'wp_ajax_asf_reset_stats',    array( __CLASS__, 'handle_reset_stats' ) );
+	}
+
+	/**
+	 * Retrieve all persistent lifetime optimization metrics from wp_options
+	 */
+	public static function get_stats() {
+		$defaults = array(
+			'total_fixes'        => 0,
+			'titles_fixed'       => 0,
+			'metas_fixed'        => 0,
+			'keywords_fixed'     => 0,
+			'links_generated'    => 0,
+			'alts_fixed'         => 0,
+			'typos_fixed'        => 0,
+			'h1_fixed'           => 0,
+			'last_activity_time' => 0,
+			'last_activity_msg'  => 'No optimizations recorded yet.',
+			'recent_activity'    => array(),
+		);
+		$saved = get_option( self::OPT_STATS, array() );
+		if ( ! is_array( $saved ) ) {
+			$saved = array();
+		}
+		return wp_parse_args( $saved, $defaults );
+	}
+
+	/**
+	 * Persistently record any optimization action applied to the site
+	 */
+	public static function record_fix( $type, $count = 1, $item_title = '', $details = '' ) {
+		$stats = self::get_stats();
+		$count = max( 1, (int) $count );
+
+		$stats['total_fixes'] += $count;
+
+		switch ( $type ) {
+			case 'title':
+				$stats['titles_fixed'] += $count;
+				break;
+			case 'meta':
+				$stats['metas_fixed'] += $count;
+				break;
+			case 'title_and_meta':
+				$stats['titles_fixed'] += $count;
+				$stats['metas_fixed']  += $count;
+				break;
+			case 'internal_link':
+				$stats['links_generated'] += $count;
+				break;
+			case 'alt':
+				$stats['alts_fixed'] += $count;
+				break;
+			case 'typo':
+				$stats['typos_fixed'] += $count;
+				break;
+			case 'h1':
+				$stats['h1_fixed'] += $count;
+				break;
+			case 'keyword':
+				$stats['keywords_fixed'] += $count;
+				break;
+		}
+
+		$now = current_time( 'timestamp' );
+		$stats['last_activity_time'] = $now;
+
+		$msg = $details;
+		if ( empty( $msg ) ) {
+			if ( $type === 'internal_link' ) {
+				$msg = sprintf( 'Added %d internal link(s) to "%s"', $count, $item_title );
+			} elseif ( $type === 'title_and_meta' ) {
+				$msg = sprintf( 'Saved SEO Title & Meta Description for "%s"', $item_title );
+			} elseif ( $type === 'meta' ) {
+				$msg = sprintf( 'Saved Meta Description for "%s"', $item_title );
+			} elseif ( $type === 'title' ) {
+				$msg = sprintf( 'Saved SEO Title for "%s"', $item_title );
+			} elseif ( $type === 'alt' ) {
+				$msg = sprintf( 'Fixed ALT text for %d image(s)', $count );
+			} elseif ( $type === 'typo' ) {
+				$msg = sprintf( 'Cleaned %d broken URL typo(s)', $count );
+			} else {
+				$msg = sprintf( 'Applied %d SEO optimization(s)', $count );
+			}
+		}
+		$stats['last_activity_msg'] = $msg;
+
+		if ( ! isset( $stats['recent_activity'] ) || ! is_array( $stats['recent_activity'] ) ) {
+			$stats['recent_activity'] = array();
+		}
+		array_unshift( $stats['recent_activity'], array(
+			'time'    => $now,
+			'date'    => current_time( 'mysql' ),
+			'type'    => $type,
+			'count'   => $count,
+			'title'   => $item_title,
+			'message' => $msg,
+		) );
+		$stats['recent_activity'] = array_slice( $stats['recent_activity'], 0, 25 );
+
+		update_option( self::OPT_STATS, $stats, false );
+
+		// Flush health score cache so health score re-evaluates fresh
+		delete_option( 'asf_health_score_cache' );
+
+		return $stats;
+	}
+
+	public static function handle_get_live_stats() {
+		asf_check_nonce();
+		asf_cap_check();
+		wp_send_json( array( 'success' => true, 'stats' => self::get_stats() ) );
+	}
+
+	public static function handle_reset_stats() {
+		asf_check_nonce();
+		asf_cap_check();
+		delete_option( self::OPT_STATS );
+		wp_send_json( array( 'success' => true, 'message' => 'Stats reset successfully.', 'stats' => self::get_stats() ) );
 	}
 }
 
@@ -609,7 +1242,8 @@ class ASF_Media {
 
 		if ( $att_id ) {
 			update_post_meta( $att_id, '_wp_attachment_image_alt', $alt );
-			wp_send_json( array( 'success' => true, 'message' => 'Alt text updated!' ) );
+			$stats = ASF_StatsTracker::record_fix( 'alt', 1, 'Attachment #' . $att_id, 'Fixed ALT text for image #' . $att_id );
+			wp_send_json( array( 'success' => true, 'message' => 'Alt text updated!', 'stats' => $stats ) );
 		}
 		wp_send_json( array( 'success' => false, 'message' => 'Invalid attachment ID' ) );
 	}
@@ -632,7 +1266,16 @@ class ASF_Media {
 			}
 		}
 
-		wp_send_json( array( 'success' => true, 'message' => 'Successfully updated ' . $count . ' image alt texts!' ) );
+		$stats = null;
+		if ( $count > 0 ) {
+			$stats = ASF_StatsTracker::record_fix( 'alt', $count, 'Media Library', 'Bulk updated ALT text for ' . $count . ' images' );
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'message' => 'Successfully updated ' . $count . ' image alt texts!',
+			'stats'   => $stats ?: ASF_StatsTracker::get_stats(),
+		) );
 	}
 
 	public static function handle_trash() {
@@ -702,6 +1345,11 @@ class ASF_Media {
 			}
 		}
 
+		$stats = null;
+		if ( $updated_count > 0 ) {
+			$stats = ASF_StatsTracker::record_fix( 'alt', $updated_count, 'Media Auto-Alt Generator', 'Auto-generated ' . $updated_count . ' clean image ALT tags' );
+		}
+
 		wp_send_json( array(
 			'success' => true,
 			'message' => '✨ Auto-generated alt text for ' . $updated_count . ' image(s)!',
@@ -709,6 +1357,7 @@ class ASF_Media {
 				'updated_count' => $updated_count,
 				'details'       => $fixed_details,
 			),
+			'stats'   => $stats ?: ASF_StatsTracker::get_stats(),
 		) );
 	}
 }
@@ -785,6 +1434,8 @@ class ASF_AutoFixer {
 		add_action( 'wp_ajax_asf_autofix_robots',              array( __CLASS__, 'handle_autofix_robots' ) );
 		add_action( 'wp_ajax_asf_autofix_metas',               array( __CLASS__, 'handle_autofix_metas' ) );
 		add_action( 'wp_ajax_asf_generate_single_meta_desc',  array( __CLASS__, 'handle_generate_single_meta_desc' ) );
+		add_action( 'wp_ajax_asf_generate_single_title',      array( __CLASS__, 'handle_generate_single_title' ) );
+		add_action( 'wp_ajax_asf_ai_batch_generate',          array( __CLASS__, 'handle_ai_batch_generate' ) );
 		add_action( 'wp_ajax_asf_autofix_titles',              array( __CLASS__, 'handle_autofix_titles' ) );
 		add_action( 'wp_ajax_asf_save_onpage_meta',            array( __CLASS__, 'handle_save_onpage_meta' ) );
 	}
@@ -793,67 +1444,20 @@ class ASF_AutoFixer {
 	 * Extracts page title and content/excerpt to generate a high-CTR, 120-155 char unique meta description
 	 */
 	public static function generate_smart_meta_desc( $post_id ) {
-		$post = get_post( $post_id );
-		if ( ! $post ) return '';
-
-		$title     = trim( strip_tags( get_the_title( $post_id ) ) );
-		$site_name = get_bloginfo( 'name' );
-		$raw       = $post->post_content;
-
-		// Check Elementor JSON data if post_content is short
-		if ( mb_strlen( trim( strip_tags( $raw ) ) ) < 40 ) {
-			$elem = get_post_meta( $post_id, '_elementor_data', true );
-			if ( $elem && is_string( $elem ) ) {
-				preg_match_all( '/"(?:editor|title)":"([^"]+)"/i', $elem, $m );
-				if ( ! empty( $m[1] ) ) {
-					$raw .= ' ' . implode( ' ', $m[1] );
-				}
-			}
-		}
-
-		$clean = strip_shortcodes( $raw );
-		$clean = wp_strip_all_tags( $clean );
-		$clean = preg_replace( '/\s+/', ' ', $clean );
-		$clean = trim( $clean );
-
-		if ( mb_strlen( $clean ) > 35 ) {
-			// Combine title with page content summary
-			$prefix    = $title . ' — ';
-			$max_len   = 152;
-			$remaining = $max_len - mb_strlen( $prefix );
-
-			if ( $remaining >= 50 ) {
-				$snippet = mb_substr( $clean, 0, $remaining );
-				$last_sp = mb_strrpos( $snippet, ' ' );
-				if ( $last_sp !== false && $last_sp > 30 ) {
-					$snippet = mb_substr( $snippet, 0, $last_sp );
-				}
-				$desc = $prefix . rtrim( $snippet, ' .,:;-' ) . '.';
-			} else {
-				$snippet = mb_substr( $clean, 0, 145 );
-				$last_sp = mb_strrpos( $snippet, ' ' );
-				if ( $last_sp !== false && $last_sp > 70 ) {
-					$snippet = mb_substr( $snippet, 0, $last_sp );
-				}
-				$desc = rtrim( $snippet, ' .,:;-' ) . '.';
-			}
-		} else {
-			$desc = $title . ' — Discover complete overview, services, and official updates on ' . $site_name . '.';
-			if ( mb_strlen( $desc ) > 155 ) {
-				$desc = mb_substr( $desc, 0, 150 );
-				$last_sp = mb_strrpos( $desc, ' ' );
-				if ( $last_sp !== false && $last_sp > 80 ) {
-					$desc = mb_substr( $desc, 0, $last_sp );
-				}
-				$desc = rtrim( $desc, ' .,:;-' ) . '.';
-			}
-		}
-
-		return $desc;
+		$seo = ASF_AIChatbot::generate_seo_data( $post_id, 'meta' );
+		return $seo['meta_desc'] ?? '';
 	}
 
 	/**
-	 * AJAX endpoint to generate a single smart meta description for a post
+	 * Generates a high-CTR, 48-60 char unique SEO title tag
+	 */
+	public static function generate_smart_title( $post_id ) {
+		$seo = ASF_AIChatbot::generate_seo_data( $post_id, 'title' );
+		return $seo['title'] ?? '';
+	}
+
+	/**
+	 * AJAX endpoint to generate a single smart meta description for a post using connected AI
 	 */
 	public static function handle_generate_single_meta_desc() {
 		asf_check_nonce();
@@ -864,11 +1468,65 @@ class ASF_AutoFixer {
 			wp_send_json( array( 'success' => false, 'message' => 'Invalid Post ID' ) );
 		}
 
-		$desc = self::generate_smart_meta_desc( $post_id );
+		$seo = ASF_AIChatbot::generate_seo_data( $post_id, 'meta' );
 		wp_send_json( array(
 			'success' => true,
-			'desc'    => $desc,
+			'desc'    => $seo['meta_desc'],
 			'post_id' => $post_id,
+			'source'  => $seo['source'] ?? 'AI Engine',
+		) );
+	}
+
+	/**
+	 * AJAX endpoint to generate a single smart SEO title tag for a post using connected AI
+	 */
+	public static function handle_generate_single_title() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$post_id = isset( $_REQUEST['post_id'] ) ? (int) $_REQUEST['post_id'] : 0;
+		if ( ! $post_id ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Invalid Post ID' ) );
+		}
+
+		$seo = ASF_AIChatbot::generate_seo_data( $post_id, 'title' );
+		wp_send_json( array(
+			'success' => true,
+			'title'   => $seo['title'],
+			'post_id' => $post_id,
+			'source'  => $seo['source'] ?? 'AI Engine',
+		) );
+	}
+
+	/**
+	 * AJAX endpoint for batch generating SEO titles/metas via connected AI
+	 */
+	public static function handle_ai_batch_generate() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$raw_ids = $_REQUEST['post_ids'] ?? array();
+		if ( is_string( $raw_ids ) ) {
+			$raw_ids = explode( ',', $raw_ids );
+		}
+		$post_ids = array_filter( array_map( 'intval', (array) $raw_ids ) );
+		$type     = sanitize_key( $_REQUEST['type'] ?? 'both' );
+
+		if ( empty( $post_ids ) ) {
+			wp_send_json( array( 'success' => false, 'message' => 'No Post IDs provided.' ) );
+		}
+
+		$post_ids = array_slice( $post_ids, 0, 15 );
+		$results  = array();
+
+		foreach ( $post_ids as $pid ) {
+			$results[ $pid ] = ASF_AIChatbot::generate_seo_data( $pid, $type );
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'results' => $results,
+			'count'   => count( $results ),
 		) );
 	}
 
@@ -901,9 +1559,14 @@ class ASF_AutoFixer {
 			}
 		}
 
+		if ( $fixed_count > 0 ) {
+			ASF_StatsTracker::record_fix( 'h1', $fixed_count, 'Auto-Fix H1 Headings', 'Added <h1> tags to ' . $fixed_count . ' page(s)' );
+		}
+
 		wp_send_json( array(
 			'success' => true,
 			'message' => '✨ Auto-fixed missing H1 headings on ' . $fixed_count . ' page(s)! Added <h1>[Page Title]</h1> tag to top of content.',
+			'stats'   => ASF_StatsTracker::get_stats(),
 		) );
 	}
 
@@ -952,10 +1615,15 @@ class ASF_AutoFixer {
 			}
 		}
 
+		if ( $fixed_count > 0 ) {
+			ASF_StatsTracker::record_fix( 'meta', $fixed_count, 'Auto-Fix Metas', 'Auto-generated ' . $fixed_count . ' meta descriptions' );
+		}
+
 		wp_send_json( array(
 			'success' => true,
 			'message' => '⚡ Auto-generated clean, content-aware meta descriptions for ' . $fixed_count . ' page(s) based on page titles and content excerpts!',
 			'data'    => array( 'fixed_count' => $fixed_count ),
+			'stats'   => ASF_StatsTracker::get_stats(),
 		) );
 	}
 
@@ -987,12 +1655,8 @@ class ASF_AutoFixer {
 			$is_bad_len  = ( mb_strlen( $clean_title ) < 25 || mb_strlen( $clean_title ) > 65 );
 
 			if ( empty( $clean_title ) || $is_dup || $is_bad_len ) {
-				$base_title = ! empty( $p->post_title ) ? $p->post_title : 'Page';
-				$new_title  = $base_title . ' — ' . $site_name;
-
-				if ( mb_strlen( $new_title ) > 60 ) {
-					$new_title = mb_substr( $new_title, 0, 57 ) . '...';
-				}
+				$seo = ASF_AIChatbot::generate_seo_data( $p->ID, 'title' );
+				$new_title = $seo['title'];
 
 				update_post_meta( $p->ID, '_asf_seo_title', $new_title );
 				update_post_meta( $p->ID, 'rank_math_title', $new_title );
@@ -1004,10 +1668,15 @@ class ASF_AutoFixer {
 			}
 		}
 
+		if ( $fixed_count > 0 ) {
+			ASF_StatsTracker::record_fix( 'title', $fixed_count, 'Auto-Fix Titles', 'Auto-generated & deduplicated ' . $fixed_count . ' SEO titles' );
+		}
+
 		wp_send_json( array(
 			'success' => true,
 			'message' => '⚡ Auto-optimized & deduplicated title tags for ' . $fixed_count . ' page(s)!',
 			'data'    => array( 'fixed_count' => $fixed_count ),
+			'stats'   => ASF_StatsTracker::get_stats(),
 		) );
 	}
 
@@ -1064,9 +1733,14 @@ class ASF_AutoFixer {
 			update_post_meta( $post_id, '_yoast_wpseo_metadesc', $desc );
 		}
 
+		$p_title = get_the_title( $post_id );
+		$type    = ( $title && $desc ) ? 'title_and_meta' : ( $title ? 'title' : 'meta' );
+		$stats   = ASF_StatsTracker::record_fix( $type, 1, $p_title, 'Updated Title & Meta Description for Post #' . $post_id );
+
 		wp_send_json( array(
 			'success' => true,
 			'message' => '✨ Title & Meta Description updated for Post #' . $post_id . '!',
+			'stats'   => $stats,
 		) );
 	}
 }
@@ -1269,8 +1943,12 @@ class ASF_AIChatbot {
 		asf_check_nonce();
 		asf_cap_check();
 
-		$prompt  = sanitize_textarea_field( $_REQUEST['prompt'] ?? '' );
-		$context = sanitize_textarea_field( $_REQUEST['context'] ?? '' );
+		$prompt         = sanitize_textarea_field( $_REQUEST['prompt'] ?? '' );
+		$context        = sanitize_textarea_field( $_REQUEST['context'] ?? '' );
+		$current_page   = sanitize_text_field( $_REQUEST['current_page'] ?? '' );
+		$screen_context = sanitize_textarea_field( $_REQUEST['screen_context'] ?? '' );
+		$history_raw    = $_REQUEST['history'] ?? '';
+		$history        = is_array( $history_raw ) ? $history_raw : json_decode( stripslashes( (string) $history_raw ), true );
 
 		if ( empty( trim( $prompt ) ) ) {
 			wp_send_json( array( 'success' => false, 'message' => 'Please enter a valid question or prompt.' ) );
@@ -1312,6 +1990,24 @@ When possible, provide:
 5. Example code/configuration if needed
 
 Never claim that an SEO issue exists unless the provided audit data supports it.";
+
+		if ( ! empty( $current_page ) ) {
+			$system_prompt .= "\n\nACTIVE USER CONTEXT & REAL-TIME SCREEN:
+The user is currently viewing the '{$current_page}' screen inside WordPress Admin.
+Screen details & live findings: {$screen_context}
+Always acknowledge their current screen and direct them clearly based on what they see.";
+		}
+
+		if ( ! empty( $history ) && is_array( $history ) ) {
+			$system_prompt .= "\n\nRECENT CONVERSATION HISTORY (MEMORY):\n";
+			foreach ( array_slice( $history, -6 ) as $h ) {
+				$r = sanitize_text_field( $h['role'] ?? 'user' );
+				$c = sanitize_text_field( $h['content'] ?? '' );
+				if ( ! empty( $c ) ) {
+					$system_prompt .= "{$r}: {$c}\n";
+				}
+			}
+		}
 
 		// ── Build Deep Structured JSON Site Snapshot ─────────────────────────
 		$last_audit_data = get_option( 'asf_last_audit_data', array() );
@@ -1764,6 +2460,481 @@ Never claim that an SEO issue exists unless the provided audit data supports it.
 			'success' => true,
 			'message' => '🎉 AI JSON Config Applied! Updated ' . $titles_updated . ' Title(s), ' . $metas_updated . ' Meta Description(s), Security & Speed settings.',
 		) );
+	}
+
+	/**
+	 * Centralized AI engine query dispatcher
+	 * Queries configured AI services: Groq LLaMA 3.3 (Primary), Google Gemini Flash (Failover), OpenRouter
+	 */
+	public static function query_llm( $system_prompt, $user_prompt, $json_mode = false ) {
+		// 1. Groq Ultra-Fast AI Engine
+		$groq_key = trim( get_option( 'asf_groq_api_key', '' ) );
+		if ( ! empty( $groq_key ) ) {
+			$groq_models = array( 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant' );
+			foreach ( $groq_models as $g_model ) {
+				$groq_body = array(
+					'model'       => $g_model,
+					'messages'    => array(
+						array( 'role' => 'system', 'content' => $system_prompt ),
+						array( 'role' => 'user',   'content' => $user_prompt ),
+					),
+					'temperature' => 0.4,
+				);
+				if ( $json_mode ) {
+					$groq_body['response_format'] = array( 'type' => 'json_object' );
+				}
+
+				$resp = wp_remote_post( 'https://api.groq.com/openai/v1/chat/completions', array(
+					'headers' => array(
+						'Content-Type'  => 'application/json',
+						'Authorization' => 'Bearer ' . $groq_key,
+						'User-Agent'    => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+					),
+					'body'    => wp_json_encode( $groq_body ),
+					'timeout' => 12,
+				) );
+
+				if ( ! is_wp_error( $resp ) && wp_remote_retrieve_response_code( $resp ) === 200 ) {
+					$json = json_decode( wp_remote_retrieve_body( $resp ), true );
+					$reply = $json['choices'][0]['message']['content'] ?? '';
+					if ( ! empty( trim( $reply ) ) ) {
+						return array( 'success' => true, 'reply' => trim( $reply ), 'source' => 'Groq AI (' . $g_model . ')' );
+					}
+				}
+			}
+		}
+
+		// 2. Google Gemini Flash API
+		$gemini_key = trim( get_option( 'asf_gemini_api_key', '' ) );
+		if ( ! empty( $gemini_key ) ) {
+			$url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+			$body = array(
+				'contents' => array(
+					array(
+						'parts' => array(
+							array( 'text' => $system_prompt . "\n\n" . $user_prompt )
+						)
+					)
+				)
+			);
+			if ( $json_mode ) {
+				$body['generationConfig'] = array( 'response_mime_type' => 'application/json' );
+			}
+
+			$resp = wp_remote_post( $url, array(
+				'headers' => array(
+					'Content-Type'   => 'application/json',
+					'X-goog-api-key' => $gemini_key,
+				),
+				'body'    => wp_json_encode( $body ),
+				'timeout' => 12,
+			) );
+
+			if ( ! is_wp_error( $resp ) && wp_remote_retrieve_response_code( $resp ) === 200 ) {
+				$data  = json_decode( wp_remote_retrieve_body( $resp ), true );
+				$reply = $data['candidates'][0]['content']['parts'][0]['text'] ?? '';
+				if ( ! empty( trim( $reply ) ) ) {
+					return array( 'success' => true, 'reply' => trim( $reply ), 'source' => 'Google Gemini Flash' );
+				}
+			}
+		}
+
+		// 3. OpenRouter API
+		$openrouter_key = trim( get_option( 'asf_openrouter_api_key', '' ) );
+		if ( ! empty( $openrouter_key ) ) {
+			$or_body = array(
+				'model'    => 'meta-llama/llama-3.3-70b-instruct:free',
+				'messages' => array(
+					array( 'role' => 'system', 'content' => $system_prompt ),
+					array( 'role' => 'user',   'content' => $user_prompt ),
+				),
+			);
+			if ( $json_mode ) {
+				$or_body['response_format'] = array( 'type' => 'json_object' );
+			}
+
+			$resp = wp_remote_post( 'https://openrouter.ai/api/v1/chat/completions', array(
+				'headers' => array(
+					'Content-Type'  => 'application/json',
+					'Authorization' => 'Bearer ' . $openrouter_key,
+					'HTTP-Referer'  => home_url(),
+					'X-Title'       => 'All-in-One SEO Fixer',
+				),
+				'body'    => wp_json_encode( $or_body ),
+				'timeout' => 12,
+			) );
+
+			if ( ! is_wp_error( $resp ) && wp_remote_retrieve_response_code( $resp ) === 200 ) {
+				$data  = json_decode( wp_remote_retrieve_body( $resp ), true );
+				$reply = $data['choices'][0]['message']['content'] ?? '';
+				if ( ! empty( trim( $reply ) ) ) {
+					return array( 'success' => true, 'reply' => trim( $reply ), 'source' => 'OpenRouter AI' );
+				}
+			}
+		}
+
+		return array( 'success' => false, 'reply' => '', 'source' => 'none' );
+	}
+
+	/**
+	 * Generates optimal, high-CTR SEO title (48-60 chars) and compelling meta description (120-155 chars)
+	 * for any post/page using connected AI with site details, falling back to smart heuristic engine.
+	 */
+	public static function generate_seo_data( $post_id, $type = 'both' ) {
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return array( 'title' => '', 'meta_desc' => '', 'source' => 'none' );
+		}
+
+		$raw_title   = trim( strip_tags( get_the_title( $post_id ) ) );
+		$site_name   = trim( get_bloginfo( 'name' ) );
+		if ( empty( $site_name ) || strtolower( $site_name ) === 'wordpress' ) {
+			$site_name = parse_url( home_url(), PHP_URL_HOST );
+			$site_name = preg_replace( '/^www\./i', '', $site_name );
+			$site_name = preg_replace( '/\.[a-z]{2,6}$/i', '', $site_name );
+			$site_name = ucfirst( $site_name );
+		}
+
+		$site_desc   = get_bloginfo( 'description' ) ?: '';
+		$site_url    = home_url( '/' );
+		$permalink   = get_permalink( $post_id );
+		$post_type   = $post->post_type;
+		$content_raw = '';
+		if ( ! empty( $post->post_excerpt ) ) {
+			$content_raw .= $post->post_excerpt . "\n";
+		}
+		$content_raw .= $post->post_content;
+
+		if ( mb_strlen( trim( strip_tags( $content_raw ) ) ) < 40 ) {
+			$elem = get_post_meta( $post_id, '_elementor_data', true );
+			if ( $elem && is_string( $elem ) ) {
+				preg_match_all( '/"(?:editor|title)":"([^"]+)"/i', $elem, $m );
+				if ( ! empty( $m[1] ) ) {
+					$content_raw .= ' ' . implode( ' ', $m[1] );
+				}
+			}
+		}
+
+		// Extract categories / product terms
+		$terms_summary = array();
+		if ( $post_type === 'product' && taxonomy_exists( 'product_cat' ) ) {
+			$terms = get_the_terms( $post_id, 'product_cat' );
+			if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
+				$terms_summary = wp_list_pluck( $terms, 'name' );
+			}
+		} elseif ( taxonomy_exists( 'category' ) ) {
+			$terms = get_the_terms( $post_id, 'category' );
+			if ( ! empty( $terms ) && ! is_wp_error( $terms ) ) {
+				$cat_names = wp_list_pluck( $terms, 'name' );
+				$terms_summary = array_filter( $cat_names, function( $n ) {
+					return ! in_array( strtolower( $n ), array( 'uncategorized', 'general' ), true );
+				} );
+			}
+		}
+		$categories_text = ! empty( $terms_summary ) ? implode( ', ', $terms_summary ) : '';
+
+		// Extra product metadata (price, SKU)
+		$extra_details = array();
+		if ( $post_type === 'product' ) {
+			$price = get_post_meta( $post_id, '_price', true );
+			if ( ! empty( $price ) ) {
+				$extra_details[] = 'Price: ' . $price;
+			}
+			$sku = get_post_meta( $post_id, '_sku', true );
+			if ( ! empty( $sku ) ) {
+				$extra_details[] = 'SKU: ' . $sku;
+			}
+		}
+		$extra_str = ! empty( $extra_details ) ? implode( ' | ', $extra_details ) : '';
+
+		$clean_content = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( strip_shortcodes( $content_raw ) ) ) );
+		$snippet       = wp_trim_words( $clean_content, 120, '...' );
+
+		preg_match_all( '/<h[12][^>]*>(.*?)<\/h[12]>/i', $post->post_content, $hm );
+		$headings = ! empty( $hm[1] ) ? array_slice( array_map( 'wp_strip_all_tags', $hm[1] ), 0, 3 ) : array();
+
+		// Check if any AI API key is configured
+		$groq_k = get_option( 'asf_groq_api_key', '' );
+		$gem_k  = get_option( 'asf_gemini_api_key', '' );
+		$or_k   = get_option( 'asf_openrouter_api_key', '' );
+
+		if ( ! empty( $groq_k ) || ! empty( $gem_k ) || ! empty( $or_k ) ) {
+			$system = "You are an elite Senior SEO Architect and Copywriter for {$site_name} ({$site_url}).
+Generate high-ranking, click-compelling metadata tailored specifically to this business and page content.
+Return strictly valid JSON only: {\"title\": \"...\", \"meta_desc\": \"...\", \"focus_keyword\": \"...\"}";
+
+			$user_prompt = "Generate optimal SEO metadata for this page:
+- Page Title: {$raw_title}
+- Post Type: {$post_type}" .
+( ! empty( $categories_text ) ? "\n- Categories: {$categories_text}" : '' ) .
+( ! empty( $extra_str ) ? "\n- Product Details: {$extra_str}" : '' ) . "
+- URL: {$permalink}
+- Content Snippet & Details: {$snippet}
+- Key Headings: " . ( ! empty( $headings ) ? implode( ' | ', $headings ) : 'None' ) . "
+- Website Brand: {$site_name}
+- Tagline: {$site_desc}
+
+RULES FOR TITLE:
+- Length: strictly 48 to 60 characters.
+- MUST be unique, high-CTR, and relevant to the page topic.
+- Include action/category terms (e.g. Repair, Fix, Buy, Certified, Services, Guide, Store) matching the page.
+- Cleanly integrate the brand name (' | {$site_name}' or ' — {$site_name}') if space permits.
+- NEVER append generic filler like 'Official Site', 'Home', or 'Website'.
+
+RULES FOR META DESCRIPTION:
+- Length: strictly 120 to 155 characters.
+- Compelling summary of the specific page with a clear value proposition and a subtle call to action (e.g. 'Order now', 'Book today', 'Explore services', 'Get a quote').
+- DO NOT just cut/paste the excerpt or repeat the title.
+- NEVER use generic templates.
+
+RULES FOR PRIMARY FOCUS KEYWORD:
+- Length: 2 to 4 words.
+- Natural high-volume target keyword representing the page's core subject (e.g. 'Acer Laptop Repair', 'Used iPhone 12 Pro Max', 'Electronics Repair Services', 'Laptop Power Adapter').
+- No punctuation, commas, or brand suffix.
+
+Return ONLY a valid JSON object:
+{\"title\": \"...\", \"meta_desc\": \"...\", \"focus_keyword\": \"...\"}";
+
+			$ai_res = self::query_llm( $system, $user_prompt, true );
+
+			if ( $ai_res['success'] && ! empty( $ai_res['reply'] ) ) {
+				$json_text = $ai_res['reply'];
+				if ( preg_match( '/\{[\s\S]*\}/', $json_text, $jm ) ) {
+					$json_text = $jm[0];
+				}
+				$parsed = json_decode( $json_text, true );
+
+				if ( is_array( $parsed ) && ! empty( $parsed['title'] ) && ! empty( $parsed['meta_desc'] ) ) {
+					$out_title = trim( str_replace( array( '"', "'" ), '', $parsed['title'] ) );
+					$out_meta  = trim( $parsed['meta_desc'] );
+					$out_kw    = trim( str_replace( array( '"', "'", '.', ',', '|', '-' ), ' ', $parsed['focus_keyword'] ?? '' ) );
+					$out_kw    = preg_replace( '/\s+/', ' ', $out_kw );
+
+					if ( empty( $out_kw ) ) {
+						$heur   = self::generate_smart_seo_heuristic( $post_id, 'all' );
+						$out_kw = $heur['focus_keyword'];
+					}
+
+					if ( mb_strlen( $out_title ) > 60 ) {
+						$out_title = mb_substr( $out_title, 0, 57 ) . '...';
+					}
+					if ( mb_strlen( $out_meta ) > 155 ) {
+						$out_meta = mb_substr( $out_meta, 0, 150 );
+						$lsp = mb_strrpos( $out_meta, ' ' );
+						if ( $lsp !== false && $lsp > 100 ) $out_meta = mb_substr( $out_meta, 0, $lsp );
+						$out_meta = rtrim( $out_meta, ' .,:;-' ) . '.';
+					}
+
+					return array(
+						'title'         => $out_title,
+						'meta_desc'     => $out_meta,
+						'focus_keyword' => $out_kw,
+						'source'        => $ai_res['source'],
+					);
+				}
+			}
+		}
+
+		// Fallback to intelligent heuristic generator
+		return self::generate_smart_seo_heuristic( $post_id, $type );
+	}
+
+	/**
+	 * Intelligent contextual SEO fallback engine
+	 * Generates unique 48-60 char titles and 120-155 char meta descriptions
+	 */
+	public static function generate_smart_seo_heuristic( $post_id, $type = 'both' ) {
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return array( 'title' => '', 'meta_desc' => '', 'source' => 'heuristic' );
+		}
+
+		$raw_title   = trim( strip_tags( get_the_title( $post_id ) ) );
+		$site_name   = trim( get_bloginfo( 'name' ) );
+		if ( empty( $site_name ) || strtolower( $site_name ) === 'wordpress' ) {
+			$site_name = parse_url( home_url(), PHP_URL_HOST );
+			$site_name = preg_replace( '/^www\./i', '', $site_name );
+			$site_name = preg_replace( '/\.[a-z]{2,6}$/i', '', $site_name );
+			$site_name = ucfirst( $site_name );
+		}
+
+		$slug        = $post->post_name;
+		$post_type   = $post->post_type;
+		$content_raw = '';
+		if ( ! empty( $post->post_excerpt ) ) {
+			$content_raw .= $post->post_excerpt . "\n";
+		}
+		$content_raw .= $post->post_content;
+
+		if ( mb_strlen( trim( strip_tags( $content_raw ) ) ) < 40 ) {
+			$elem = get_post_meta( $post_id, '_elementor_data', true );
+			if ( $elem && is_string( $elem ) ) {
+				preg_match_all( '/"(?:editor|title)":"([^"]+)"/i', $elem, $m );
+				if ( ! empty( $m[1] ) ) {
+					$content_raw .= ' ' . implode( ' ', $m[1] );
+				}
+			}
+		}
+
+		$clean_content = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( strip_shortcodes( $content_raw ) ) ) );
+		$title_lower   = strtolower( $raw_title );
+		$slug_lower    = strtolower( $slug );
+
+		// Clean short title for long titles with subtitles
+		$short_title = $raw_title;
+		if ( strpos( $raw_title, ':' ) !== false && mb_strlen( $raw_title ) > 35 ) {
+			$parts = explode( ':', $raw_title );
+			$short_title = trim( $parts[0] );
+		} elseif ( strpos( $raw_title, ' — ' ) !== false && mb_strlen( $raw_title ) > 35 ) {
+			$parts = explode( ' — ', $raw_title );
+			$short_title = trim( $parts[0] );
+		}
+
+		// --- 1. TITLE GENERATION (Strictly 48 - 60 Chars) ---
+		$gen_title = '';
+		$brand_suffix = " | {$site_name}";
+
+		if ( $slug_lower === 'cart' || strpos( $title_lower, 'cart' ) !== false ) {
+			$gen_title = mb_substr( "Your Shopping Cart & Secure Checkout{$brand_suffix}", 0, 60 );
+		} elseif ( $slug_lower === 'checkout' || strpos( $title_lower, 'checkout' ) !== false ) {
+			$gen_title = mb_substr( "Secure Checkout & Order Completion{$brand_suffix}", 0, 60 );
+		} elseif ( $slug_lower === 'services' || $title_lower === 'services' ) {
+			$gen_title = mb_substr( "Expert Device & Gadget Repair Services{$brand_suffix}", 0, 60 );
+		} elseif ( strpos( $title_lower, 'contact' ) !== false ) {
+			$gen_title = mb_substr( "Contact Us & Store Location Support{$brand_suffix}", 0, 60 );
+		} elseif ( strpos( $title_lower, 'about' ) !== false ) {
+			$gen_title = mb_substr( "About Us & Certified Technical Team{$brand_suffix}", 0, 60 );
+		} elseif ( strpos( $title_lower, 'repair' ) !== false || strpos( $title_lower, 'fix' ) !== false ) {
+			$avail = 60 - mb_strlen( $short_title . $brand_suffix );
+
+			if ( $avail >= 22 ) {
+				$gen_title = "{$short_title} & Screen Replacement{$brand_suffix}";
+			} elseif ( $avail >= 15 ) {
+				$gen_title = "{$short_title} - Fast Repairs{$brand_suffix}";
+			} elseif ( $avail >= 0 ) {
+				$gen_title = "{$short_title}{$brand_suffix}";
+			} else {
+				$sub = mb_substr( $short_title, 0, ( 60 - mb_strlen( $brand_suffix ) ) );
+				$lsp = mb_strrpos( $sub, ' ' );
+				if ( $lsp !== false && $lsp > 15 ) $sub = mb_substr( $sub, 0, $lsp );
+				$gen_title = "{$sub}{$brand_suffix}";
+			}
+		} elseif ( $post_type === 'product' || strpos( $slug_lower, 'product' ) !== false || strpos( $title_lower, 'adapter' ) !== false || strpos( $title_lower, 'charger' ) !== false ) {
+			$avail = 60 - mb_strlen( $short_title . $brand_suffix );
+
+			if ( strpos( $title_lower, 'used' ) !== false ) {
+				if ( $avail >= 16 ) {
+					$gen_title = "Certified {$short_title}{$brand_suffix}";
+				} elseif ( $avail >= 0 ) {
+					$gen_title = "{$short_title}{$brand_suffix}";
+				} else {
+					$gen_title = $short_title;
+				}
+			} elseif ( $avail >= 15 ) {
+				$gen_title = "Buy {$short_title} Online{$brand_suffix}";
+			} elseif ( $avail >= 0 ) {
+				$gen_title = "{$short_title}{$brand_suffix}";
+			} else {
+				$sub = mb_substr( $short_title, 0, ( 60 - mb_strlen( $brand_suffix ) ) );
+				$lsp = mb_strrpos( $sub, ' ' );
+				if ( $lsp !== false && $lsp > 15 ) $sub = mb_substr( $sub, 0, $lsp );
+				$gen_title = "{$sub}{$brand_suffix}";
+			}
+		} else {
+			$avail = 60 - mb_strlen( $short_title . $brand_suffix );
+
+			if ( $avail >= 18 ) {
+				$gen_title = "{$short_title} — Overview & Guide{$brand_suffix}";
+			} elseif ( $avail >= 0 ) {
+				$gen_title = "{$short_title}{$brand_suffix}";
+			} else {
+				$sub = mb_substr( $short_title, 0, ( 60 - mb_strlen( $brand_suffix ) ) );
+				$lsp = mb_strrpos( $sub, ' ' );
+				if ( $lsp !== false && $lsp > 15 ) $sub = mb_substr( $sub, 0, $lsp );
+				$gen_title = "{$sub}{$brand_suffix}";
+			}
+		}
+
+		if ( mb_strlen( $gen_title ) > 60 ) {
+			$gen_title = mb_substr( $gen_title, 0, 57 ) . '...';
+		}
+
+		// --- 2. META DESCRIPTION GENERATION (Strictly 120 - 155 Chars) ---
+		$gen_meta = '';
+
+		if ( $slug_lower === 'cart' || strpos( $title_lower, 'cart' ) !== false ) {
+			$gen_meta = "Review items in your shopping cart at {$site_name}. Enjoy fast, secure checkout, warranty coverage, and dedicated customer support across UAE.";
+		} elseif ( $slug_lower === 'checkout' || strpos( $title_lower, 'checkout' ) !== false ) {
+			$gen_meta = "Complete your secure order at {$site_name}. Safe encrypted payments, verified warranties, and rapid doorstep delivery. Finish your purchase now!";
+		} elseif ( $slug_lower === 'services' || $title_lower === 'services' ) {
+			$gen_meta = "Explore professional electronics and gadget repair services at {$site_name}. Certified technicians, genuine parts, fast turnaround, and full warranty.";
+		} elseif ( strpos( $title_lower, 'repair' ) !== false || strpos( $title_lower, 'fix' ) !== false ) {
+			$gen_meta = "Need expert {$short_title}? {$site_name} provides fast diagnostics, genuine replacement parts, and warranty-backed repairs. Contact us today!";
+		} elseif ( $post_type === 'product' || strpos( $slug_lower, 'product' ) !== false || strpos( $title_lower, 'adapter' ) !== false || strpos( $title_lower, 'used' ) !== false ) {
+			if ( strpos( $title_lower, 'used' ) !== false ) {
+				$clean_product = trim( preg_replace( '/^used\s+/i', '', $short_title ) );
+				$gen_meta = "Shop certified pre-owned {$clean_product} at {$site_name}. 100% tested, premium condition, warranty included, and fast nationwide delivery. Order online now!";
+			} else {
+				$gen_meta = "Discover high-quality {$short_title} at {$site_name}. Tested reliability, unbeatable prices, and express delivery across UAE. Order yours online today!";
+			}
+		} elseif ( mb_strlen( $clean_content ) >= 60 ) {
+			$prefix = "Explore {$short_title} on {$site_name}. ";
+			$target_rem = 152 - mb_strlen( $prefix );
+
+			$sub = mb_substr( $clean_content, 0, $target_rem );
+			$lsp = mb_strrpos( $sub, ' ' );
+			if ( $lsp !== false && $lsp > 35 ) {
+				$sub = mb_substr( $sub, 0, $lsp );
+			}
+			$cand = $prefix . rtrim( $sub, ' .,:;-' ) . '. Learn more and contact us today!';
+			if ( mb_strlen( $cand ) > 155 ) {
+				$cand = $prefix . rtrim( $sub, ' .,:;-' ) . '.';
+			}
+			$gen_meta = $cand;
+		} else {
+			$gen_meta = "Get complete details, professional assistance, and trusted solutions for {$short_title} on {$site_name}. Visit our website or contact our team today!";
+		}
+
+		if ( mb_strlen( $gen_meta ) < 120 ) {
+			$gen_meta = rtrim( $gen_meta, ' .' ) . " Contact our team today for more details!";
+		}
+		if ( mb_strlen( $gen_meta ) > 155 ) {
+			$gen_meta = mb_substr( $gen_meta, 0, 150 );
+			$lsp = mb_strrpos( $gen_meta, ' ' );
+			if ( $lsp !== false && $lsp > 100 ) {
+				$gen_meta = mb_substr( $gen_meta, 0, $lsp );
+			}
+			$gen_meta = rtrim( $gen_meta, ' .,:;-' ) . '.';
+		}
+
+		// Extract clean 2-4 word focus keyword
+		$gen_kw = '';
+		if ( $slug_lower === 'cart' || strpos( $title_lower, 'cart' ) !== false ) {
+			$gen_kw = 'Shopping Cart';
+		} elseif ( $slug_lower === 'checkout' || strpos( $title_lower, 'checkout' ) !== false ) {
+			$gen_kw = 'Secure Checkout';
+		} elseif ( $slug_lower === 'services' || $title_lower === 'services' ) {
+			$gen_kw = 'Device Repair Services';
+		} elseif ( strpos( $title_lower, 'repair' ) !== false || strpos( $title_lower, 'fix' ) !== false ) {
+			$gen_kw = $short_title;
+		} elseif ( $post_type === 'product' || strpos( $slug_lower, 'product' ) !== false ) {
+			$gen_kw = $short_title;
+		} else {
+			$gen_kw = $short_title;
+		}
+
+		$gen_kw = trim( preg_replace( '/\s+/', ' ', preg_replace( '/[^A-Za-z0-9\s]/', '', $gen_kw ) ) );
+		$kw_words = explode( ' ', $gen_kw );
+		if ( count( $kw_words ) > 4 ) {
+			$gen_kw = implode( ' ', array_slice( $kw_words, 0, 4 ) );
+		}
+
+		return array(
+			'title'         => $gen_title,
+			'meta_desc'     => $gen_meta,
+			'focus_keyword' => $gen_kw,
+			'source'        => 'Heuristic Engine',
+		);
 	}
 }
 

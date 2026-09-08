@@ -19,7 +19,10 @@
 			nonce: nonce,
 			adminUrl: raw.adminUrl || (window.location.origin + '/wp-admin/'),
 			siteUrl: raw.siteUrl || window.location.origin,
+			siteName: raw.siteName || (typeof document !== 'undefined' ? document.title.split('—')[0].split('|')[0].trim() : ''),
+			siteDesc: raw.siteDesc || '',
 			hasPsiKey: raw.hasPsiKey || '0',
+			hasAiKey: raw.hasAiKey || '0',
 			lastAudit: raw.lastAudit || null
 		};
 	};
@@ -453,12 +456,16 @@
 
 			if (!data) {
 				alert('Running 360° SEO Audit Worker to generate complete PDF report...');
-				ASF.request('asf_full_360_audit').done(function (res) {
-					if (res && res.success) {
-						ASF.lastAuditData = res.data;
-						$('#asf-download-pdf-btn').trigger('click');
-					}
-				});
+				ASF.request('asf_full_360_audit')
+					.done(function (res) {
+						if (res && res.success) {
+							ASF.lastAuditData = res.data;
+							$('#asf-download-pdf-btn').trigger('click');
+						} else {
+							ASF.toast('Audit failed. Cannot generate report.', 'error');
+						}
+					})
+					.fail(function () { ASF.toast('Network error running audit for PDF report.', 'error'); });
 				return;
 			}
 
@@ -513,7 +520,9 @@
 			e.preventDefault();
 			var $b = $(this);
 			$b.prop('disabled', true).text('Fixing…');
-			ASF.request('asf_autofix_missing_h1').done(function (r) { alert(r.message); $('#asf-run-full-btn').click(); });
+			ASF.request('asf_autofix_missing_h1')
+				.done(function (r) { $b.prop('disabled', false).html('Fix Now'); ASF.toast(r.message); $('#asf-run-full-btn').click(); })
+				.fail(function () { $b.prop('disabled', false).html('Fix Now'); ASF.toast('Network error fixing H1 tags.', 'error'); });
 		});
 
 		// 1-CLICK FIXER: Auto-Fix Alt Texts (Redirects to interactive Media Scanner with missing_alt filter)
@@ -527,7 +536,9 @@
 			e.preventDefault();
 			var $b = $(this);
 			$b.prop('disabled', true).text('Fixing…');
-			ASF.request('asf_clean_broken_links').done(function (r) { alert(r.message || 'Broken link typos cleaned!'); $('#asf-run-full-btn').click(); });
+			ASF.request('asf_clean_broken_links')
+				.done(function (r) { $b.prop('disabled', false).html('Fix Now'); ASF.toast(r.message || 'Broken link typos cleaned!'); $('#asf-run-full-btn').click(); })
+				.fail(function () { $b.prop('disabled', false).html('Fix Now'); ASF.toast('Network error fixing URL typos.', 'error'); });
 		});
 
 		// 1-CLICK FIXER: Auto-Create Robots.txt
@@ -535,7 +546,9 @@
 			e.preventDefault();
 			var $b = $(this);
 			$b.prop('disabled', true).text('Creating…');
-			ASF.request('asf_autofix_robots').done(function (r) { alert(r.message); $('#asf-run-full-btn').click(); });
+			ASF.request('asf_autofix_robots')
+				.done(function (r) { $b.prop('disabled', false).html('Fix Now'); ASF.toast(r.message); $('#asf-run-full-btn').click(); })
+				.fail(function () { $b.prop('disabled', false).html('Fix Now'); ASF.toast('Network error creating robots.txt.', 'error'); });
 		});
 
 		// 1-CLICK FIXER: Auto-Fix Security Headers (HSTS, X-Frame-Options, X-Content-Type)
@@ -543,51 +556,265 @@
 			e.preventDefault();
 			var $b = $(this);
 			$b.prop('disabled', true).text('Fixing…');
-			ASF.request('asf_autofix_security_headers').done(function (r) { alert(r.message); $('#asf-security-btn').click(); });
+			ASF.request('asf_autofix_security_headers')
+				.fail(function () { $b.prop('disabled', false).html('Fix Now'); ASF.toast('Network error fixing security headers.', 'error'); });
 		});
 
-		// SMART ASSISTANT MODAL: Fix Titles Now
+		// SMART ASSISTANT HELPERS: Generate Clean Titles & Descriptions in JS
+		function generateSmartTitleJS(pTitle, postType, url) {
+			pTitle = (pTitle || 'Page').trim();
+			var data = getAsfData();
+			var site = (data.siteName || '').trim();
+			if (!site || site.toLowerCase() === 'wordpress') {
+				site = window.location.hostname.replace(/^www\./i, '').replace(/\.[a-z]{2,6}$/i, '');
+				if (site) site = site.charAt(0).toUpperCase() + site.slice(1);
+			}
+
+			var lower = pTitle.toLowerCase();
+			var urlLower = (url || '').toLowerCase();
+			var brandSuffix = site ? ' | ' + site : '';
+
+			if (lower === 'cart' || urlLower.indexOf('/cart') !== -1) {
+				return ('Your Shopping Cart & Secure Checkout' + brandSuffix).substring(0, 60);
+			}
+			if (lower === 'checkout' || urlLower.indexOf('/checkout') !== -1) {
+				return ('Secure Checkout & Order Completion' + brandSuffix).substring(0, 60);
+			}
+			if (lower === 'services' || lower === 'service' || urlLower.indexOf('/services') !== -1) {
+				return ('Expert Device & Gadget Repair Services' + brandSuffix).substring(0, 60);
+			}
+			if (lower.indexOf('contact') !== -1) {
+				return ('Contact Us & Store Location Support' + brandSuffix).substring(0, 60);
+			}
+			if (lower.indexOf('about') !== -1) {
+				return ('About Us & Certified Technical Team' + brandSuffix).substring(0, 60);
+			}
+
+			// Repair & service pages
+			if (lower.indexOf('repair') !== -1 || lower.indexOf('fix') !== -1) {
+				var avail = 60 - (pTitle + brandSuffix).length;
+				if (avail >= 22) return pTitle + ' & Screen Replacement' + brandSuffix;
+				if (avail >= 15) return pTitle + ' - Fast Repairs' + brandSuffix;
+				if (avail >= 0) return pTitle + brandSuffix;
+				return pTitle.substring(0, 57) + '...';
+			}
+
+			// Products
+			if (postType === 'product' || urlLower.indexOf('/product') !== -1 || lower.indexOf('adapter') !== -1 || lower.indexOf('charger') !== -1) {
+				var avail = 60 - (pTitle + brandSuffix).length;
+				if (lower.indexOf('used') !== -1) {
+					if (avail >= 16) return 'Certified ' + pTitle + brandSuffix;
+					if (avail >= 0) return pTitle + brandSuffix;
+				}
+				if (avail >= 15) return 'Buy ' + pTitle + ' Online' + brandSuffix;
+				if (avail >= 0) return pTitle + brandSuffix;
+				return pTitle.substring(0, 57) + '...';
+			}
+
+			// Standard pages
+			var avail = 60 - (pTitle + brandSuffix).length;
+			if (avail >= 18) return pTitle + ' — Overview & Guide' + brandSuffix;
+			if (avail >= 0) return pTitle + brandSuffix;
+			return pTitle.substring(0, 57) + '...';
+		}
+
+		function generateMetaDescFromData(title, snippet, postType, url) {
+			title = (title || 'Page').trim();
+			var data = getAsfData();
+			var site = data.siteName || (typeof document !== 'undefined' ? document.title.split('—')[0].split('|')[0].trim() : 'our store');
+			if (!site || site.toLowerCase() === 'wordpress') {
+				site = window.location.hostname.replace(/^www\./i, '').replace(/\.[a-z]{2,6}$/i, '');
+				if (site) site = site.charAt(0).toUpperCase() + site.slice(1);
+			}
+
+			var lower = title.toLowerCase();
+			var urlLower = (url || '').toLowerCase();
+
+			if (urlLower.indexOf('/cart') !== -1 || lower === 'cart' || lower.indexOf('cart') !== -1) {
+				return 'Review items in your shopping cart at ' + site + '. Enjoy fast, secure checkout, warranty coverage, and dedicated customer support across UAE.';
+			}
+			if (urlLower.indexOf('/checkout') !== -1 || lower === 'checkout' || lower.indexOf('checkout') !== -1) {
+				return 'Complete your secure order at ' + site + '. Safe encrypted payments, verified warranties, and rapid doorstep delivery. Finish your purchase now!';
+			}
+			if (urlLower.indexOf('/services') !== -1 || lower === 'services' || lower === 'service') {
+				return 'Explore professional electronics and gadget repair services at ' + site + '. Certified technicians, genuine parts, fast turnaround, and full warranty.';
+			}
+			if (lower.indexOf('repair') !== -1 || lower.indexOf('fix') !== -1) {
+				return 'Need reliable ' + title + '? ' + site + ' provides expert diagnostics, certified technicians, and warranty-backed fixes. Contact our repair center today!';
+			}
+			if (postType === 'product' || urlLower.indexOf('/product') !== -1 || lower.indexOf('adapter') !== -1 || lower.indexOf('used') !== -1) {
+				if (lower.indexOf('used') !== -1) {
+					return 'Shop certified pre-owned ' + title + ' at ' + site + '. 100% tested, premium condition, warranty included, and fast nationwide delivery. Order online now!';
+				}
+				return 'Discover high-quality ' + title + ' at ' + site + '. Tested reliability, unbeatable prices, and express delivery across UAE. Order yours today!';
+			}
+
+			if (snippet && snippet.length >= 60) {
+				var prefix = 'Explore ' + title + ' on ' + site + '. ';
+				var targetRem = 152 - prefix.length;
+				var sub = snippet.substring(0, targetRem);
+				var sp = sub.lastIndexOf(' ');
+				if (sp > 35) sub = sub.substring(0, sp);
+				var cand = prefix + sub.replace(/[.,:;\s-]+$/, '') + '. Learn more and contact us today!';
+				if (cand.length > 155) cand = prefix + sub.replace(/[.,:;\s-]+$/, '') + '.';
+				if (cand.length >= 120) return cand;
+			}
+
+			return 'Get complete details, professional assistance, and trusted solutions for ' + title + ' on ' + site + '. Visit our website or contact our team today!';
+		}
+
+		// SMART ASSISTANT MODAL: Fix Titles Now (AI & Site-Profile Connected)
 		$(document).on('click', '.asf-fix-titles-btn', function (e) {
 			e.preventDefault();
-			ASF.request('asf_onpage_scan').done(function (res) {
-				if (!res || !res.success) { alert('Could not scan pages.'); return; }
+			ASF.request('asf_onpage_scan')
+			.done(function (res) {
+				if (!res || !res.success) { ASF.toast('Could not scan pages.', 'error'); return; }
 				var pages = res.data.filter(function (p) {
-					return p.issues.some(function (i) { return i.msg.indexOf('Title') !== -1; });
+					return p.issues.some(function (i) { return i.msg.indexOf('Title') !== -1; }) || !p.has_good_title;
 				});
 
-				if (!pages.length) pages = res.data.slice(0, 10);
+				if (!pages.length) pages = res.data.slice(0, 15);
 
-				var bodyHtml = '<div class="asf-notice asf-notice-success" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;">';
-				bodyHtml += '<div><strong>Smart Auto-Fix:</strong> Auto-optimize titles for all ' + pages.length + ' page(s) in 1-click.</div>';
-				bodyHtml += '<div><button type="button" class="button button-primary" id="asf-autofix-all-titles-btn">Auto-Fix All Titles</button></div></div>';
+				var bodyHtml = '<div class="asf-notice asf-notice-success" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:12px 14px;flex-wrap:wrap;gap:10px;">';
+				bodyHtml += '<div><strong>🤖 AI Title Optimizer:</strong> Generate high-CTR, unique SEO titles (48–60 chars) using connected AI engine with site &amp; page profile context.</div>';
+				bodyHtml += '<div style="display:flex;gap:8px;align-items:center;">';
+				bodyHtml += '<button type="button" class="button button-primary" id="asf-ai-autofix-all-titles-btn">⚡ Auto-Generate All with AI (' + pages.length + ' Pages)</button>';
+				bodyHtml += '</div></div>';
+				bodyHtml += '<div id="asf-titles-progress-bar" style="display:none;margin-bottom:12px;background:#e2e8f0;border-radius:4px;overflow:hidden;height:8px;"><div id="asf-titles-progress-fill" style="background:#10b981;height:100%;width:0%;transition:width 0.2s;"></div></div>';
 
-				bodyHtml += '<div style="max-height:360px;overflow-y:auto;"><table class="asf-table widefat"><thead><tr><th>Page Name</th><th>SEO Title Tag</th></tr></thead><tbody>';
+				bodyHtml += '<div style="max-height:420px;overflow-y:auto;"><table class="asf-table widefat striped"><thead><tr><th style="width:30%;">Page &amp; URL</th><th style="width:50%;">SEO Title Tag (48–60 chars)</th><th style="width:20%;text-align:center;">Action</th></tr></thead><tbody>';
 				pages.forEach(function (p) {
-					var autoTitle = p.title ? p.title + ' — ' + (dataObj.siteName || 'Official Site') : p.title;
-					bodyHtml += '<tr><td><strong>' + p.title + '</strong><br><small>' + p.url + '</small></td>';
-					bodyHtml += '<td><input type="text" class="asf-input asf-modal-title-input" data-id="' + (p.id || p.post_id) + '" value="' + autoTitle + '" style="width:100%;"></td></tr>';
+					var pid = p.id || p.post_id;
+					var autoTitle = (p.seo_title && p.seo_title.length >= 35 && p.seo_title.indexOf('Official Site') === -1) ? p.seo_title : generateSmartTitleJS(p.title, p.post_type, p.url);
+					var charCount = autoTitle.length;
+					var pillCol = (charCount >= 45 && charCount <= 60) ? '#10b981' : (charCount < 30 ? '#ef4444' : '#f59e0b');
+
+					bodyHtml += '<tr data-title-row-id="' + pid + '">';
+					bodyHtml += '<td><strong>' + ASF.escapeHtml(p.title) + '</strong><br><small><a href="' + p.url + '" target="_blank" style="color:#2271b1;text-decoration:none;">' + p.url + '</a></small></td>';
+					bodyHtml += '<td>';
+					bodyHtml += '<input type="text" class="asf-input asf-modal-title-input" data-id="' + pid + '" data-title="' + ASF.escapeHtml(p.title) + '" data-url="' + ASF.escapeHtml(p.url) + '" value="' + ASF.escapeHtml(autoTitle) + '" style="width:100%;font-size:12px;line-height:1.4;">';
+					bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:3px;"><span class="asf-title-counter" style="color:' + pillCol + ';font-weight:600;">' + charCount + ' / 60 chars</span><span class="asf-title-status-' + pid + '" style="font-weight:600;"></span></div>';
+					bodyHtml += '</td>';
+					bodyHtml += '<td style="vertical-align:middle;text-align:center;">';
+					bodyHtml += '<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">';
+					bodyHtml += '<button type="button" class="button button-secondary asf-modal-single-title-ai-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;" title="Generate SEO title tag using connected AI">🤖 AI Generate</button>';
+					bodyHtml += '<button type="button" class="button button-primary asf-modal-single-title-save-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;">💾 Save</button>';
+					bodyHtml += '</div>';
+					bodyHtml += '</td></tr>';
 				});
 				bodyHtml += '</tbody></table></div>';
 
-				var footerHtml = '<button type="button" class="asf-btn-secondary asf-modal-cancel-btn">Cancel</button><button type="button" class="asf-btn-primary" id="asf-save-modal-titles-btn">Save & Apply Titles</button>';
+				var footerHtml = '<button type="button" class="asf-btn-secondary asf-modal-cancel-btn">Close</button><button type="button" class="asf-btn-primary" id="asf-save-modal-titles-btn">💾 Save &amp; Apply All Titles</button>';
 
-				ASF.openModal('Quick-Fix Page Title Tags', bodyHtml, footerHtml);
+				ASF.openModal('Quick-Fix Page Title Tags (' + pages.length + ' Pages)', bodyHtml, footerHtml);
+			})
+			.fail(function (err) { ASF.toast('Network error scanning pages.', 'error'); });
+		});
+
+		// Live char counter listener for modal title inputs
+		$(document).on('input', '.asf-modal-title-input', function () {
+			var len = $(this).val().length;
+			var $counter = $(this).closest('td').find('.asf-title-counter');
+			var col = (len >= 45 && len <= 60) ? '#10b981' : (len < 30 ? '#ef4444' : '#f59e0b');
+			$counter.css('color', col).text(len + ' / 60 chars');
+		});
+
+		// Single Row AI Generate for Title
+		$(document).on('click', '.asf-modal-single-title-ai-btn', function (e) {
+			e.preventDefault();
+			var $b = $(this);
+			var pid = $b.data('id');
+			var $row = $('tr[data-title-row-id="' + pid + '"]');
+			var $input = $row.find('.asf-modal-title-input');
+			var pTitle = $input.data('title') || '';
+			var pUrl = $input.data('url') || '';
+
+			$b.prop('disabled', true).text('Generating…');
+
+			ASF.request('asf_generate_single_title', { post_id: pid }).done(function (r) {
+				$b.prop('disabled', false).text('🤖 AI Generate');
+				var newTitle = (r && r.success && r.title) ? r.title : generateSmartTitleJS(pTitle, '', pUrl);
+				$input.val(newTitle).trigger('input');
+				$input.css('background', '#f0fdf4');
+				setTimeout(function () { $input.css('background', '#ffffff'); }, 1200);
+				$('.asf-title-status-' + pid).css('color', '#10b981').text('✨ AI Generated!').show().fadeOut(2500);
+			}).fail(function () {
+				$b.prop('disabled', false).text('🤖 AI Generate');
+				var newTitle = generateSmartTitleJS(pTitle, '', pUrl);
+				$input.val(newTitle).trigger('input');
+				$('.asf-title-status-' + pid).css('color', '#10b981').text('✨ Generated!').show().fadeOut(2500);
 			});
 		});
 
-		// 1-Click Auto-Fix All Titles Handler
-		$(document).on('click', '#asf-autofix-all-titles-btn', function (e) {
+		// Single Row Save for Title
+		$(document).on('click', '.asf-modal-single-title-save-btn', function (e) {
+			e.preventDefault();
+			var $b = $(this);
+			var pid = $b.data('id');
+			var $row = $('tr[data-title-row-id="' + pid + '"]');
+			var title = $row.find('.asf-modal-title-input').val().trim();
+
+			if (!title) { alert('Please enter a title tag.'); return; }
+
+			$b.prop('disabled', true).text('Saving…');
+			ASF.request('asf_save_onpage_meta', { post_id: pid, title: title }).done(function (r) {
+				$b.prop('disabled', false).text('💾 Save');
+				$('.asf-title-status-' + pid).css('color', '#10b981').text('✓ Saved!').show().fadeOut(2500);
+			}).fail(function () {
+				$b.prop('disabled', false).text('💾 Save');
+				alert('Could not save title tag.');
+			});
+		});
+
+		// Progressive Auto-Fix All Titles with AI Handler
+		$(document).on('click', '#asf-ai-autofix-all-titles-btn', function (e) {
 			e.preventDefault();
 			var $btn = $(this);
-			$btn.prop('disabled', true).text('Auto-Fixing…');
-			ASF.request('asf_autofix_titles').done(function (r) {
-				ASF.closeModal();
-				alert(r.message || 'Titles updated successfully!');
-				$('#asf-run-full-btn').click();
-			});
+			var $inputs = $('.asf-modal-title-input');
+			var total = $inputs.length;
+			if (!total) return;
+
+			$btn.prop('disabled', true);
+			$('#asf-titles-progress-bar').show();
+
+			var idx = 0;
+			function processNextTitle() {
+				if (idx >= total) {
+					$btn.prop('disabled', false).text('✓ All ' + total + ' Titles Generated!');
+					$('#asf-titles-progress-fill').css('width', '100%');
+					setTimeout(function () { $('#asf-titles-progress-bar').fadeOut(); }, 2000);
+					ASF.toast('✨ AI Title generation complete! Review and click "Save & Apply All Titles".', 'success');
+					return;
+				}
+
+				var $input = $($inputs[idx]);
+				var pid = $input.data('id');
+				var pTitle = $input.data('title') || '';
+				var pUrl = $input.data('url') || '';
+
+				idx++;
+				var pct = Math.round((idx / total) * 100);
+				$btn.text('⚡ Generating ' + idx + '/' + total + ' (' + pct + '%)…');
+				$('#asf-titles-progress-fill').css('width', pct + '%');
+
+				ASF.request('asf_generate_single_title', { post_id: pid }).done(function (r) {
+					var newTitle = (r && r.success && r.title) ? r.title : generateSmartTitleJS(pTitle, '', pUrl);
+					$input.val(newTitle).trigger('input');
+					$input.css('background', '#f0fdf4');
+					setTimeout(function () { $input.css('background', '#ffffff'); }, 800);
+					$('.asf-title-status-' + pid).css('color', '#10b981').text('✓ AI').show().fadeOut(2000);
+					setTimeout(processNextTitle, 120);
+				}).fail(function () {
+					var newTitle = generateSmartTitleJS(pTitle, '', pUrl);
+					$input.val(newTitle).trigger('input');
+					setTimeout(processNextTitle, 100);
+				});
+			}
+
+			processNextTitle();
 		});
 
-		// Save Modal Titles
+		// Save Modal Titles (Batch)
 		$(document).on('click', '#asf-save-modal-titles-btn', function (e) {
 			e.preventDefault();
 			var $btn = $(this);
@@ -607,7 +834,7 @@
 
 			if (!promises.length) {
 				alert('No titles to update.');
-				$btn.prop('disabled', false).text('Save & Apply Titles');
+				$btn.prop('disabled', false).text('💾 Save & Apply All Titles');
 				return;
 			}
 
@@ -618,55 +845,29 @@
 			});
 		});
 
-		// SMART ASSISTANT MODAL: Fix Meta Descriptions Now
-		function generateMetaDescFromData(title, snippet) {
-			title = (title || 'Page').trim();
-			var site = dataObj.siteName || (typeof document !== 'undefined' ? document.title.split('—')[0].trim() : 'our site');
-			if (snippet && snippet.length > 25) {
-				var prefix = title + ' — ';
-				var rem = 150 - prefix.length;
-				if (rem >= 45) {
-					var sub = snippet.substring(0, rem);
-					var sp = sub.lastIndexOf(' ');
-					if (sp > 25) sub = sub.substring(0, sp);
-					return prefix + sub.replace(/[.,:;\s-]+$/, '') + '.';
-				} else {
-					var sub = snippet.substring(0, 145);
-					var sp = sub.lastIndexOf(' ');
-					if (sp > 70) sub = sub.substring(0, sp);
-					return sub.replace(/[.,:;\s-]+$/, '') + '.';
-				}
-			} else {
-				var base = title + ' — Complete details, services, and official guide on ' + site + '.';
-				if (base.length > 155) {
-					base = base.substring(0, 150);
-					var sp = base.lastIndexOf(' ');
-					if (sp > 80) base = base.substring(0, sp);
-					base = base.replace(/[.,:;\s-]+$/, '') + '.';
-				}
-				return base;
-			}
-		}
-
-		// SMART ASSISTANT MODAL: Fix Meta Descriptions Now (Title + Content Aware)
+		// SMART ASSISTANT MODAL: Fix Meta Descriptions Now (AI & Site-Profile Connected)
 		$(document).on('click', '.asf-fix-metas-btn', function (e) {
 			e.preventDefault();
-			ASF.request('asf_onpage_scan').done(function (res) {
-				if (!res || !res.success) { alert('Could not scan pages.'); return; }
+			ASF.request('asf_onpage_scan')
+			.done(function (res) {
+				if (!res || !res.success) { ASF.toast('Could not scan pages.', 'error'); return; }
 				var pages = res.data.filter(function (p) {
 					return p.issues.some(function (i) { return i.msg.indexOf('Meta') !== -1; }) || !p.meta_desc || p.meta_desc.length < 80;
 				});
 
 				if (!pages.length) pages = res.data.slice(0, 15);
 
-				var bodyHtml = '<div class="asf-notice asf-notice-success" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:10px 14px;flex-wrap:wrap;gap:10px;">';
-				bodyHtml += '<div><strong>Smart Content-Aware Engine:</strong> Generates unique 120–155 character descriptions combining each page\'s title with its content summary.</div>';
-				bodyHtml += '<div><button type="button" class="button button-primary" id="asf-autofix-all-metas-btn">⚡ Auto-Generate All (' + pages.length + ' Pages)</button></div></div>';
+				var bodyHtml = '<div class="asf-notice asf-notice-success" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:12px 14px;flex-wrap:wrap;gap:10px;">';
+				bodyHtml += '<div><strong>🤖 AI Meta Optimizer:</strong> Generate unique 120–155 character descriptions using connected AI engine with site &amp; page profile context.</div>';
+				bodyHtml += '<div style="display:flex;gap:8px;align-items:center;">';
+				bodyHtml += '<button type="button" class="button button-primary" id="asf-ai-autofix-all-metas-btn">⚡ Auto-Generate All with AI (' + pages.length + ' Pages)</button>';
+				bodyHtml += '</div></div>';
+				bodyHtml += '<div id="asf-metas-progress-bar" style="display:none;margin-bottom:12px;background:#e2e8f0;border-radius:4px;overflow:hidden;height:8px;"><div id="asf-metas-progress-fill" style="background:#10b981;height:100%;width:0%;transition:width 0.2s;"></div></div>';
 
 				bodyHtml += '<div style="max-height:420px;overflow-y:auto;"><table class="asf-table widefat striped"><thead><tr><th style="width:28%;">Page &amp; Content Outline</th><th style="width:52%;">Meta Description (120–155 chars)</th><th style="width:20%;text-align:center;">Action</th></tr></thead><tbody>';
 				pages.forEach(function (p) {
 					var pid = p.id || p.post_id;
-					var initialDesc = (p.meta_desc && p.meta_desc.length >= 80) ? p.meta_desc : generateMetaDescFromData(p.title, p.snippet);
+					var initialDesc = (p.meta_desc && p.meta_desc.length >= 100) ? p.meta_desc : generateMetaDescFromData(p.title, p.snippet, p.post_type, p.url);
 					var charCount = initialDesc.length;
 					var pillCol = (charCount >= 120 && charCount <= 155) ? '#10b981' : (charCount < 80 ? '#ef4444' : '#f59e0b');
 
@@ -677,12 +878,12 @@
 					}
 					bodyHtml += '</td>';
 					bodyHtml += '<td>';
-					bodyHtml += '<textarea class="asf-input asf-modal-desc-input" data-id="' + pid + '" data-title="' + ASF.escapeHtml(p.title) + '" data-snippet="' + ASF.escapeHtml(p.snippet || '') + '" style="width:100%;height:64px;font-size:12px;line-height:1.4;">' + ASF.escapeHtml(initialDesc) + '</textarea>';
+					bodyHtml += '<textarea class="asf-input asf-modal-desc-input" data-id="' + pid + '" data-title="' + ASF.escapeHtml(p.title) + '" data-snippet="' + ASF.escapeHtml(p.snippet || '') + '" data-url="' + ASF.escapeHtml(p.url) + '" style="width:100%;height:64px;font-size:12px;line-height:1.4;">' + ASF.escapeHtml(initialDesc) + '</textarea>';
 					bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:3px;"><span class="asf-desc-counter" style="color:' + pillCol + ';font-weight:600;">' + charCount + ' / 155 chars</span><span class="asf-single-status-' + pid + '" style="font-weight:600;"></span></div>';
 					bodyHtml += '</td>';
 					bodyHtml += '<td style="vertical-align:middle;text-align:center;">';
 					bodyHtml += '<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">';
-					bodyHtml += '<button type="button" class="button button-secondary asf-modal-single-ai-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;" title="Read page title & content to generate smart description">🤖 AI Generate</button>';
+					bodyHtml += '<button type="button" class="button button-secondary asf-modal-single-ai-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;" title="Generate smart description using connected AI">🤖 AI Generate</button>';
 					bodyHtml += '<button type="button" class="button button-primary asf-modal-single-save-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;">💾 Save</button>';
 					bodyHtml += '</div>';
 					bodyHtml += '</td></tr>';
@@ -703,7 +904,7 @@
 			$counter.css('color', col).text(len + ' / 155 chars');
 		});
 
-		// Single Row AI Generate
+		// Single Row AI Generate for Meta Description
 		$(document).on('click', '.asf-modal-single-ai-btn', function (e) {
 			e.preventDefault();
 			var $b = $(this);
@@ -712,25 +913,26 @@
 			var $input = $row.find('.asf-modal-desc-input');
 			var title = $input.data('title') || '';
 			var snippet = $input.data('snippet') || '';
+			var pUrl = $input.data('url') || '';
 
 			$b.prop('disabled', true).text('Generating…');
 
 			ASF.request('asf_generate_single_meta_desc', { post_id: pid }).done(function (r) {
 				$b.prop('disabled', false).text('🤖 AI Generate');
-				var newDesc = (r && r.success && r.desc) ? r.desc : generateMetaDescFromData(title, snippet);
+				var newDesc = (r && r.success && r.desc) ? r.desc : generateMetaDescFromData(title, snippet, '', pUrl);
 				$input.val(newDesc).trigger('input');
 				$input.css('background', '#f0fdf4');
 				setTimeout(function () { $input.css('background', '#ffffff'); }, 1200);
-				$('.asf-single-status-' + pid).css('color', '#10b981').text('✨ Generated!').show().fadeOut(2500);
+				$('.asf-single-status-' + pid).css('color', '#10b981').text('✨ AI Generated!').show().fadeOut(2500);
 			}).fail(function () {
 				$b.prop('disabled', false).text('🤖 AI Generate');
-				var newDesc = generateMetaDescFromData(title, snippet);
+				var newDesc = generateMetaDescFromData(title, snippet, '', pUrl);
 				$input.val(newDesc).trigger('input');
 				$('.asf-single-status-' + pid).css('color', '#10b981').text('✨ Generated!').show().fadeOut(2500);
 			});
 		});
 
-		// Single Row Save
+		// Single Row Save for Meta Description
 		$(document).on('click', '.asf-modal-single-save-btn', function (e) {
 			e.preventDefault();
 			var $b = $(this);
@@ -750,19 +952,56 @@
 			});
 		});
 
-		// 1-Click Auto-Fix All Meta Descriptions Handler
-		$(document).on('click', '#asf-autofix-all-metas-btn', function (e) {
+		// Progressive Auto-Fix All Meta Descriptions with AI Handler
+		$(document).on('click', '#asf-autofix-all-metas-btn, #asf-ai-autofix-all-metas-btn', function (e) {
 			e.preventDefault();
 			var $btn = $(this);
-			$btn.prop('disabled', true).text('Auto-Generating…');
-			ASF.request('asf_autofix_metas').done(function (r) {
-				ASF.closeModal();
-				alert(r.message || '✨ Meta Descriptions updated successfully!');
-				$('#asf-run-full-btn').click();
-			});
+			var $inputs = $('.asf-modal-desc-input');
+			var total = $inputs.length;
+			if (!total) return;
+
+			$btn.prop('disabled', true);
+			$('#asf-metas-progress-bar').show();
+
+			var idx = 0;
+			function processNextMeta() {
+				if (idx >= total) {
+					$btn.prop('disabled', false).text('✓ All ' + total + ' Descriptions Generated!');
+					$('#asf-metas-progress-fill').css('width', '100%');
+					setTimeout(function () { $('#asf-metas-progress-bar').fadeOut(); }, 2000);
+					ASF.toast('✨ AI Meta generation complete! Review and click "Save & Apply All Descriptions".', 'success');
+					return;
+				}
+
+				var $input = $($inputs[idx]);
+				var pid = $input.data('id');
+				var pTitle = $input.data('title') || '';
+				var pSnippet = $input.data('snippet') || '';
+				var pUrl = $input.data('url') || '';
+
+				idx++;
+				var pct = Math.round((idx / total) * 100);
+				$btn.text('⚡ Generating ' + idx + '/' + total + ' (' + pct + '%)…');
+				$('#asf-metas-progress-fill').css('width', pct + '%');
+
+				ASF.request('asf_generate_single_meta_desc', { post_id: pid }).done(function (r) {
+					var newDesc = (r && r.success && r.desc) ? r.desc : generateMetaDescFromData(pTitle, pSnippet, '', pUrl);
+					$input.val(newDesc).trigger('input');
+					$input.css('background', '#f0fdf4');
+					setTimeout(function () { $input.css('background', '#ffffff'); }, 800);
+					$('.asf-single-status-' + pid).css('color', '#10b981').text('✓ AI').show().fadeOut(2000);
+					setTimeout(processNextMeta, 120);
+				}).fail(function () {
+					var newDesc = generateMetaDescFromData(pTitle, pSnippet, '', pUrl);
+					$input.val(newDesc).trigger('input');
+					setTimeout(processNextMeta, 100);
+				});
+			}
+
+			processNextMeta();
 		});
 
-		// Save Modal Descriptions
+		// Save Modal Descriptions (Batch)
 		$(document).on('click', '#asf-save-modal-descs-btn', function (e) {
 			e.preventDefault();
 			var $btn = $(this);
@@ -782,7 +1021,7 @@
 
 			if (!promises.length) {
 				alert('No descriptions to update.');
-				$btn.prop('disabled', false).text('Save & Apply Descriptions');
+				$btn.prop('disabled', false).text('💾 Save & Apply All Descriptions');
 				return;
 			}
 
@@ -1001,14 +1240,15 @@
 					var html = '<div class="asf-card">';
 					html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">';
 					html += '<h2 style="margin:0;">Pages with SEO Issues <span class="asf-count-pill">' + issues.length + '</span></h2>';
-					html += '<button type="button" class="button button-secondary" id="asf-table-bulk-fix-btn">⚡ 1-Click Auto-Fix Missing Metas</button>';
+					html += '<button type="button" class="button button-primary" id="asf-table-bulk-fix-btn">⚡ 1-Click Auto-Fix via AI (Missing Metas, Titles &amp; Focus Keywords)</button>';
 					html += '</div>';
 
-					html += '<table class="asf-table widefat" id="asf-onpage-table"><thead><tr><th style="width:260px;">Page / Post</th><th style="width:140px;">Content Depth</th><th>SEO Audit Issues</th><th style="width:180px;text-align:right;">Actions</th></tr></thead><tbody>';
+					html += '<table class="asf-table widefat" id="asf-onpage-table"><thead><tr><th style="width:260px;">Page / Post</th><th style="width:140px;">Content Depth</th><th>SEO Audit Issues</th><th style="width:220px;text-align:right;">Actions</th></tr></thead><tbody>';
 					issues.forEach(function (p) {
+						var linkPill = (p.internal_links > 0) ? '<span style="color:#10b981;font-weight:600;">🔗 ' + p.internal_links + ' internal links</span>' : '<span style="color:#ef4444;font-weight:600;">🔗 0 internal links</span>';
 						html += '<tr data-id="' + p.id + '">';
 						html += '<td><strong>' + p.title + '</strong> <span class="asf-badge asf-badge-blue">' + (p.post_type || 'page') + '</span><br><small><a href="' + p.url + '" target="_blank" style="word-break:break-all;">' + p.url + '</a></small></td>';
-						html += '<td><small>📝 ' + (p.word_count || 0) + ' words<br>🔗 ' + (p.internal_links || 0) + ' internal links</small></td>';
+						html += '<td><small>📝 ' + (p.word_count || 0) + ' words<br><span class="asf-page-links-count" data-id="' + p.id + '">' + linkPill + '</span></small></td>';
 						html += '<td><ul style="margin:4px 0;padding-left:16px;">';
 						p.issues.forEach(function (iss) {
 							html += '<li><span class="' + (iss.type === 'error' ? 'asf-err' : 'asf-warn') + '">' + iss.msg + '</span></li>';
@@ -1016,6 +1256,7 @@
 						html += '</ul></td>';
 						html += '<td style="text-align:right;white-space:nowrap;">';
 						html += '<button type="button" class="button button-primary button-small asf-onpage-quick-fix-btn" data-id="' + p.id + '" title="Quick fix SEO title, meta description & schema directly">⚡ Quick Fix</button> ';
+						html += '<button type="button" class="button button-secondary button-small asf-autolink-btn" data-id="' + p.id + '" title="Auto-link category keywords to generate internal links">🔗 Auto-Link</button> ';
 						html += '<a href="' + p.edit_url + '" target="_blank" class="button button-secondary button-small">Edit Post</a>';
 						html += '</td></tr>';
 					});
@@ -1038,31 +1279,184 @@
 			runOnPageScan();
 		});
 
-		// 1-Click Bulk Auto-Fix Missing Meta Descriptions & Short Titles
+		// Progressive 1-Click Auto-Fix via AI (Titles, Metas & Focus Keywords with Paced Delays)
 		$(document).on('click', '#asf-onpage-bulk-autofix-btn, #asf-table-bulk-fix-btn', function (e) {
 			e.preventDefault();
 			var btn = this;
+			var $btn = $(btn);
 			var $status = $('#asf-onpage-status');
+			var $rows = $('#asf-onpage-table tbody tr');
 
-			if (!confirm('Auto-generate and apply clean SEO titles & meta descriptions for all pages currently missing them?')) return;
+			if (!$rows.length) {
+				ASF.toast('Scanning published pages first…', 'info');
+				runOnPageScan();
+				return;
+			}
 
-			ASF.spinning(btn, 'Auto-Fixing Pages…');
-			$status.html('<span class="asf-spinner"></span> Extracting content snippets and generating optimized meta descriptions & titles…');
+			if (!confirm('Auto-generate and apply high-CTR SEO Titles (48-60 chars), Meta Descriptions (120-155 chars), and Primary Focus Keywords for all ' + $rows.length + ' pages using connected AI?')) return;
 
-			ASF.request('asf_onpage_bulk_autofix')
+			$btn.prop('disabled', true);
+			$('#asf-onpage-progress-bar').show();
+			$('#asf-onpage-progress-fill').css('width', '0%');
+
+			var total = $rows.length;
+			var idx = 0;
+			var successCount = 0;
+
+			function processNextPage() {
+				if (idx >= total) {
+					$btn.prop('disabled', false).text('⚡ 1-Click Auto-Fix via AI');
+					$('#asf-onpage-progress-fill').css('width', '100%');
+					setTimeout(function () { $('#asf-onpage-progress-bar').fadeOut(); }, 2500);
+					$status.html('<div class="asf-notice asf-notice-success"><strong>🎉 Successfully optimized ' + successCount + ' of ' + total + ' pages with AI SEO Titles, Meta Descriptions & Focus Keywords!</strong></div>');
+					ASF.toast('✓ All pages successfully optimized with AI!', 'success');
+					return;
+				}
+
+				var $row = $($rows[idx]);
+				var pid = $row.data('id');
+				var pTitle = $row.find('td:first strong').text().trim();
+				idx++;
+
+				var pct = Math.round((idx / total) * 100);
+				$('#asf-onpage-progress-fill').css('width', pct + '%');
+				$status.html('<span class="asf-spinner"></span> ⚡ AI Optimizing ' + idx + '/' + total + ' (' + pct + '%): <strong>' + ASF.escapeHtml(pTitle) + '</strong>…');
+
+				ASF.request('asf_onpage_autofix_single_ai', { post_id: pid })
+					.done(function (res) {
+						if (res && res.success) {
+							successCount++;
+							$row.css('background', '#f0fdf4');
+							$row.find('.asf-onpage-quick-fix-btn').text('✓ AI Fixed').css({'background':'#10b981','border-color':'#059669','color':'#ffffff'});
+							var $issCell = $row.find('td:nth-child(3)');
+							$issCell.html('<div style="color:#059669;font-weight:600;font-size:12px;margin-bottom:3px;">✓ AI Optimized:</div>' +
+								'<div style="font-size:11px;line-height:1.4;color:#334155;">' +
+								'<strong>Title:</strong> ' + ASF.escapeHtml(res.title) + '<br>' +
+								'<strong>Focus Keyword:</strong> <span style="background:#e0f2fe;color:#0369a1;padding:1px 5px;border-radius:3px;font-weight:600;">' + ASF.escapeHtml(res.focus_keyword) + '</span>' +
+								'</div>');
+						}
+						setTimeout(processNextPage, 160);
+					})
+					.fail(function () {
+						setTimeout(processNextPage, 120);
+					});
+			}
+
+			processNextPage();
+		});
+
+		// Single Page Auto-Link Button in OnPage table
+		$(document).on('click', '.asf-autolink-btn', function (e) {
+			e.preventDefault();
+			var $btn = $(this);
+			var pid = $btn.data('id');
+			var $row = $('#asf-onpage-table tr[data-id="' + pid + '"]');
+			var origText = $btn.text();
+
+			$btn.prop('disabled', true).text('Linking…');
+
+			ASF.request('asf_autolink_single_page', { post_id: pid })
 				.done(function (res) {
-					ASF.done(btn);
+					$btn.prop('disabled', false).text(origText);
 					if (res && res.success) {
-						alert(res.message);
-						runOnPageScan();
+						var linksAdded = res.links_added || 0;
+						var totalLinks = res.total_internal || 0;
+						var pillText = (totalLinks > 0) ? '🔗 ' + totalLinks + ' internal links' : '🔗 0 internal links';
+						$row.find('.asf-page-links-count').html(pillText);
+
+						if (linksAdded > 0) {
+							$row.find('li').each(function () {
+								if ($(this).text().indexOf('internal links') !== -1) {
+									$(this).remove();
+								}
+							});
+
+							if ($row.find('ul li').length === 0) {
+								$row.css('background', '#f0fdf4');
+								$row.find('td:nth-child(3)').html('<span style="color:#10b981;font-weight:600;">✓ All issues resolved!</span>');
+								var $pill = $('.asf-count-pill');
+								var count = parseInt($pill.text(), 10) || 0;
+								if (count > 0) $pill.text(count - 1);
+							}
+
+							ASF.toast('✓ Added ' + linksAdded + ' contextual internal link(s) to related categories!', 'success');
+						} else {
+							ASF.toast(res.message || 'No matching category keywords found in content.', 'info');
+						}
 					} else {
-						$status.html('<div class="asf-notice asf-notice-error">❌ ' + (res ? res.message : 'Bulk fix failed') + '</div>');
+						ASF.toast('Could not auto-link page.', 'error');
 					}
 				})
 				.fail(function () {
-					ASF.done(btn);
-					alert('Network error running bulk auto-fix.');
+					$btn.prop('disabled', false).text(origText);
+					ASF.toast('Network error during auto-linking.', 'error');
 				});
+		});
+
+		// Progressive Bulk Auto-Linking for All Pages
+		$(document).on('click', '#asf-onpage-autolink-all-btn', function (e) {
+			e.preventDefault();
+			var btn = this;
+			var $btn = $(btn);
+			var $status = $('#asf-onpage-status');
+			var $rows = $('#asf-onpage-table tbody tr');
+
+			if (!$rows.length) {
+				ASF.toast('Scanning published pages first…', 'info');
+				runOnPageScan();
+				return;
+			}
+
+			if (!confirm('Scan all pages and contextually generate internal links to matching WooCommerce categories, post categories, and key services?')) return;
+
+			$btn.prop('disabled', true);
+			$('#asf-onpage-progress-bar').show();
+			$('#asf-onpage-progress-fill').css('width', '0%');
+
+			var total = $rows.length;
+			var idx = 0;
+			var totalLinksAdded = 0;
+
+			function linkNextPage() {
+				if (idx >= total) {
+					$btn.prop('disabled', false).text('🔗 Auto-Generate Internal Links');
+					$('#asf-onpage-progress-fill').css('width', '100%');
+					setTimeout(function () { $('#asf-onpage-progress-bar').fadeOut(); }, 2500);
+					$status.html('<div class="asf-notice asf-notice-success"><strong>🎉 Smart Internal Linking complete! Generated ' + totalLinksAdded + ' internal links across scanned pages.</strong></div>');
+					ASF.toast('✓ Internal linking complete!', 'success');
+					return;
+				}
+
+				var $row = $($rows[idx]);
+				var pid = $row.data('id');
+				var pTitle = $row.find('td:first strong').text().trim();
+				idx++;
+
+				var pct = Math.round((idx / total) * 100);
+				$('#asf-onpage-progress-fill').css('width', pct + '%');
+				$status.html('<span class="asf-spinner"></span> 🔗 Contextually linking ' + idx + '/' + total + ' (' + pct + '%): <strong>' + ASF.escapeHtml(pTitle) + '</strong>…');
+
+				ASF.request('asf_autolink_single_page', { post_id: pid })
+					.done(function (res) {
+						if (res && res.success && res.links_added > 0) {
+							totalLinksAdded += res.links_added;
+							$row.find('.asf-page-links-count').html('🔗 ' + res.total_internal + ' internal links');
+							$row.find('li').each(function () {
+								if ($(this).text().indexOf('internal links') !== -1) $(this).remove();
+							});
+							if ($row.find('ul li').length === 0) {
+								$row.css('background', '#f0fdf4');
+								$row.find('td:nth-child(3)').html('<span style="color:#10b981;font-weight:600;">✓ All issues resolved!</span>');
+							}
+						}
+						setTimeout(linkNextPage, 140);
+					})
+					.fail(function () {
+						setTimeout(linkNextPage, 100);
+					});
+			}
+
+			linkNextPage();
 		});
 
 		// Inline Quick-Fix Modal Handler
@@ -1092,8 +1486,8 @@
 					// SEO Title
 					modalHtml += '<div style="margin-bottom:14px;">';
 					modalHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
-					modalHtml += '<label style="font-weight:600;">SEO Title Tag:</label>';
-					modalHtml += '<span id="asf-qf-title-count" style="font-size:11px;color:#64748b;">' + (d.seo_title || '').length + '/60 chars (Aim for 50–60)</span>';
+					modalHtml += '<label style="font-weight:600;">SEO Title Tag (Aim for 48–60 chars):</label>';
+					modalHtml += '<span id="asf-qf-title-count" style="font-size:11px;color:#64748b;">' + (d.seo_title || '').length + '/60 chars</span>';
 					modalHtml += '</div>';
 					modalHtml += '<input type="text" id="asf-qf-title" class="asf-input" style="width:100%;font-size:13px;" value="' + ASF.escapeHtml(d.seo_title || '') + '" placeholder="' + ASF.escapeHtml(d.sug_title) + '" />';
 					modalHtml += '</div>';
@@ -1101,8 +1495,8 @@
 					// Meta Description
 					modalHtml += '<div style="margin-bottom:14px;">';
 					modalHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
-					modalHtml += '<label style="font-weight:600;">Meta Description:</label>';
-					modalHtml += '<span id="asf-qf-desc-count" style="font-size:11px;color:#64748b;">' + (d.meta_desc || '').length + '/155 chars (Aim for 120–155)</span>';
+					modalHtml += '<label style="font-weight:600;">Meta Description (Aim for 120–155 chars):</label>';
+					modalHtml += '<span id="asf-qf-desc-count" style="font-size:11px;color:#64748b;">' + (d.meta_desc || '').length + '/155 chars</span>';
 					modalHtml += '</div>';
 					modalHtml += '<textarea id="asf-qf-desc" class="asf-input" rows="3" style="width:100%;font-size:13px;" placeholder="' + ASF.escapeHtml(d.sug_desc) + '">' + ASF.escapeHtml(d.meta_desc || '') + '</textarea>';
 					modalHtml += '</div>';
@@ -1110,7 +1504,7 @@
 					// Focus Keyword & Schema Type
 					modalHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
 					modalHtml += '<div><label style="font-weight:600;display:block;margin-bottom:4px;">Primary Focus Keyword:</label>';
-					modalHtml += '<input type="text" id="asf-qf-keyword" class="asf-input" style="width:100%;" value="' + ASF.escapeHtml(d.focus_keyword || '') + '" placeholder="e.g. laptop repair dubai" /></div>';
+					modalHtml += '<input type="text" id="asf-qf-keyword" class="asf-input" style="width:100%;" value="' + ASF.escapeHtml(d.focus_keyword || '') + '" placeholder="e.g. Laptop Repair Dubai" /></div>';
 
 					modalHtml += '<div><label style="font-weight:600;display:block;margin-bottom:4px;">Schema JSON-LD Type:</label>';
 					modalHtml += '<select id="asf-qf-schema" class="asf-select" style="width:100%;">';
@@ -1120,10 +1514,16 @@
 					modalHtml += '</select></div>';
 					modalHtml += '</div>';
 
-					// AI Suggestion Box
-					modalHtml += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">';
-					modalHtml += '<div style="font-size:12px;color:#1e40af;">💡 <strong>Smart AI Suggested Meta:</strong> Use auto-generated clean snippet based on content depth.</div>';
-					modalHtml += '<button type="button" class="button button-small" id="asf-qf-apply-sug" data-title="' + ASF.escapeHtml(d.sug_title) + '" data-desc="' + ASF.escapeHtml(d.sug_desc) + '">🤖 Fill Suggestion</button>';
+					// AI Suggestion Box with AI Auto-Fill button
+					modalHtml += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
+					modalHtml += '<div style="font-size:12px;color:#1e40af;">💡 <strong>Connected AI Engine:</strong> Auto-generate high-CTR Title, Meta Description &amp; Focus Keyword.</div>';
+					modalHtml += '<button type="button" class="button button-primary button-small" id="asf-qf-ai-autofill-btn" data-id="' + postId + '">🤖 AI Auto-Fill All 3 Fields</button>';
+					modalHtml += '</div>';
+
+					// Internal Linking Generator in Modal
+					modalHtml += '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">';
+					modalHtml += '<div><strong style="font-size:12px;">🔗 Smart Internal Linking:</strong> <span id="asf-qf-link-status" style="font-size:12px;color:#475569;">Contextually link category keywords in body text</span></div>';
+					modalHtml += '<button type="button" class="button button-secondary button-small" id="asf-qf-autolink-btn" data-id="' + postId + '">🔗 Generate Internal Links</button>';
 					modalHtml += '</div>';
 
 					modalHtml += '<div id="asf-qf-msg" style="margin-top:8px;"></div>';
@@ -1136,13 +1536,13 @@
 					// Dynamic counters
 					$('#asf-qf-title').on('input', function () {
 						var len = $(this).val().length;
-						var col = (len >= 50 && len <= 60) ? '#16a34a' : (len < 30 ? '#d97706' : '#64748b');
+						var col = (len >= 45 && len <= 60) ? '#16a34a' : (len < 30 ? '#ef4444' : '#d97706');
 						$('#asf-qf-title-count').html('<span style="color:' + col + ';font-weight:600;">' + len + '/60 chars</span>');
 					});
 
 					$('#asf-qf-desc').on('input', function () {
 						var len = $(this).val().length;
-						var col = (len >= 120 && len <= 155) ? '#16a34a' : (len < 80 ? '#d97706' : '#64748b');
+						var col = (len >= 120 && len <= 155) ? '#16a34a' : (len < 80 ? '#ef4444' : '#d97706');
 						$('#asf-qf-desc-count').html('<span style="color:' + col + ';font-weight:600;">' + len + '/155 chars</span>');
 					});
 				})
@@ -1152,13 +1552,67 @@
 				});
 		});
 
-		// Fill Suggestion in Modal
-		$(document).on('click', '#asf-qf-apply-sug', function (e) {
+		// 1-Click AI Auto-Fill in Quick Fix Modal
+		$(document).on('click', '#asf-qf-ai-autofill-btn', function (e) {
 			e.preventDefault();
-			var sugTitle = $(this).data('title');
-			var sugDesc  = $(this).data('desc');
-			$('#asf-qf-title').val(sugTitle).trigger('input');
-			$('#asf-qf-desc').val(sugDesc).trigger('input');
+			var $b = $(this);
+			var pid = $b.data('id');
+			$b.prop('disabled', true).text('Generating with AI…');
+
+			ASF.request('asf_onpage_generate_single_seo', { post_id: pid })
+				.done(function (res) {
+					$b.prop('disabled', false).text('🤖 AI Auto-Fill All 3 Fields');
+					if (res && res.success) {
+						if (res.title) $('#asf-qf-title').val(res.title).trigger('input').css('background', '#f0fdf4');
+						if (res.meta_desc) $('#asf-qf-desc').val(res.meta_desc).trigger('input').css('background', '#f0fdf4');
+						if (res.focus_keyword) $('#asf-qf-keyword').val(res.focus_keyword).css('background', '#f0fdf4');
+						setTimeout(function () {
+							$('#asf-qf-title, #asf-qf-desc, #asf-qf-keyword').css('background', '#ffffff');
+						}, 1200);
+						$('#asf-qf-msg').html('<div style="color:#10b981;font-weight:600;font-size:12px;">✨ AI generated optimized Title, Meta Description, and Focus Keyword! Click "Save &amp; Apply Instantly" below.</div>');
+					} else {
+						$('#asf-qf-msg').html('<div style="color:#ef4444;font-size:12px;">Could not generate AI metadata.</div>');
+					}
+				})
+				.fail(function () {
+					$b.prop('disabled', false).text('🤖 AI Auto-Fill All 3 Fields');
+					$('#asf-qf-msg').html('<div style="color:#ef4444;font-size:12px;">Network error generating AI metadata.</div>');
+				});
+		});
+
+		// 1-Click Auto-Link in Quick Fix Modal
+		$(document).on('click', '#asf-qf-autolink-btn', function (e) {
+			e.preventDefault();
+			var $b = $(this);
+			var pid = $b.data('id');
+			$b.prop('disabled', true).text('Linking…');
+
+			ASF.request('asf_autolink_single_page', { post_id: pid })
+				.done(function (res) {
+					$b.prop('disabled', false).text('🔗 Generate Internal Links');
+					if (res && res.success) {
+						var added = res.links_added || 0;
+						var total = res.total_internal || 0;
+						if (res.stats) {
+							if ($('#asf-silo-links-count').length) $('#asf-silo-links-count').text(res.stats.links_generated || 0);
+							if ($('#asf-stat-total-fixes').length) $('#asf-stat-total-fixes').text(res.stats.total_fixes || 0);
+							if ($('#asf-tracker-badge').length) $('#asf-tracker-badge').text(res.stats.total_fixes || 0);
+							if ($('#asf-stat-links').length) $('#asf-stat-links').text(res.stats.links_generated || 0);
+						}
+						if (added > 0) {
+							$('#asf-qf-link-status').html('<span style="color:#10b981;font-weight:600;">✓ Added ' + added + ' link(s) to related categories! (Total: ' + total + ')</span>');
+							$('#asf-onpage-table tr[data-id="' + pid + '"] .asf-page-links-count').html('🔗 ' + total + ' internal links');
+							$('#asf-onpage-table tr[data-id="' + pid + '"] li').each(function () {
+								if ($(this).text().indexOf('internal links') !== -1) $(this).remove();
+							});
+						} else {
+							$('#asf-qf-link-status').html('<span style="color:#64748b;">No matching keywords found or page already linked (Total: ' + total + ').</span>');
+						}
+					}
+				})
+				.fail(function () {
+					$b.prop('disabled', false).text('🔗 Generate Internal Links');
+				});
 		});
 
 		// Save Quick Fix Modal
@@ -1181,11 +1635,38 @@
 				.done(function (res) {
 					$btn.prop('disabled', false).text('💾 Save & Apply Instantly');
 					if (res && res.success) {
-						$('#asf-qf-msg').html('<div class="asf-notice asf-notice-success">✓ Saved successfully! Refreshing table…</div>');
+						if (res.stats) {
+							if ($('#asf-stat-total-fixes').length) $('#asf-stat-total-fixes').text(res.stats.total_fixes || 0);
+							if ($('#asf-tracker-badge').length) $('#asf-tracker-badge').text(res.stats.total_fixes || 0);
+							if ($('#asf-stat-titles').length) $('#asf-stat-titles').text(res.stats.titles_fixed || 0);
+							if ($('#asf-stat-metas').length) $('#asf-stat-metas').text(res.stats.metas_fixed || 0);
+						}
+						$('#asf-qf-msg').html('<div class="asf-notice asf-notice-success">✓ Saved &amp; Applied! Marking Done…</div>');
+
+						var $row = $('#asf-onpage-table tr[data-id="' + postId + '"]');
+						if ($row.length) {
+							$row.css('background', '#f0fdf4');
+							$row.find('.asf-onpage-quick-fix-btn').replaceWith('<span class="asf-badge asf-badge-green" style="font-size:11px;padding:3px 8px;">✓ Done &amp; Fixed</span>');
+							$row.find('td:nth-child(3)').html('<div style="color:#059669;font-weight:600;font-size:12px;">✓ Fixed: SEO Title &amp; Meta Description Saved</div><div style="font-size:11px;color:#64748b;">Title: ' + ASF.escapeHtml(payload.seo_title) + '</div>');
+
+							var $pill = $('.asf-count-pill');
+							var count = parseInt($pill.text(), 10) || 0;
+							if (count > 0) $pill.text(count - 1);
+
+							setTimeout(function () {
+								$row.fadeOut(500, function () {
+									$(this).remove();
+									if ($('#asf-onpage-table tbody tr').length === 0) {
+										$('#asf-onpage-results').html('<div class="asf-card asf-card-ok"><p class="asf-ok">🎉 All published pages pass every on-page SEO check!</p></div>');
+									}
+								});
+							}, 600);
+						}
+
 						setTimeout(function () {
 							ASF.closeModal();
-							runOnPageScan();
-						}, 1200);
+							ASF.toast('✓ Page #' + postId + ' SEO successfully saved & marked Done!', 'success');
+						}, 700);
 					} else {
 						$('#asf-qf-msg').html('<div class="asf-notice asf-notice-error">❌ ' + (res ? res.message : 'Save failed') + '</div>');
 					}
@@ -1875,6 +2356,88 @@
 		});
 
 		/* =============================================================
+		   PAGE: SMART INTERNAL LINKING & CATEGORY SILO HUB
+		   ============================================================= */
+		$(document).on('click', '#asf-silo-autolink-btn', function (e) {
+			e.preventDefault();
+			var btn = this;
+			var $btn = $(btn);
+			var $status = $('#asf-silo-status');
+			var $results = $('#asf-silo-results');
+
+			if (!confirm('Scan all published pages, posts, and WooCommerce products and contextually link category keywords (e.g. iPhone Repair, MacBook Screen) across your website?')) return;
+
+			ASF.spinning(btn, 'Auto-linking site…');
+			$('#asf-silo-progress-bar').show();
+			$('#asf-silo-progress-fill').css('width', '60%');
+			$status.html('<span class="asf-spinner"></span> Indexing categories & scanning published content for silo link injection…');
+
+			ASF.request('asf_autolink_bulk_pages')
+				.done(function (res) {
+					ASF.done(btn);
+					$('#asf-silo-progress-fill').css('width', '100%');
+					setTimeout(function () { $('#asf-silo-progress-bar').fadeOut(); }, 2500);
+
+					if (!res || !res.success) {
+						$status.html('<div class="asf-notice asf-notice-error">❌ ' + (res ? res.message : 'Internal linking failed') + '</div>');
+						return;
+					}
+
+					if (res.stats) {
+						if ($('#asf-silo-links-count').length) $('#asf-silo-links-count').text(res.stats.links_generated || 0);
+						if ($('#asf-stat-total-fixes').length) $('#asf-stat-total-fixes').text(res.stats.total_fixes || 0);
+						if ($('#asf-tracker-badge').length) $('#asf-tracker-badge').text(res.stats.total_fixes || 0);
+						if ($('#asf-stat-links').length) $('#asf-stat-links').text(res.stats.links_generated || 0);
+					}
+
+					$status.html('<div class="asf-notice asf-notice-success"><strong>' + res.message + '</strong></div>');
+					$results.html('<div class="asf-card asf-card-ok"><p class="asf-ok">🎉 Category Silo Engine successfully generated <strong>' + res.total_linked + '</strong> internal links across <strong>' + res.pages_fixed + '</strong> pages.</p></div>');
+					ASF.toast('✓ Internal links successfully generated!', 'success');
+				})
+				.fail(function (err) {
+					ASF.done(btn);
+					$status.html('<div class="asf-notice asf-notice-error">❌ ' + (err.statusText || 'Auto-linking network error') + '</div>');
+				});
+		});
+
+		$(document).on('click', '#asf-view-targets-btn', function (e) {
+			e.preventDefault();
+			var $btn = $(this);
+			$btn.prop('disabled', true).text('Loading targets…');
+
+			ASF.request('asf_get_internal_link_targets')
+				.done(function (res) {
+					$btn.prop('disabled', false).text('👁️ View Indexed Category Targets & Keywords');
+					if (!res || !res.success) {
+						alert('Could not fetch category targets.');
+						return;
+					}
+
+					var targets = res.targets || [];
+					var bodyHtml = '<div style="margin-bottom:12px;font-size:13px;color:#475569;">The Smart Link Silo Engine indexes all your product categories, post categories, and pillar landing pages to automatically link keywords found in page body text:</div>';
+					bodyHtml += '<div style="max-height:420px;overflow-y:auto;"><table class="asf-table widefat striped"><thead><tr><th>Target Keyword</th><th>Type</th><th>Destination URL</th></tr></thead><tbody>';
+
+					targets.forEach(function (t) {
+						var typeBadge = (t.type === 'product_cat') ? '<span class="asf-badge asf-badge-green">Product Category</span>' : (t.type === 'category' ? '<span class="asf-badge asf-badge-blue">Post Category</span>' : '<span class="asf-badge asf-badge-orange">' + t.type + '</span>');
+						bodyHtml += '<tr>';
+						bodyHtml += '<td><strong>' + ASF.escapeHtml(t.keyword) + '</strong></td>';
+						bodyHtml += '<td>' + typeBadge + '</td>';
+						bodyHtml += '<td><a href="' + t.url + '" target="_blank" style="word-break:break-all;text-decoration:none;color:#2271b1;">' + t.url + '</a></td>';
+						bodyHtml += '</tr>';
+					});
+
+					bodyHtml += '</tbody></table></div>';
+
+					var footerHtml = '<button type="button" class="button button-primary" onclick="ASF.closeModal();">Close</button>';
+					ASF.openModal('Indexed Category Targets &amp; Keywords (' + res.total + ' Targets)', bodyHtml, footerHtml);
+				})
+				.fail(function () {
+					$btn.prop('disabled', false).text('👁️ View Indexed Category Targets & Keywords');
+					alert('Network error fetching targets.');
+				});
+		});
+
+		/* =============================================================
 		   PAGE: 301 CANONICAL REDIRECT MANAGER & 404 LOG MONITOR
 		   ============================================================= */
 		$(document).on('click', '#asf-add-row, #asf-add-row-bottom', function (e) {
@@ -2490,7 +3053,8 @@
 				$btn.prop('disabled', false);
 				alert(res.message || 'Debug log cleared!');
 				$('#asf-error-scan-btn').click();
-			});
+			})
+			.fail(function (err) { ASF.toast('Network error clearing debug log.', 'error'); });
 		});
 
 		// Clear Console History
@@ -2502,7 +3066,8 @@
 				$btn.prop('disabled', false);
 				alert(res.message || 'Console history cleared!');
 				$('#asf-error-scan-btn').click();
-			});
+			})
+			.fail(function (err) { ASF.toast('Network error clearing console log.', 'error'); });
 		});
 
 		// AI Diagnose & Fix Error — Step-by-Step WordPress Guide & functions.php Snippet
@@ -2667,7 +3232,8 @@
 				}
 			}).fail(function () {
 				if ($recheckBtn.length) ASF.done($recheckBtn[0]);
-			});
+			})
+			.fail(function (err) { ASF.toast('Network error checking site health.', 'error'); });
 		}
 
 		if ($('#asf-health-banner').length) {
@@ -3362,7 +3928,12 @@
 						$('#asf-schemaorg-test-btn').attr('href', 'https://validator.schema.org/#url=' + encodeURIComponent(targetUrl));
 					} else {
 						$code.text('// Error generating schema');
+						$status.html('<div class="asf-notice asf-notice-error">Schema generation failed.</div>');
 					}
+				})
+				.fail(function () {
+					$code.text('// Network error generating schema preview');
+					$status.html('<div class="asf-notice asf-notice-error">Network error generating schema preview.</div>');
 				});
 		}
 
@@ -3485,6 +4056,53 @@
 		/* =============================================================
 		   FLOATING AI ASSISTANT COPILOT (ALL ASF ADMIN PAGES)
 		   ============================================================= */
+		var floatingChatHistory = [];
+
+		function getCurrentScreenContext() {
+			var $drawer = $('#asf-floating-ai-drawer');
+			var screenName = $drawer.attr('data-screen') || $('.asf-header-title h1').text() || document.title;
+			var pageSlug   = $drawer.attr('data-page') || '';
+			var details = [];
+
+			details.push("Screen Name: " + screenName + " (Slug: " + pageSlug + ")");
+			details.push("URL: " + window.location.href);
+
+			// On-Page Scanner screen context
+			if ($('#asf-onpage-status').length && $('#asf-onpage-status').text().trim()) {
+				details.push("On-Page Status: " + $('#asf-onpage-status').text().trim());
+			}
+			if ($('#asf-onpage-table tbody tr').length) {
+				var count = $('#asf-onpage-table tbody tr').length;
+				details.push("Visible Table: " + count + " page(s) with SEO optimization opportunities detected.");
+				var samplePages = [];
+				$('#asf-onpage-table tbody tr').slice(0, 5).each(function () {
+					var t = $(this).find('td:first strong').text().trim();
+					var errs = $(this).find('td:nth-child(3) li').map(function () { return $(this).text().trim(); }).get().join(', ');
+					if (t) samplePages.push(t + " [" + (errs || 'Needs optimization') + "]");
+				});
+				if (samplePages.length) {
+					details.push("Sample affected pages: " + samplePages.join("; "));
+				}
+			}
+
+			// Dashboard screen context
+			if ($('.asf-score-val').length) {
+				details.push("Site SEO Health Score: " + $('.asf-score-val:first').text().trim());
+			}
+
+			// Media scanner screen context
+			if ($('#asf-media-status').length && $('#asf-media-status').text().trim()) {
+				details.push("Media Scanner Status: " + $('#asf-media-status').text().trim());
+			}
+
+			// PageSpeed screen context
+			if ($('#asf-psi-status').length && $('#asf-psi-status').text().trim()) {
+				details.push("PageSpeed Status: " + $('#asf-psi-status').text().trim());
+			}
+
+			return details.join("\n");
+		}
+
 		// Toggle floating AI drawer
 		$(document).on('click', '#asf-floating-ai-trigger', function (e) {
 			e.preventDefault();
@@ -3511,8 +4129,20 @@
 		$(document).on('click', '#asf-floating-ai-clear', function (e) {
 			e.preventDefault();
 			if (confirm('Clear AI Copilot chat history?')) {
-				$('#asf-floating-chat-box').html('<div class="asf-ai-msg asf-ai-msg-bot">👋 <strong>Hello! I am your AI SEO Copilot</strong> powered by ultra-fast Groq LLaMA 3.3. How can I assist you with ranking, indexing, technical fixes, or content optimization today?</div>');
+				floatingChatHistory = [];
+				var screenName = $('#asf-floating-ai-drawer').attr('data-screen') || 'All-in-One SEO Fixer';
+				$('#asf-floating-chat-box').html('<div class="asf-ai-msg asf-ai-msg-bot">👋 <strong>Hello! I am your AI SEO Copilot</strong> powered by ultra-fast Groq LLaMA 3.3. I am synced with <strong>' + ASF.escapeHtml(screenName) + '</strong>. How can I assist you with ranking, indexing, technical fixes, or content optimization today?</div>');
 			}
+		});
+
+		// "Start AI Session" Button: Sends current screen & site state directly to AI
+		$(document).on('click', '#asf-floating-sync-btn', function (e) {
+			e.preventDefault();
+			var screenName = $('#asf-floating-ai-drawer').attr('data-screen') || 'Current Screen';
+			var ctx = getCurrentScreenContext();
+
+			var promptText = "I am currently viewing the '" + screenName + "' screen. Here is my current live screen context and audit status:\n" + ctx + "\nAnalyze this screen and tell me the most critical action I should take right now.";
+			sendFloatingAiPrompt(promptText);
 		});
 
 		// Helper to dispatch floating AI chat prompt
@@ -3524,32 +4154,45 @@
 
 			if (!text) return;
 
+			floatingChatHistory.push({ role: 'user', content: text });
+			if (floatingChatHistory.length > 8) floatingChatHistory.shift();
+
 			$box.append('<div class="asf-ai-msg asf-ai-msg-user">' + $("<div>").text(text).html() + '</div>');
 			if (!promptText) $input.val('');
 
-			$box.append('<div id="asf-floating-typing" class="asf-ai-msg asf-ai-msg-bot" style="color:#2563eb;"><span class="asf-spinner"></span> <em>Groq AI Copilot is thinking…</em></div>');
+			$box.append('<div id="asf-floating-typing" class="asf-ai-msg asf-ai-msg-bot" style="color:#2563eb;"><span class="asf-spinner"></span> <em>Groq AI Copilot is analyzing screen &amp; site data…</em></div>');
 			$box.scrollTop($box[0].scrollHeight);
 
 			$btn.prop('disabled', true).text('…');
 
-			ASF.request('asf_ai_chat', { prompt: text })
-				.done(function (res) {
-					$btn.prop('disabled', false).text('Send');
-					$('#asf-floating-typing').remove();
-					if (res && res.success) {
-						var replyFormatted = $("<div>").text(res.reply).html().replace(/\n/g, '<br>');
-						$box.append('<div class="asf-ai-msg asf-ai-msg-bot"><strong>🤖 ' + (res.source || 'Groq AI') + ':</strong><br>' + replyFormatted + '</div>');
-					} else {
-						$box.append('<div class="asf-ai-msg asf-ai-msg-bot" style="color:#dc2626;">❌ ' + (res ? res.message : 'AI request failed') + '</div>');
-					}
-					$box.scrollTop($box[0].scrollHeight);
-				})
-				.fail(function (err) {
-					$btn.prop('disabled', false).text('Send');
-					$('#asf-floating-typing').remove();
-					$box.append('<div class="asf-ai-msg asf-ai-msg-bot" style="color:#dc2626;">❌ Error: ' + (err.statusText || 'AI request failed') + '</div>');
-					$box.scrollTop($box[0].scrollHeight);
-				});
+			var screenName = $('#asf-floating-ai-drawer').attr('data-screen') || '';
+			var screenCtx  = getCurrentScreenContext();
+
+			ASF.request('asf_ai_chat', {
+				prompt: text,
+				current_page: screenName,
+				screen_context: screenCtx,
+				history: JSON.stringify(floatingChatHistory.slice(-6))
+			})
+			.done(function (res) {
+				$btn.prop('disabled', false).text('Send');
+				$('#asf-floating-typing').remove();
+				if (res && res.success) {
+					floatingChatHistory.push({ role: 'assistant', content: res.reply });
+					if (floatingChatHistory.length > 8) floatingChatHistory.shift();
+					var replyFormatted = $("<div>").text(res.reply).html().replace(/\n/g, '<br>');
+					$box.append('<div class="asf-ai-msg asf-ai-msg-bot"><strong>🤖 ' + (res.source || 'Groq AI') + ':</strong><br>' + replyFormatted + '</div>');
+				} else {
+					$box.append('<div class="asf-ai-msg asf-ai-msg-bot" style="color:#dc2626;">❌ ' + (res ? res.message : 'AI request failed') + '</div>');
+				}
+				$box.scrollTop($box[0].scrollHeight);
+			})
+			.fail(function (err) {
+				$btn.prop('disabled', false).text('Send');
+				$('#asf-floating-typing').remove();
+				$box.append('<div class="asf-ai-msg asf-ai-msg-bot" style="color:#dc2626;">❌ Error: ' + (err.statusText || 'AI request failed') + '</div>');
+				$box.scrollTop($box[0].scrollHeight);
+			});
 		}
 
 		$(document).on('click', '#asf-floating-ai-send', function (e) {

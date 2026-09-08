@@ -32,7 +32,10 @@ class ASF_PageSpeed {
 		$url      = esc_url_raw( $_REQUEST['url'] ?? '' );
 		$strategy = strtoupper( $_REQUEST['strategy'] ?? 'MOBILE' );
 		$strategy = in_array( $strategy, array( 'MOBILE', 'DESKTOP' ), true ) ? $strategy : 'MOBILE';
-		$api_key  = trim( get_option( ASF_OPT_PSI_KEY, '' ) );
+		$api_key  = trim( get_option( ASF_OPT_PSI_KEY, defined( 'ASF_DEFAULT_PSI_KEY' ) ? ASF_DEFAULT_PSI_KEY : 'AIzaSyCupxDhHgvv86DP4Zf6G7HbjaQKZ2PDyjw' ) );
+		if ( empty( $api_key ) ) {
+			$api_key = defined( 'ASF_DEFAULT_PSI_KEY' ) ? ASF_DEFAULT_PSI_KEY : 'AIzaSyCupxDhHgvv86DP4Zf6G7HbjaQKZ2PDyjw';
+		}
 
 		if ( ! $url ) {
 			$url = home_url( '/' );

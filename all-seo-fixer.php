@@ -77,12 +77,20 @@ define( 'ASF_PLUGIN_FILE', __FILE__ );
 /* ─── Option Keys ───────────────────────────────────────────── */
 define( 'ASF_OPT_REDIRECTS', 'asf_custom_redirects' );
 define( 'ASF_OPT_PSI_KEY',   'asf_psi_api_key' );
+define( 'ASF_DEFAULT_PSI_KEY', 'AIzaSyCupxDhHgvv86DP4Zf6G7HbjaQKZ2PDyjw' );
+define( 'ASF_DEFAULT_GCP_KEY', 'AIzaSyBncUXbZ34vYpS_-snCT3GZwgB8Jn1TT-c' );
 
 /* ─── Activation / Deactivation ────────────────────────────── */
 register_activation_hook( __FILE__, 'asf_activate' );
 function asf_activate() {
 	if ( get_option( ASF_OPT_REDIRECTS ) === false ) {
 		add_option( ASF_OPT_REDIRECTS, array() );
+	}
+	if ( ! get_option( ASF_OPT_PSI_KEY ) ) {
+		update_option( ASF_OPT_PSI_KEY, ASF_DEFAULT_PSI_KEY );
+	}
+	if ( ! get_option( 'asf_google_cloud_api_key' ) ) {
+		update_option( 'asf_google_cloud_api_key', ASF_DEFAULT_GCP_KEY );
 	}
 
 	// Create custom DB table for 404 URL Hit Logger with index
@@ -172,6 +180,8 @@ add_action( 'plugins_loaded', function () {
 	ASF_LazyLoad::init();
 	ASF_OnPage::init();
 	ASF_LinkCleaner::init();
+	ASF_InternalLinks::init();
+	ASF_StatsTracker::init();
 	ASF_Media::init();
 	ASF_Pinger::init();
 	ASF_AutoFixer::init();
@@ -183,5 +193,14 @@ add_action( 'plugins_loaded', function () {
 
 	if ( is_admin() ) {
 		ASF_Admin::init();
+
+		add_action( 'admin_init', function () {
+			if ( ! get_option( ASF_OPT_PSI_KEY ) ) {
+				update_option( ASF_OPT_PSI_KEY, ASF_DEFAULT_PSI_KEY );
+			}
+			if ( ! get_option( 'asf_google_cloud_api_key' ) ) {
+				update_option( 'asf_google_cloud_api_key', ASF_DEFAULT_GCP_KEY );
+			}
+		} );
 	}
 } );

@@ -12,6 +12,7 @@ if ( ! current_user_can('manage_options') ) return;
 $save_notice = '';
 if ( isset($_POST['asf_save_settings']) && check_admin_referer('asf_save_settings','asf_settings_nonce') ) {
 	update_option( ASF_OPT_PSI_KEY, sanitize_text_field( $_POST['asf_psi_key'] ?? '' ) );
+	update_option( 'asf_google_cloud_api_key', sanitize_text_field( $_POST['asf_google_cloud_api_key'] ?? '' ) );
 	update_option( 'asf_groq_api_key', sanitize_text_field( $_POST['asf_groq_api_key'] ?? '' ) );
 	update_option( 'asf_gemini_api_key', sanitize_text_field( $_POST['asf_gemini_api_key'] ?? '' ) );
 	update_option( 'asf_openrouter_api_key', sanitize_text_field( $_POST['asf_openrouter_api_key'] ?? '' ) );
@@ -68,7 +69,14 @@ if ( isset($_POST['asf_save_settings']) && check_admin_referer('asf_save_setting
 	$save_notice = '<div class="asf-notice asf-notice-success" style="margin-bottom:16px;"><strong>✨ Settings saved successfully! All API keys, GEO meta tags, robots.txt &amp; llms.txt are updated live.</strong></div>';
 }
 
-$psi_key        = get_option( ASF_OPT_PSI_KEY, '' );
+$psi_key        = get_option( ASF_OPT_PSI_KEY, defined( 'ASF_DEFAULT_PSI_KEY' ) ? ASF_DEFAULT_PSI_KEY : 'AIzaSyCupxDhHgvv86DP4Zf6G7HbjaQKZ2PDyjw' );
+if ( empty( $psi_key ) ) {
+	$psi_key = defined( 'ASF_DEFAULT_PSI_KEY' ) ? ASF_DEFAULT_PSI_KEY : 'AIzaSyCupxDhHgvv86DP4Zf6G7HbjaQKZ2PDyjw';
+}
+$gcp_api_key    = get_option( 'asf_google_cloud_api_key', defined( 'ASF_DEFAULT_GCP_KEY' ) ? ASF_DEFAULT_GCP_KEY : 'AIzaSyBncUXbZ34vYpS_-snCT3GZwgB8Jn1TT-c' );
+if ( empty( $gcp_api_key ) ) {
+	$gcp_api_key = defined( 'ASF_DEFAULT_GCP_KEY' ) ? ASF_DEFAULT_GCP_KEY : 'AIzaSyBncUXbZ34vYpS_-snCT3GZwgB8Jn1TT-c';
+}
 $groq_key       = get_option( 'asf_groq_api_key', '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' );
 $gemini_key     = get_option( 'asf_gemini_api_key', '' );
 $openrouter_key = get_option( 'asf_openrouter_api_key', '' );
@@ -268,6 +276,22 @@ $active_tab = sanitize_text_field( $_POST['asf_active_tab'] ?? 'general' );
 								<textarea id="asf_gsc_json" name="asf_gsc_json" class="asf-input" style="width:100%;max-width:600px;height:120px;font-family:monospace;font-size:12px;"
 									placeholder='{"type": "service_account", "project_id": "...", "private_key": "-----BEGIN PRIVATE KEY-----\n..."}'><?php echo esc_textarea($gsc_json); ?></textarea>
 								<p class="description">Paste downloaded Google Cloud Service Account JSON key contents.</p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<h3 style="margin-top:24px;color:#1e293b;">Option 3: Google Cloud Platform (GCP) API Key</h3>
+				<p style="font-size:12px;color:#64748b;margin-top:2px;">For general Google Cloud Services integration (BigQuery, Storage, Analytics Hub, etc.):</p>
+				<table class="form-table">
+					<tbody>
+						<tr>
+							<th scope="row"><label for="asf_google_cloud_api_key">Google Cloud API Key</label></th>
+							<td>
+								<input id="asf_google_cloud_api_key" type="text" name="asf_google_cloud_api_key" value="<?php echo esc_attr($gcp_api_key); ?>" class="asf-input" style="width:100%;max-width:550px;" placeholder="AIzaSy..." />
+								<p class="description">
+									<strong>Note on Search Console:</strong> Google requires OAuth 2.0 (Option 1) or a Service Account (Option 2) for private site keyword rankings and indexing. Raw API Keys can access public/cloud endpoints but cannot query private domain Search Console data without delegation.
+								</p>
 							</td>
 						</tr>
 					</tbody>

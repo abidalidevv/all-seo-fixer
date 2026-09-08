@@ -171,12 +171,16 @@ class ASF_Admin {
 		$ajax_url   = admin_url( 'admin-ajax.php' );
 
 		// Localize all dynamic data for JS
+		$has_ai = ( get_option( 'asf_groq_api_key', '' ) || get_option( 'asf_gemini_api_key', '' ) || get_option( 'asf_openrouter_api_key', '' ) ) ? '1' : '0';
 		wp_localize_script( 'asf-admin', 'asfData', array(
 			'ajax'      => $ajax_url,
 			'nonce'     => $nonce,
 			'adminUrl'  => admin_url(),
 			'siteUrl'   => home_url(),
+			'siteName'  => get_bloginfo( 'name' ) ?: parse_url( home_url(), PHP_URL_HOST ),
+			'siteDesc'  => get_bloginfo( 'description' ) ?: '',
 			'hasPsiKey' => get_option( ASF_OPT_PSI_KEY, '' ) ? '1' : '0',
+			'hasAiKey'  => $has_ai,
 			'version'   => ASF_VERSION,
 			'lastAudit' => $last_audit ? $last_audit : null,
 		) );
@@ -186,6 +190,23 @@ class ASF_Admin {
 	public static function render_floating_ai_widget() {
 		$page = sanitize_text_field( $_GET['page'] ?? '' );
 		if ( strpos( $page, 'asf' ) === false ) return;
+
+		$page_titles = array(
+			'asf-dashboard'     => 'Command Center Dashboard',
+			'asf-onpage'        => 'On-Page SEO & Tag Auditor',
+			'asf-media'         => 'Media & ALT Text Fixer',
+			'asf-pagespeed'     => 'PageSpeed & CWV Optimizer',
+			'asf-broken-links'  => 'Broken Links & 404 Cleaner',
+			'asf-security'      => 'Security & Headers Auditor',
+			'asf-schema'        => 'Rich Snippets & Schema Generator',
+			'asf-authority'     => 'Backlinks & Domain Authority',
+			'asf-builder'       => 'Sitemap & Robots.txt Builder',
+			'asf-gsc-inspector' => 'Google Search Console & Indexer',
+			'asf-geo-local'     => 'Local Business & GEO SEO',
+			'asf-ai-assistant'  => 'AI SEO Assistant & Copilot Hub',
+			'asf-settings'      => 'Settings & Configurations',
+		);
+		$current_screen_name = $page_titles[ $page ] ?? 'SEO Tools';
 		?>
 		<!-- FLOATING AI ASSISTANT BUBBLE (ALL ASF PAGES) -->
 		<div id="asf-floating-ai-trigger" title="Chat with AI SEO Copilot (Groq AI)" aria-label="AI SEO Copilot">
@@ -194,7 +215,7 @@ class ASF_Admin {
 		</div>
 
 		<!-- FLOATING AI COPILOT DRAWER -->
-		<div id="asf-floating-ai-drawer" style="display:none;">
+		<div id="asf-floating-ai-drawer" data-screen="<?php echo esc_attr( $current_screen_name ); ?>" data-page="<?php echo esc_attr( $page ); ?>" style="display:none;">
 			<div class="asf-floating-header">
 				<div style="display:flex;align-items:center;gap:8px;">
 					<span class="dashicons dashicons-rest-api" style="font-size:20px;color:#fff;"></span>
@@ -209,6 +230,13 @@ class ASF_Admin {
 					</a>
 					<button type="button" id="asf-floating-ai-close" title="Minimize Drawer" style="background:none;border:none;color:#fff;cursor:pointer;font-size:18px;line-height:1;padding:4px;">✕</button>
 				</div>
+			</div>
+
+			<div class="asf-floating-context-bar" style="background:#f8fafc;padding:7px 12px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;font-size:11px;gap:8px;">
+				<span id="asf-floating-current-screen" style="color:#475569;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" title="<?php echo esc_attr( $current_screen_name ); ?>">
+					<span class="dashicons dashicons-location" style="font-size:14px;width:14px;height:14px;vertical-align:middle;color:#2563eb;"></span> <?php echo esc_html( $current_screen_name ); ?>
+				</span>
+				<button type="button" id="asf-floating-sync-btn" class="button button-small" style="font-size:11px;padding:2px 8px;height:24px;line-height:20px;background:#2563eb;color:#fff;border-color:#1d4ed8;font-weight:600;" title="Send current page context &amp; audit errors to AI Copilot">⚡ Start AI Session</button>
 			</div>
 
 			<div class="asf-floating-chips">
