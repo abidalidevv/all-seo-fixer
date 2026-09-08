@@ -21,6 +21,26 @@ $total_fixes    = (int) ( $lifetime_stats['total_fixes'] ?? 0 );
 ?>
 <div class="wrap asf-wrap">
 
+	<?php if ( ! get_option( 'asf_setup_wizard_completed', false ) ) : ?>
+	<!-- SETUP WIZARD ONBOARDING BANNER -->
+	<div class="asf-card" style="background:linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);color:#fff;padding:18px 22px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:0 8px 20px -4px rgba(79,70,229,0.35);">
+		<div style="display:flex;align-items:center;gap:14px;">
+			<div style="font-size:32px;background:rgba(255,255,255,0.15);width:50px;height:50px;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+				🧙‍♂️
+			</div>
+			<div>
+				<strong style="font-size:16px;display:block;font-weight:700;">Complete Your 3-Minute SEO Setup Wizard</strong>
+				<span style="font-size:13px;opacity:0.9;">Configure your website niche, Schema markup, social OpenGraph sharing, and AI credentials to unlock automatic optimizations.</span>
+			</div>
+		</div>
+		<div style="display:flex;gap:8px;">
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=asf-setup-wizard' ) ); ?>" class="button button-primary" style="background:#fff;color:#4f46e5;font-weight:700;border:none;padding:8px 18px;border-radius:6px;box-shadow:0 3px 10px rgba(0,0,0,0.15);font-size:13px;">
+				🚀 Launch Setup Wizard &rarr;
+			</a>
+		</div>
+	</div>
+	<?php endif; ?>
+
 	<!-- PAGE HEADER -->
 	<div class="asf-header">
 		<div class="asf-header-title">
@@ -30,6 +50,7 @@ $total_fixes    = (int) ( $lifetime_stats['total_fixes'] ?? 0 );
 		<div class="asf-header-actions">
 			<button type="button" class="button button-primary" id="asf-run-full-btn"><span class="dashicons dashicons-update" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Run Full 360° SEO Audit</button>
 			<button type="button" class="button button-secondary" id="asf-download-pdf-btn"><span class="dashicons dashicons-pdf" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Download Audit PDF Report</button>
+			<a href="<?php echo esc_url( admin_url('admin.php?page=asf-setup-wizard') ); ?>" class="button button-secondary" title="Re-run the initial setup wizard"><span class="dashicons dashicons-admin-settings" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> Setup Wizard</a>
 			<a href="<?php echo esc_url( admin_url('admin.php?page=asf-ai-assistant') ); ?>" class="button button-secondary"><span class="dashicons dashicons-rest-api" style="font-size:16px;vertical-align:middle;margin-right:4px;"></span> AI SEO Copilot</a>
 			<button type="button" class="button button-secondary" id="asf-ping-btn">Ping Search Engines</button>
 		</div>

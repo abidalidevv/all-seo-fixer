@@ -3601,3 +3601,233 @@ class ASF_Diagnostics {
 }
 
 ASF_Diagnostics::init();
+
+/* ==============================================================
+   SETUP & ONBOARDING WIZARD HANDLER
+   ============================================================== */
+class ASF_Setup_Wizard {
+
+	public static function init() {
+		add_action( 'wp_ajax_asf_save_wizard_step', array( __CLASS__, 'handle_save_step' ) );
+		add_action( 'wp_ajax_asf_finish_wizard',    array( __CLASS__, 'handle_finish' ) );
+		add_action( 'wp_ajax_asf_skip_wizard',      array( __CLASS__, 'handle_skip' ) );
+		add_action( 'wp_ajax_asf_test_wizard_groq', array( __CLASS__, 'handle_test_groq' ) );
+	}
+
+	public static function handle_save_step() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$step = intval( $_POST['step'] ?? 1 );
+
+		if ( $step === 1 ) {
+			// Step 1: Website Profile & Industry Niche
+			$niche       = sanitize_text_field( $_POST['asf_site_niche'] ?? 'local_service' );
+			$clean_brand = sanitize_text_field( $_POST['asf_clean_brand_name'] ?? '' );
+			$tagline     = sanitize_text_field( $_POST['asf_site_tagline'] ?? '' );
+			$entity_type = sanitize_text_field( $_POST['asf_entity_type'] ?? 'Organization' );
+
+			update_option( 'asf_site_niche', $niche );
+			if ( ! empty( $clean_brand ) ) {
+				update_option( 'asf_clean_brand_name', $clean_brand );
+				update_option( 'asf_local_biz_name', $clean_brand );
+				update_option( 'asf_schema_org_name', $clean_brand );
+			}
+			if ( ! empty( $tagline ) ) {
+				update_option( 'asf_site_tagline', $tagline );
+			}
+			update_option( 'asf_entity_type', $entity_type );
+
+			wp_send_json( array(
+				'success' => true,
+				'step'    => 1,
+				'message' => 'Step 1 saved: Brand & site profile updated.',
+			) );
+		} elseif ( $step === 2 ) {
+			// Step 2: Business & Local SEO Details
+			$phone       = sanitize_text_field( $_POST['asf_local_biz_phone'] ?? '' );
+			$email       = sanitize_email( $_POST['asf_local_biz_email'] ?? '' );
+			$address     = sanitize_text_field( $_POST['asf_local_biz_address'] ?? '' );
+			$city        = sanitize_text_field( $_POST['asf_local_biz_city'] ?? '' );
+			$state       = sanitize_text_field( $_POST['asf_local_biz_state'] ?? '' );
+			$zip         = sanitize_text_field( $_POST['asf_local_biz_zip'] ?? '' );
+			$country     = sanitize_text_field( $_POST['asf_local_biz_country'] ?? '' );
+			$placename   = sanitize_text_field( $_POST['asf_geo_placename'] ?? '' );
+			$lat         = sanitize_text_field( $_POST['asf_geo_lat'] ?? '' );
+			$lng         = sanitize_text_field( $_POST['asf_geo_lng'] ?? '' );
+			$hours       = sanitize_text_field( $_POST['asf_local_biz_hours'] ?? '' );
+			$price_range = sanitize_text_field( $_POST['asf_local_biz_price_range'] ?? '$$' );
+
+			update_option( 'asf_local_biz_phone', $phone );
+			if ( ! empty( $email ) ) {
+				update_option( 'asf_local_biz_email', $email );
+			}
+			update_option( 'asf_local_biz_address', $address );
+			update_option( 'asf_local_biz_city', $city );
+			update_option( 'asf_local_biz_state', $state );
+			update_option( 'asf_local_biz_zip', $zip );
+			update_option( 'asf_local_biz_country', $country );
+			if ( ! empty( $placename ) ) {
+				update_option( 'asf_geo_placename', $placename );
+			}
+			if ( ! empty( $lat ) ) {
+				update_option( 'asf_geo_lat', $lat );
+				update_option( 'asf_local_biz_lat', $lat );
+			}
+			if ( ! empty( $lng ) ) {
+				update_option( 'asf_geo_lng', $lng );
+				update_option( 'asf_local_biz_lng', $lng );
+			}
+			if ( ! empty( $hours ) ) {
+				update_option( 'asf_local_biz_hours', $hours );
+			}
+			update_option( 'asf_local_biz_price_range', $price_range );
+
+			wp_send_json( array(
+				'success' => true,
+				'step'    => 2,
+				'message' => 'Step 2 saved: Contact & Local SEO information updated.',
+			) );
+		} elseif ( $step === 3 ) {
+			// Step 3: Social & OpenGraph Branding
+			$logo     = esc_url_raw( $_POST['asf_site_logo'] ?? '' );
+			$og_img   = esc_url_raw( $_POST['asf_og_default_image'] ?? '' );
+			$fb       = esc_url_raw( $_POST['asf_social_facebook'] ?? '' );
+			$ig       = esc_url_raw( $_POST['asf_social_instagram'] ?? '' );
+			$tw       = sanitize_text_field( $_POST['asf_social_twitter'] ?? '' );
+			$li       = esc_url_raw( $_POST['asf_social_linkedin'] ?? '' );
+			$yt       = esc_url_raw( $_POST['asf_social_youtube'] ?? '' );
+			$gmb      = esc_url_raw( $_POST['asf_social_gmb'] ?? '' );
+
+			if ( ! empty( $logo ) ) {
+				update_option( 'asf_site_logo', $logo );
+			}
+			if ( ! empty( $og_img ) ) {
+				update_option( 'asf_og_default_image', $og_img );
+			}
+			update_option( 'asf_social_facebook', $fb );
+			update_option( 'asf_social_instagram', $ig );
+			update_option( 'asf_social_twitter', $tw );
+			update_option( 'asf_social_linkedin', $li );
+			update_option( 'asf_social_youtube', $yt );
+			update_option( 'asf_social_gmb', $gmb );
+
+			// Build Schema sameAs list
+			$same_as = array();
+			if ( $fb )  $same_as[] = $fb;
+			if ( $ig )  $same_as[] = $ig;
+			if ( $tw )  $same_as[] = ( strpos( $tw, 'http' ) === 0 ) ? $tw : 'https://x.com/' . ltrim( $tw, '@' );
+			if ( $li )  $same_as[] = $li;
+			if ( $yt )  $same_as[] = $yt;
+			if ( $gmb ) $same_as[] = $gmb;
+
+			if ( ! empty( $same_as ) ) {
+				update_option( 'asf_local_biz_same_as', implode( "\n", array_unique( $same_as ) ) );
+			}
+
+			wp_send_json( array(
+				'success' => true,
+				'step'    => 3,
+				'message' => 'Step 3 saved: Logo, OpenGraph image & social links stored.',
+			) );
+		} elseif ( $step === 4 ) {
+			// Step 4: AI Supercharger & Automations
+			$groq_k  = sanitize_text_field( $_POST['asf_groq_api_key'] ?? '' );
+			$gem_k   = sanitize_text_field( $_POST['asf_gemini_api_key'] ?? '' );
+			$auto_sc = isset( $_POST['asf_enable_auto_schema'] ) ? '1' : '0';
+			$auto_og = isset( $_POST['asf_enable_opengraph'] ) ? '1' : '0';
+			$auto_rb = isset( $_POST['asf_enable_virtual_robots'] ) ? '1' : '0';
+
+			if ( ! empty( $groq_k ) ) {
+				update_option( 'asf_groq_api_key', $groq_k );
+			}
+			if ( ! empty( $gem_k ) ) {
+				update_option( 'asf_gemini_api_key', $gem_k );
+			}
+			update_option( 'asf_enable_auto_schema', $auto_sc );
+			update_option( 'asf_og_enable', $auto_og );
+			update_option( 'asf_enable_virtual_robots', $auto_rb );
+
+			wp_send_json( array(
+				'success' => true,
+				'step'    => 4,
+				'message' => 'Step 4 saved: AI Engine keys & SEO automation preferences configured.',
+			) );
+		}
+
+		wp_send_json( array( 'success' => true, 'step' => $step ) );
+	}
+
+	public static function handle_finish() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		// Mark setup wizard as completed
+		update_option( 'asf_setup_wizard_completed', '1' );
+
+		wp_send_json( array(
+			'success'  => true,
+			'message'  => '🎉 Congratulations! Your SEO profile is fully configured.',
+			'redirect' => admin_url( 'admin.php?page=asf-panel&wizard_completed=1' ),
+		) );
+	}
+
+	public static function handle_skip() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		// Mark setup wizard as completed so it does not auto-redirect again
+		update_option( 'asf_setup_wizard_completed', '1' );
+
+		wp_send_json( array(
+			'success'  => true,
+			'message'  => 'Setup Wizard skipped. You can re-run it anytime from the Dashboard or Settings.',
+			'redirect' => admin_url( 'admin.php?page=asf-panel' ),
+		) );
+	}
+
+	public static function handle_test_groq() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$key = sanitize_text_field( $_POST['api_key'] ?? '' );
+		if ( empty( $key ) ) {
+			wp_send_json( array( 'success' => false, 'message' => 'Please enter a Groq API key to test.' ) );
+		}
+
+		$response = wp_remote_get( 'https://api.groq.com/openai/v1/models', array(
+			'headers' => array(
+				'Authorization' => 'Bearer ' . $key,
+				'Content-Type'  => 'application/json',
+			),
+			'timeout' => 12,
+		) );
+
+		if ( is_wp_error( $response ) ) {
+			wp_send_json( array(
+				'success' => false,
+				'message' => 'Connection error: ' . $response->get_error_message(),
+			) );
+		}
+
+		$code = wp_remote_retrieve_response_code( $response );
+		if ( $code === 200 ) {
+			wp_send_json( array(
+				'success' => true,
+				'message' => '✅ Groq API Key is valid! High-speed LLaMA 3.3-70B is ready.',
+			) );
+		} elseif ( $code === 401 ) {
+			wp_send_json( array(
+				'success' => false,
+				'message' => '❌ HTTP 401: Invalid API Key. Please copy your key carefully from console.groq.com/keys.',
+			) );
+		} else {
+			wp_send_json( array(
+				'success' => false,
+				'message' => 'HTTP ' . $code . ' received from Groq.',
+			) );
+		}
+	}
+}
+
+ASF_Setup_Wizard::init();

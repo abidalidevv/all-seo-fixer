@@ -108,8 +108,23 @@ function asf_activate() {
 		UNIQUE KEY url_idx (url(191))
 	) $charset_collate;";
 
-	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-	dbDelta( $sql );
+	// Trigger Setup Wizard redirect for fresh installations
+	if ( ! get_option( 'asf_setup_wizard_completed', false ) ) {
+		set_transient( 'asf_activation_redirect', true, 60 );
+	}
+}
+
+add_action( 'admin_init', 'asf_check_wizard_redirect' );
+function asf_check_wizard_redirect() {
+	if ( get_transient( 'asf_activation_redirect' ) ) {
+		delete_transient( 'asf_activation_redirect' );
+		if ( ! isset( $_GET['activate-multi'] ) && current_user_can( 'manage_options' ) ) {
+			if ( ! get_option( 'asf_setup_wizard_completed', false ) ) {
+				wp_safe_redirect( admin_url( 'admin.php?page=asf-setup-wizard' ) );
+				exit;
+			}
+		}
+	}
 }
 
 register_deactivation_hook( __FILE__, 'asf_deactivate' );

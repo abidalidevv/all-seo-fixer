@@ -4561,6 +4561,269 @@
 		});
 
 
+		/* ==============================================================
+		   ONBOARDING SETUP WIZARD CONTROLLER
+		   ============================================================== */
+		var currentWizardStep = 1;
+
+		function updateWizardUI(step) {
+			currentWizardStep = step;
+
+			// Panes
+			$('.asf-wizard-step-pane').hide();
+			$('#asf-wizard-step-' + step).fadeIn(200);
+
+			// Indicators
+			$('.asf-wizard-step-indicator').each(function () {
+				var s = parseInt($(this).data('step'), 10);
+				var $num = $(this).find('.asf-step-num');
+				if (s === step) {
+					$(this).addClass('active');
+					$num.css({ 'background': '#6366f1', 'color': '#fff', 'box-shadow': '0 0 0 3px rgba(99,102,241,0.3)' });
+				} else if (s < step) {
+					$(this).removeClass('active');
+					$num.css({ 'background': '#10b981', 'color': '#fff', 'box-shadow': 'none' }).text('✓');
+				} else {
+					$(this).removeClass('active');
+					$num.css({ 'background': 'rgba(255,255,255,0.15)', 'color': '#cbd5e1', 'box-shadow': 'none' }).text(s);
+				}
+			});
+
+			// Progress bar
+			var progressPct = (step / 5) * 100;
+			$('#asf-wizard-progress-bar').css('width', progressPct + '%');
+
+			// Label
+			$('#asf-wizard-step-label').text('Step ' + step + ' of 5');
+
+			// Nav Buttons
+			if (step === 1) {
+				$('#asf-wizard-prev-btn').hide();
+			} else {
+				$('#asf-wizard-prev-btn').show();
+			}
+
+			if (step === 5) {
+				$('#asf-wizard-next-btn').hide();
+				populateWizardSummary();
+			} else {
+				$('#asf-wizard-next-btn').show().html('Save &amp; Continue &rarr;');
+			}
+
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+
+		function populateWizardSummary() {
+			var brand = $('#asf_clean_brand_name').val() || 'Not specified';
+			var entity = $('#asf_entity_type').val() || 'Organization';
+			var phone = $('#asf_local_biz_phone').val() || 'Not specified';
+			var email = $('#asf_local_biz_email').val() || 'Not specified';
+			var loc = $('#asf_geo_placename').val() || $('#asf_local_biz_city').val() || 'Configured';
+			var hours = $('#asf_local_biz_hours').val() || 'Mo-Fr 09:00-18:00';
+			var og = $('#asf_og_default_image').val() ? '✅ Image Configured' : 'Theme logo fallback';
+			var groq = $('#asf_wizard_groq_key').val() ? '✅ Groq LLaMA 3.3 Active' : 'Offline contextual engine';
+
+			$('#asf-sum-brand').text(brand);
+			$('#asf-sum-entity').text(entity);
+			$('#asf-sum-phone').text(phone);
+			$('#asf-sum-email').text(email);
+			$('#asf-sum-loc').text(loc);
+			$('#asf-sum-hours').text(hours);
+			$('#asf-sum-og').text(og);
+			$('#asf-sum-ai').text(groq);
+		}
+
+		// Niche selection styling
+		$(document).on('change', 'input[name="asf_site_niche"]', function () {
+			$('.asf-niche-card').css({ 'border-color': '#e2e8f0', 'background': '#ffffff' });
+			$(this).closest('.asf-niche-card').css({ 'border-color': '#6366f1', 'background': '#f5f3ff' });
+		});
+
+		// Stepper click
+		$(document).on('click', '.asf-wizard-step-indicator', function () {
+			var targetStep = parseInt($(this).data('step'), 10);
+			if (targetStep < currentWizardStep) {
+				updateWizardUI(targetStep);
+			}
+		});
+
+		// Previous button
+		$(document).on('click', '#asf-wizard-prev-btn', function () {
+			if (currentWizardStep > 1) {
+				updateWizardUI(currentWizardStep - 1);
+			}
+		});
+
+		// Next button (with AJAX step save)
+		$(document).on('click', '#asf-wizard-next-btn', function (e) {
+			e.preventDefault();
+			var btn = this;
+
+			// Step 1 validation
+			if (currentWizardStep === 1) {
+				var brand = ($('#asf_clean_brand_name').val() || '').trim();
+				if (!brand) {
+					ASF.toast('Please enter your Brand Name to continue.', 'warning');
+					$('#asf_clean_brand_name').focus();
+					return;
+				}
+			}
+
+			// Gather form data for current step
+			var postData = $('#asf-wizard-form').serializeArray();
+			postData.push({ name: 'step', value: currentWizardStep });
+
+			ASF.spinning(btn, 'Saving…');
+
+			ASF.request('asf_save_wizard_step', postData)
+			.done(function (res) {
+				ASF.done(btn);
+				if (res && res.success) {
+					ASF.toast(res.message || 'Saved!', 'success');
+					updateWizardUI(currentWizardStep + 1);
+				} else {
+					ASF.toast(res ? res.message : 'Error saving step.', 'error');
+				}
+			})
+			.fail(function () {
+				ASF.done(btn);
+				// Even on network error, allow user to proceed
+				updateWizardUI(currentWizardStep + 1);
+			});
+		});
+
+		// Finish button
+		$(document).on('click', '#asf-wizard-finish-btn', function (e) {
+			e.preventDefault();
+			var btn = this;
+			ASF.spinning(btn, 'Finalizing SEO Profile…');
+
+			ASF.request('asf_finish_wizard')
+			.done(function (res) {
+				ASF.done(btn);
+				ASF.toast(res.message || 'Setup Completed!', 'success');
+				setTimeout(function () {
+					window.location.href = res.redirect || 'admin.php?page=asf-panel';
+				}, 600);
+			})
+			.fail(function () {
+				ASF.done(btn);
+				window.location.href = 'admin.php?page=asf-panel';
+			});
+		});
+
+		// Skip button
+		$(document).on('click', '#asf-wizard-skip-btn', function (e) {
+			e.preventDefault();
+			if (!confirm('Are you sure you want to skip the setup wizard? You can re-launch it anytime from Settings.')) return;
+			var btn = this;
+			$(btn).prop('disabled', true).text('Skipping…');
+
+			ASF.request('asf_skip_wizard')
+			.done(function (res) {
+				window.location.href = res.redirect || 'admin.php?page=asf-panel';
+			})
+			.fail(function () {
+				window.location.href = 'admin.php?page=asf-panel';
+			});
+		});
+
+		// Media library picker in wizard
+		$(document).on('click', '.asf-wizard-media-btn', function (e) {
+			e.preventDefault();
+			var targetInput   = $(this).data('target');
+			var targetPreview = $(this).data('preview');
+
+			if (typeof wp === 'undefined' || !wp.media) {
+				alert('WordPress media library is not loaded on this page.');
+				return;
+			}
+
+			var frame = wp.media({
+				title: 'Select or Upload Image',
+				button: { text: 'Use this Image' },
+				multiple: false,
+				library: { type: 'image' }
+			});
+
+			frame.on('select', function () {
+				var attachment = frame.state().get('selection').first().toJSON();
+				if (attachment && attachment.url) {
+					$(targetInput).val(attachment.url);
+					if (targetPreview) {
+						$(targetPreview).html('<img src="' + attachment.url + '" style="max-width:100%;max-height:100%;object-fit:cover;" />');
+					}
+				}
+			});
+
+			frame.open();
+		});
+
+		// GPS Auto-Detection in wizard
+		$(document).on('click', '#asf-wizard-gps-btn', function (e) {
+			e.preventDefault();
+			var btn     = this;
+			var $status = $('#asf-wizard-gps-status');
+
+			if (!navigator.geolocation) {
+				$status.show().html('<span style="color:#ef4444;">❌ Geolocation is not supported by your browser.</span>');
+				return;
+			}
+
+			ASF.spinning(btn, 'Detecting GPS…');
+			$status.show().html('<span style="color:#2563eb;">📡 Contacting browser location service…</span>');
+
+			navigator.geolocation.getCurrentPosition(
+				function (pos) {
+					ASF.done(btn);
+					var lat = pos.coords.latitude.toFixed(6);
+					var lng = pos.coords.longitude.toFixed(6);
+
+					$('#asf_geo_lat').val(lat);
+					$('#asf_geo_lng').val(lng);
+
+					$status.html('<span style="color:#16a34a;font-weight:600;">✅ GPS Coordinates detected: ' + lat + ', ' + lng + '</span>');
+					ASF.toast('GPS Coordinates detected successfully!', 'success');
+				},
+				function (err) {
+					ASF.done(btn);
+					$status.html('<span style="color:#ef4444;">❌ Could not retrieve GPS: ' + (err.message || 'Permission denied') + '</span>');
+				},
+				{ timeout: 10000, enableHighAccuracy: true }
+			);
+		});
+
+		// Test Groq API Key in wizard
+		$(document).on('click', '#asf-wizard-test-groq-btn', function (e) {
+			e.preventDefault();
+			var btn     = this;
+			var key     = ($('#asf_wizard_groq_key').val() || '').trim();
+			var $status = $('#asf-wizard-groq-status');
+
+			if (!key) {
+				$status.show().html('<span style="color:#ef4444;">❌ Please enter a Groq API key first.</span>');
+				return;
+			}
+
+			ASF.spinning(btn, 'Testing…');
+			$status.show().html('<span style="color:#2563eb;">Connecting to Groq API…</span>');
+
+			ASF.request('asf_test_wizard_groq', { api_key: key })
+			.done(function (res) {
+				ASF.done(btn);
+				if (res && res.success) {
+					$status.html('<span style="color:#16a34a;font-weight:600;">' + res.message + '</span>');
+					ASF.toast('Groq API Key verified successfully!', 'success');
+				} else {
+					$status.html('<span style="color:#ef4444;font-weight:600;">' + (res ? res.message : 'API test failed.') + '</span>');
+				}
+			})
+			.fail(function () {
+				ASF.done(btn);
+				$status.html('<span style="color:#ef4444;">❌ Network error testing Groq API key.</span>');
+			});
+		});
+
 	});
 
 }(jQuery));

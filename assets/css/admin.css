@@ -906,3 +906,29 @@
 .asf-toast-close:hover {
 	color: #0f172a;
 }
+
+/* ============================================================
+   ONBOARDING SETUP WIZARD STYLES
+   ============================================================ */
+.asf-wizard-container {
+	animation: asfWizardFadeIn 0.35s ease-out;
+}
+@keyframes asfWizardFadeIn {
+	from { opacity: 0; transform: translateY(8px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+.asf-wizard-step-indicator:hover .asf-step-num {
+	transform: scale(1.08);
+}
+.asf-niche-card:hover {
+	border-color: #818cf8 !important;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(99,102,241,0.12);
+}
+.asf-wizard-step-pane {
+	animation: asfPaneFade 0.25s ease-out;
+}
+@keyframes asfPaneFade {
+	from { opacity: 0; transform: translateY(4px); }
+	to { opacity: 1; transform: translateY(0); }
+}

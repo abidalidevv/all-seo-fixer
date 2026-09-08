@@ -84,6 +84,9 @@ class ASF_Admin {
 		foreach ( $pages as $page ) {
 			add_submenu_page( self::SLUG, $page[1], $page[1], 'manage_options', $page[0], array( __CLASS__, 'dispatch' ) );
 		}
+
+		// Setup Wizard (standalone route, hidden from standard submenu bar)
+		add_submenu_page( null, __( 'Setup Wizard', 'all-seo-fixer' ), __( 'Setup Wizard', 'all-seo-fixer' ), 'manage_options', 'asf-setup-wizard', array( __CLASS__, 'dispatch' ) );
 	}
 
 	/** Route current page slug to the correct view file */
@@ -93,6 +96,7 @@ class ASF_Admin {
 		$page = $_GET['page'] ?? self::SLUG;
 		$map  = array(
 			'asf-panel'            => 'dashboard',
+			'asf-setup-wizard'     => 'setup-wizard',
 			'asf-pagespeed'        => 'pagespeed',
 			'asf-performance'      => 'performance',
 			'asf-builder-analyzer' => 'builder-analyzer',
@@ -139,6 +143,11 @@ class ASF_Admin {
 		);
 
 		if ( ! $is_our_page ) return;
+
+		// Enqueue WordPress Media Uploader for logo / OG image selection
+		if ( $page === 'asf-setup-wizard' || strpos( $page, 'asf' ) !== false ) {
+			wp_enqueue_media();
+		}
 
 		// Dynamic cache-busting timestamp version to prevent stale browser caching
 		$js_file  = ASF_PLUGIN_DIR . 'assets/js/admin.js';

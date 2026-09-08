@@ -201,6 +201,17 @@ $active_tab = sanitize_text_field( $_POST['asf_active_tab'] ?? 'general' );
 		     TAB 1: GENERAL & APIS
 		     ========================================================= -->
 		<div class="asf-tab-panel" data-panel="general" style="<?php echo $active_tab === 'general' ? '' : 'display:none;'; ?>">
+			<!-- SETUP WIZARD QUICK LAUNCH -->
+			<div class="asf-card" style="background:#f8fafc;border-left:4px solid #4f46e5;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+				<div>
+					<strong style="font-size:14px;color:#1e293b;">🧙 Need to update your website profile or Local SEO details?</strong>
+					<p style="margin:2px 0 0 0;font-size:12px;color:#64748b;">You can re-launch the 5-step interactive onboarding wizard anytime to adjust your brand, address, social tags, and AI settings.</p>
+				</div>
+				<a href="<?php echo esc_url( admin_url('admin.php?page=asf-setup-wizard') ); ?>" class="button button-secondary" style="font-weight:600;">
+					🚀 Re-Run Setup Wizard
+				</a>
+			</div>
+
 			<!-- HOMEPAGE SEO META -->
 			<div class="asf-card">
 				<h2><span class="dashicons dashicons-admin-home" style="color:#2271b1;vertical-align:middle;margin-right:4px;"></span> Homepage SEO Snippet</h2>
