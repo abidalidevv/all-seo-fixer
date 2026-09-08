@@ -2589,7 +2589,7 @@ Always acknowledge their current screen and direct them clearly based on what th
 		$domain_brand = ucfirst( $domain_brand );
 
 		if ( empty( $raw_name ) || strtolower( $raw_name ) === 'wordpress' ) {
-			return $domain_brand ?: 'eFix';
+			return $domain_brand ?: 'Brand';
 		}
 
 		// If raw_name contains delimiters like |, —, –, -, :, •
@@ -2607,7 +2607,7 @@ Always acknowledge their current screen and direct them clearly based on what th
 			if ( ! empty( $words ) && ! empty( $domain_brand ) && strtolower( $words[0] ) === strtolower( $domain_brand ) ) {
 				return $words[0];
 			}
-			$cleaned = preg_replace( '/\b(Electronics\s*Repair|Mobile\s*Phone|Repair\s*Center|Shop|Store|Official\s*Site)\b.*$/i', '', $raw_name );
+			$cleaned = preg_replace( '/\b(Electronics\s*Repair|Mobile\s*Phone|Repair\s*Center|Shop|Store|Official\s*Site|Company|Agency|Blog|Services?)\b.*$/i', '', $raw_name );
 			$cleaned = trim( $cleaned );
 			if ( ! empty( $cleaned ) && mb_strlen( $cleaned ) <= 15 ) {
 				return $cleaned;
@@ -2617,7 +2617,7 @@ Always acknowledge their current screen and direct them clearly based on what th
 			}
 		}
 
-		return ! empty( $raw_name ) ? $raw_name : ( $domain_brand ?: 'eFix' );
+		return ! empty( $raw_name ) ? $raw_name : ( $domain_brand ?: 'Brand' );
 	}
 
 	/**
@@ -2697,36 +2697,37 @@ Always acknowledge their current screen and direct them clearly based on what th
 
 		if ( ! empty( $groq_k ) || ! empty( $gem_k ) || ! empty( $or_k ) ) {
 			$system = "You are an elite Senior SEO Architect and Copywriter for {$clean_brand} ({$site_url}).
-Generate high-ranking, click-compelling metadata tailored specifically to this business and page content.
+Site Description: {$site_desc}
+Generate high-ranking, click-compelling metadata tailored specifically to this business niche and page content.
 Return strictly valid JSON only: {\"title\": \"...\", \"meta_desc\": \"...\", \"focus_keyword\": \"...\"}";
 
 			$user_prompt = "Generate optimal SEO metadata for this page:
 - Page Title: {$raw_title}
 - Post Type: {$post_type}" .
 ( ! empty( $categories_text ) ? "\n- Categories: {$categories_text}" : '' ) .
-( ! empty( $extra_str ) ? "\n- Product Details: {$extra_str}" : '' ) . "
+( ! empty( $extra_str ) ? "\n- Product / Service Details: {$extra_str}" : '' ) . "
 - URL: {$permalink}
-- Content Snippet & Details: {$snippet}
+- Content Snippet: {$snippet}
 - Key Headings: " . ( ! empty( $headings ) ? implode( ' | ', $headings ) : 'None' ) . "
 - Brand Name: {$clean_brand}
 
 RULES FOR TITLE:
 - Length: strictly 48 to 60 characters.
-- MUST be unique, high-CTR, and relevant to the page topic.
-- Include action/category terms (e.g. Repair, Fix, Screen, Battery, Certified, Services) matching the page.
-- Cleanly append the brand name (' | {$clean_brand}' or ' | {$clean_brand} UAE') at the very end.
-- NEVER append slogans, taglines, or descriptions like 'Mobile Phone & Electronics Repair in Muwaileh Sharjah'.
+- MUST be unique, high-CTR, and tailored to this page's exact topic.
+- Use comprehensive, high-value phrasing matching the service or product.
+- Cleanly append the brand name (' | {$clean_brand}') at the very end.
+- NEVER append generic filler like 'Official Site', 'Home', or 'Website'.
 - NEVER let the title exceed 60 characters and NEVER truncate with ellipsis (...).
 
 RULES FOR META DESCRIPTION:
 - Length: strictly 120 to 155 characters.
-- Compelling summary of the specific page with brand {$clean_brand}, value proposition, and a clear call to action (e.g. 'Book online today!', 'Contact our technicians now!').
+- Compelling summary of the specific page with brand {$clean_brand}, value proposition, and a clear call to action tailored to this business.
 - DO NOT repeat the title verbatim.
 - NEVER exceed 155 characters.
 
 RULES FOR PRIMARY FOCUS KEYWORD:
 - Length: 2 to 4 words.
-- Natural high-volume target keyword representing the page's core subject (e.g. 'Acer Laptop Repair', 'Used iPhone 12 Pro Max', 'Electronics Repair Services').
+- Natural high-volume target keyword representing the page's core subject.
 - No punctuation, commas, or brand suffix.
 
 Return ONLY a valid JSON object:
@@ -2803,7 +2804,7 @@ Return ONLY a valid JSON object:
 
 	/**
 	 * Intelligent contextual SEO fallback engine
-	 * Generates unique 48-60 char titles and 120-155 char meta descriptions
+	 * Generates unique 48-60 char titles and 120-155 char meta descriptions for ANY niche
 	 */
 	public static function generate_smart_seo_heuristic( $post_id, $type = 'both' ) {
 		$post = get_post( $post_id );
@@ -2832,10 +2833,8 @@ Return ONLY a valid JSON object:
 			}
 		}
 
-		$clean_content = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( strip_shortcodes( $content_raw ) ) ) );
-
 		// Strip existing site brand / tagline suffixes from raw_title if already embedded
-		$cleaned = preg_replace( '/\s*([|\-–—:]\s*(' . preg_quote( $brand, '/' ) . '|Official Site|WordPress|Electronics Repair|Mobile Phone)).*$/i', '', $raw_title );
+		$cleaned = preg_replace( '/\s*([|\-–—:]\s*(' . preg_quote( $brand, '/' ) . '|Official Site|WordPress)).*$/i', '', $raw_title );
 		$cleaned = trim( $cleaned );
 		if ( empty( $cleaned ) ) {
 			$cleaned = $raw_title;
@@ -2845,131 +2844,150 @@ Return ONLY a valid JSON object:
 		$slug_lower  = strtolower( $slug );
 		$brand_suf   = " | {$brand}";
 
-		// --- 1. TITLE GENERATION (Strictly 48 - 60 Chars) ---
+		// --- 1. TITLE GENERATION (Strictly 48 - 60 Chars, Universal Niche-Agnostic) ---
 		$gen_title = '';
 
 		// Standard high-level pages
 		if ( $slug_lower === 'cart' || strpos( $lower, 'cart' ) !== false ) {
-			$gen_title = "Your Shopping Cart & Secure Online Checkout | {$brand} UAE";
+			$candidates = array(
+				"Your Shopping Cart & Secure Online Checkout{$brand_suf}",
+				"View Your Shopping Cart & Checkout Online{$brand_suf}",
+				"Secure Shopping Cart & Order Checkout{$brand_suf}",
+			);
 		} elseif ( $slug_lower === 'checkout' || strpos( $lower, 'checkout' ) !== false ) {
-			$gen_title = "Secure Checkout & Fast Order Completion in UAE | {$brand}";
+			$candidates = array(
+				"Secure Checkout & Fast Order Confirmation{$brand_suf}",
+				"Complete Your Order & Secure Online Checkout{$brand_suf}",
+				"Secure Checkout & Quick Order Completion{$brand_suf}",
+			);
 		} elseif ( in_array( $lower, array( 'home', 'homepage' ), true ) || in_array( $slug_lower, array( 'home', 'front-page' ), true ) ) {
-			$gen_title = "Expert Device & Electronics Repair in Dubai | {$brand}";
+			$candidates = array(
+				"Welcome to Official Website & Services{$brand_suf}",
+				"Official Website & Professional Solutions{$brand_suf}",
+				"Home - Trusted Quality & Professional Care{$brand_suf}",
+			);
 		} elseif ( strpos( $lower, 'contact' ) !== false ) {
-			$gen_title = "Contact Us & Repair Service Center Location | {$brand} UAE";
+			$candidates = array(
+				"Contact Us & Customer Support Helpdesk{$brand_suf}",
+				"Get in Touch & Dedicated Customer Support{$brand_suf}",
+				"Contact Our Support Team & Store Location{$brand_suf}",
+			);
 		} elseif ( strpos( $lower, 'about' ) !== false ) {
-			$gen_title = "About Us & Certified Technicians Team | {$brand} UAE";
+			$candidates = array(
+				"About Us, Our Company Mission & Expert Team{$brand_suf}",
+				"About Us & Dedicated Professional Team{$brand_suf}",
+				"About Our Company, History & Values{$brand_suf}",
+			);
 		} elseif ( in_array( $lower, array( 'services', 'service', 'our services' ), true ) || $slug_lower === 'services' ) {
-			$gen_title = "Certified Device Repair & Screen Services | {$brand}";
+			$candidates = array(
+				"Professional Services & Expert Solutions{$brand_suf}",
+				"Comprehensive Services & Trusted Solutions{$brand_suf}",
+				"Expert Services, Certified Quality & Care{$brand_suf}",
+			);
+		} elseif ( strpos( $lower, 'repair' ) !== false || strpos( $lower, 'fix' ) !== false || strpos( $lower, 'maintenance' ) !== false || strpos( $lower, 'support' ) !== false || strpos( $lower, 'diagnostic' ) !== false ) {
+			// Universal Repair & Technical: encompasses all repairs (screens, batteries, buttons, touch, power loss, motherboard, diagnostics)
+			$candidates = array(
+				"{$cleaned} - Complete Repair & Diagnostics{$brand_suf}",
+				"{$cleaned} - Expert Diagnostics & Full Fix{$brand_suf}",
+				"{$cleaned} - Fast, Certified Repair Service{$brand_suf}",
+				"{$cleaned} - Professional Hardware & Tech Fix{$brand_suf}",
+				"{$cleaned} - Trusted Diagnostics & Repair{$brand_suf}",
+				"{$cleaned} - Comprehensive Service & Fix{$brand_suf}",
+				"{$cleaned} - Complete Hardware & System Fix{$brand_suf}",
+				"{$cleaned} - Full Diagnostics & Hardware Fix{$brand_suf}",
+				"{$cleaned} - Expert Service & Diagnostics{$brand_suf}",
+				"{$cleaned} - Professional Certified Repair{$brand_suf}",
+				"{$cleaned} - Complete Multi-Point Repair{$brand_suf}",
+				"{$cleaned} - Fast, Reliable Repair Service{$brand_suf}",
+				"{$cleaned} - Same-Day Certified Repair{$brand_suf}",
+				"{$cleaned} - Expert Hardware Repair & Fix{$brand_suf}",
+				"{$cleaned} - Complete Diagnostics & Fix{$brand_suf}",
+				"{$cleaned} - Trusted Repair & Support{$brand_suf}",
+			);
+		} elseif ( $post_type === 'product' || strpos( $lower, 'buy' ) !== false || strpos( $lower, 'adapter' ) !== false || strpos( $lower, 'charger' ) !== false || strpos( $lower, 'shoes' ) !== false || strpos( $lower, 'shirt' ) !== false ) {
+			$candidates = array(
+				"Buy {$cleaned} Online with Warranty{$brand_suf}",
+				"Original {$cleaned} - Certified Quality & Deals{$brand_suf}",
+				"{$cleaned} - Best Online Deals & Fast Delivery{$brand_suf}",
+				"Order {$cleaned} Online - Guaranteed Quality{$brand_suf}",
+				"{$cleaned} - Specifications, Price & Warranty{$brand_suf}",
+				"Buy {$cleaned} Online - Best Price & Warranty{$brand_suf}",
+				"{$cleaned} - Premium Quality & Fast Shipping{$brand_suf}",
+			);
 		} else {
-			$candidates = array();
+			$candidates = array(
+				"{$cleaned} — Complete Overview & Guide{$brand_suf}",
+				"{$cleaned} - Expert Insights & Full Overview{$brand_suf}",
+				"{$cleaned} - Comprehensive Guide & Details{$brand_suf}",
+				"{$cleaned} - Complete Information & Guide{$brand_suf}",
+				"{$cleaned} - Trusted Solutions & Overview{$brand_suf}",
+				"{$cleaned} - Professional Overview & Guide{$brand_suf}",
+				"{$cleaned} - Official Guide & Details{$brand_suf}",
+				"{$cleaned} - Trusted Insights & Guide{$brand_suf}",
+			);
+		}
 
-			// Device-specific intent patterns
-			if ( strpos( $lower, 'iphone' ) !== false ) {
-				$candidates = array(
-					"{$cleaned} Screen & Battery Fix in Dubai{$brand_suf}",
-					"{$cleaned} Screen & Battery Replacement{$brand_suf}",
-					"{$cleaned} - Same Day Screen Repair in UAE{$brand_suf}",
-					"{$cleaned} - Fast Screen & Battery Fix | {$brand} UAE",
-					"{$cleaned} Screen & Glass Repair in Dubai | {$brand}",
-					"{$cleaned} - Expert Diagnostics & Fix{$brand_suf}",
-					"{$cleaned} Screen & Battery Repair | {$brand} UAE",
-					"{$cleaned} - Certified Screen Fix in Dubai | {$brand}",
-				);
-			} elseif ( strpos( $lower, 'samsung' ) !== false || strpos( $lower, 'galaxy' ) !== false || strpos( $lower, 'note' ) !== false || strpos( $lower, 'series' ) !== false ) {
-				$candidates = array(
-					"{$cleaned} Screen & Glass Repair | {$brand} UAE",
-					"{$cleaned} Screen & Battery Fix in Dubai{$brand_suf}",
-					"{$cleaned} Screen & Battery Replacement{$brand_suf}",
-					"{$cleaned} - Fast Screen & Glass Repair{$brand_suf}",
-					"{$cleaned} - Genuine Screen Replacement | {$brand}",
-					"{$cleaned} - Fast Repairs & Screen Fix{$brand_suf}",
-					"{$cleaned} Screen & Battery Fix | {$brand} UAE",
-					"{$cleaned} - Certified Mobile Repair | {$brand}",
-				);
-			} elseif ( strpos( $lower, 'macbook' ) !== false || strpos( $lower, 'imac' ) !== false || strpos( $lower, 'laptop' ) !== false || strpos( $lower, 'surface' ) !== false || strpos( $lower, 'computer' ) !== false ) {
-				$candidates = array(
-					"{$cleaned} & Screen Fix in Dubai | {$brand}",
-					"{$cleaned} & Screen Replacement in UAE | {$brand}",
-					"{$cleaned} - Fast Hardware Fix in Dubai | {$brand}",
-					"{$cleaned} - Screen & Battery Fix in Dubai | {$brand}",
-					"{$cleaned} & Motherboard Repair in Dubai | {$brand}",
-					"{$cleaned} - Fast Diagnostics & Repair | {$brand}",
-					"{$cleaned} & Hardware Repair Service | {$brand} UAE",
-					"{$cleaned} - Expert Screen & Battery Fix | {$brand}",
-				);
-			} elseif ( strpos( $lower, 'tablet' ) !== false || strpos( $lower, 'ipad' ) !== false ) {
-				$candidates = array(
-					"{$cleaned} Screen & Battery Fix in Dubai{$brand_suf}",
-					"{$cleaned} Screen & Battery Fix in Dubai | {$brand} UAE",
-					"{$cleaned} Screen & Glass Replacement{$brand_suf}",
-					"{$cleaned} Screen & Battery Replacement | {$brand}",
-					"{$cleaned} - Fast Certified Repair in Dubai | {$brand}",
-					"{$cleaned} & Hardware Fix | {$brand} UAE",
-					"{$cleaned} - Same Day Screen Fix in Dubai | {$brand}",
-					"{$cleaned} - Fast Screen & Glass Fix | {$brand} UAE",
-				);
-			} elseif ( strpos( $lower, 'repair' ) !== false || strpos( $lower, 'fix' ) !== false || $post_type === 'page' ) {
-				$candidates = array(
-					"{$cleaned} - Fast Certified Service in Dubai{$brand_suf}",
-					"{$cleaned} & Diagnostics Service in UAE{$brand_suf}",
-					"{$cleaned} - Expert Same Day Fix in Dubai | {$brand}",
-					"{$cleaned} & Screen Replacement in Dubai | {$brand}",
-					"{$cleaned} - Professional Repair in UAE | {$brand}",
-					"{$cleaned} | Certified Fast Repair in Dubai",
-				);
-			} else {
-				$candidates = array(
-					"{$cleaned} - Buy Online with Warranty | {$brand} UAE",
-					"Certified {$cleaned} - Best Deals in UAE | {$brand}",
-					"{$cleaned} — Complete Overview & Specs | {$brand} UAE",
-					"{$cleaned} - Fast Delivery in UAE | {$brand}",
-					"{$cleaned} | Official Guide & Store | {$brand}",
-				);
+		// Find candidate strictly 48 - 60 chars
+		foreach ( $candidates as $cand ) {
+			$clen = mb_strlen( $cand );
+			if ( $clen >= 48 && $clen <= 60 ) {
+				$gen_title = $cand;
+				break;
 			}
+		}
 
-			// Find candidate strictly 48 - 60 chars
-			foreach ( $candidates as $cand ) {
+		// Dynamic graduated padding based on available budget (mathematically covers all lengths)
+		if ( empty( $gen_title ) ) {
+			$pad_options = array(
+				" - Complete Comprehensive Services & Support{$brand_suf}",
+				" - Professional Service & Expert Support{$brand_suf}",
+				" - Complete Overview & Comprehensive Guide{$brand_suf}",
+				" - Professional Solutions & Trusted Care{$brand_suf}",
+				" - Expert Diagnostics & Full Solutions{$brand_suf}",
+				" - Comprehensive Services & Support{$brand_suf}",
+				" - Professional Service & Support{$brand_suf}",
+				" - Complete Overview & Guide{$brand_suf}",
+				" - Professional Services & Care{$brand_suf}",
+				" - Expert Solutions & Overview{$brand_suf}",
+				" - Trusted Services & Support{$brand_suf}",
+				" - Complete Diagnostic Service{$brand_suf}",
+				" - Professional Solutions{$brand_suf}",
+				" - Expert Guide & Details{$brand_suf}",
+				" - Trusted Quality & Care{$brand_suf}",
+				" - Comprehensive Services{$brand_suf}",
+				" - Professional Services{$brand_suf}",
+				" - Official Specifications{$brand_suf}",
+				" - Expert Solutions{$brand_suf}",
+				" - Trusted Services{$brand_suf}",
+				" - Complete Overview{$brand_suf}",
+				" - Complete Guide{$brand_suf}",
+				" - Full Overview{$brand_suf}",
+				" - Expert Care{$brand_suf}",
+				" - Solutions{$brand_suf}",
+				" - Overview{$brand_suf}",
+				" - Guide{$brand_suf}",
+				$brand_suf,
+			);
+			foreach ( $pad_options as $pad ) {
+				$cand = $cleaned . $pad;
 				$clen = mb_strlen( $cand );
 				if ( $clen >= 48 && $clen <= 60 ) {
 					$gen_title = $cand;
 					break;
 				}
 			}
+		}
 
-			// If no direct candidate hit 48-60, pad dynamically
-			if ( empty( $gen_title ) ) {
-				$pad_options = array(
-					" in Dubai & Sharjah | {$brand}",
-					" - Certified Service in Dubai | {$brand}",
-					" - Fast Same Day Fix | {$brand} UAE",
-					" Screen & Battery Fix | {$brand} UAE",
-					" Repair & Fix in Dubai | {$brand}",
-					" | {$brand} Dubai Repair Center",
-					" | {$brand} UAE",
-					" | {$brand}",
-				);
-				foreach ( $pad_options as $pad ) {
-					$cand = $cleaned . $pad;
-					$clen = mb_strlen( $cand );
-					if ( $clen >= 48 && $clen <= 60 ) {
-						$gen_title = $cand;
-						break;
-					}
-				}
-			}
-
-			// If still empty (e.g. extremely long original title)
-			if ( empty( $gen_title ) ) {
-				if ( mb_strlen( $cleaned . $brand_suf ) > 60 ) {
-					$max_base = 60 - mb_strlen( $brand_suf );
-					$sub = mb_substr( $cleaned, 0, $max_base );
-					$lsp = mb_strrpos( $sub, ' ' );
-					if ( $lsp !== false && $lsp > 15 ) $sub = mb_substr( $sub, 0, $lsp );
-					$gen_title = $sub . $brand_suf;
-				} else {
-					$gen_title = mb_substr( $cleaned . $brand_suf, 0, 60 );
-				}
+		// If still empty (e.g. extremely long original title)
+		if ( empty( $gen_title ) ) {
+			if ( mb_strlen( $cleaned . $brand_suf ) > 60 ) {
+				$max_base = 60 - mb_strlen( $brand_suf );
+				$sub = mb_substr( $cleaned, 0, $max_base );
+				$lsp = mb_strrpos( $sub, ' ' );
+				if ( $lsp !== false && $lsp > 15 ) $sub = mb_substr( $sub, 0, $lsp );
+				$gen_title = $sub . $brand_suf;
+			} else {
+				$gen_title = mb_substr( $cleaned . $brand_suf, 0, 60 );
 			}
 		}
 
@@ -2977,21 +2995,20 @@ Return ONLY a valid JSON object:
 			$gen_title = mb_substr( $gen_title, 0, 60 );
 		}
 
-		// --- 2. META DESCRIPTION GENERATION (Strictly 120 - 155 Chars) ---
+		// --- 2. META DESCRIPTION GENERATION (Strictly 120 - 155 Chars, Universal) ---
 		$gen_meta = '';
 		if ( $slug_lower === 'cart' || strpos( $lower, 'cart' ) !== false ) {
-			$gen_meta = "Review items in your shopping cart at {$brand}. Enjoy fast, secure checkout, warranty coverage, and dedicated customer support across UAE.";
+			$gen_meta = "Review items in your shopping cart at {$brand}. Enjoy fast, secure checkout, verified warranty, and dedicated support. Finish your order today!";
 		} elseif ( $slug_lower === 'checkout' || strpos( $lower, 'checkout' ) !== false ) {
-			$gen_meta = "Complete your secure order at {$brand}. Safe encrypted payments, verified warranties, and rapid doorstep delivery. Finish your purchase now!";
+			$gen_meta = "Complete your secure order at {$brand}. Safe encrypted payments, verified guarantees, and fast delivery to your door. Finish your purchase now!";
 		} elseif ( in_array( $lower, array( 'services', 'service', 'our services' ), true ) || $slug_lower === 'services' ) {
-			$gen_meta = "Explore professional electronics and gadget repair services at {$brand}. Certified technicians, genuine parts, fast turnaround, and full warranty.";
+			$gen_meta = "Explore professional services and trusted solutions at {$brand}. Certified specialists, proven quality, and dedicated support. Get in touch today!";
 		} else {
-			$cand1 = "Need expert {$cleaned}? {$brand} provides fast same-day diagnostics, genuine parts, and warranty-backed repairs in Dubai & Sharjah. Contact us today!";
-			$cand2 = "Professional {$cleaned} at {$brand}. Certified technicians, genuine replacement parts, quick turnaround, and full warranty coverage across UAE. Call now!";
-			$cand3 = "Looking for trusted {$cleaned}? {$brand} offers certified repairs, original parts, and fast service in Dubai & Sharjah. Book your repair online today!";
-			$cand4 = "Get reliable {$cleaned} with {$brand} UAE. Certified service, genuine parts, fast diagnostics, and complete warranty. Visit our repair center today!";
+			$cand1 = "Get complete details and professional solutions for {$cleaned} at {$brand}. Certified expertise, verified quality, and fast assistance. Contact us today!";
+			$cand2 = "Discover trusted {$cleaned} with {$brand}. Certified specialists, high quality standards, reliable results, and full support. Book or order online today!";
+			$cand3 = "Looking for expert {$cleaned}? {$brand} provides comprehensive solutions, verified quality, and dedicated customer care. Explore our options now!";
 
-			$meta_candidates = array( $cand1, $cand2, $cand3, $cand4 );
+			$meta_candidates = array( $cand1, $cand2, $cand3 );
 			foreach ( $meta_candidates as $mc ) {
 				$mlen = mb_strlen( $mc );
 				if ( $mlen >= 120 && $mlen <= 155 ) {
@@ -3005,12 +3022,12 @@ Return ONLY a valid JSON object:
 					$sub = mb_substr( $cand1, 0, 150 );
 					$lsp = mb_strrpos( $sub, ' ' );
 					if ( $lsp !== false && $lsp > 100 ) $sub = mb_substr( $sub, 0, $lsp );
-					$gen_meta = rtrim( $sub, ' .,:;-' ) . '. Book online today!';
+					$gen_meta = rtrim( $sub, ' .,:;-' ) . '. Contact us today!';
 					if ( mb_strlen( $gen_meta ) > 155 ) {
 						$gen_meta = rtrim( $sub, ' .,:;-' ) . '.';
 					}
 				} elseif ( mb_strlen( $cand1 ) < 120 ) {
-					$gen_meta = rtrim( $cand1, ' .' ) . ' Contact our expert technicians today!';
+					$gen_meta = rtrim( $cand1, ' .' ) . ' Contact our expert team today!';
 				} else {
 					$gen_meta = $cand1;
 				}
@@ -3019,11 +3036,12 @@ Return ONLY a valid JSON object:
 
 		// Focus keyword
 		$kw = $cleaned;
-		$kw = preg_replace( '/\b(in\s+Dubai|in\s+UAE|Repair|Fix|Service)\b/i', '', $kw );
+		$kw = preg_replace( '/\b(Official|Guide|Overview|Solutions?|Services?)\b/i', '', $kw );
 		$kw = trim( preg_replace( '/\s+/', ' ', $kw ) );
 		if ( empty( $kw ) ) $kw = $cleaned;
-		if ( strpos( strtolower( $kw ), 'repair' ) === false ) {
-			$kw .= ' Repair';
+		$kw_words = explode( ' ', $kw );
+		if ( count( $kw_words ) > 4 ) {
+			$kw = implode( ' ', array_slice( $kw_words, 0, 4 ) );
 		}
 
 		return array(

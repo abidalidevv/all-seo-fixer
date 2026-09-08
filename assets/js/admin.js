@@ -577,99 +577,97 @@
 				var words = site.split(/\s+/);
 				site = words[0];
 			}
-			return site || 'eFix';
+			return site || 'Brand';
 		}
 
-		function generateSmartTitleJS(pTitle, postType, url) {
+		function generateSmartTitleJS(pTitle, postType, url, brand) {
 			pTitle = (pTitle || 'Page').trim();
-			var brand = getCleanBrandJS();
-			var cleaned = pTitle.replace(new RegExp('\\s*([|\\-–—:]\\s*(' + brand + '|Official Site|WordPress|Electronics Repair|Mobile Phone)).*$', 'i'), '').trim();
+			brand = brand || getCleanBrandJS();
+			var cleaned = pTitle.replace(new RegExp('\\s*([|\\-–—:]\\s*(' + brand + '|Official Site|WordPress)).*$', 'i'), '').trim();
 			if (!cleaned) cleaned = pTitle;
 
 			var lower = cleaned.toLowerCase();
 			var urlLower = (url || '').toLowerCase();
 			var brandSuf = ' | ' + brand;
 
-			if (lower === 'cart' || urlLower.indexOf('/cart') !== -1) {
-				return ('Your Shopping Cart & Secure Online Checkout | ' + brand + ' UAE').substring(0, 60);
-			}
-			if (lower === 'checkout' || urlLower.indexOf('/checkout') !== -1) {
-				return ('Secure Checkout & Fast Order Completion in UAE | ' + brand).substring(0, 60);
-			}
-			if (lower === 'home' || lower === 'homepage' || urlLower.indexOf('/home') !== -1) {
-				return ('Expert Device & Electronics Repair in Dubai | ' + brand).substring(0, 60);
-			}
-			if (lower.indexOf('contact') !== -1) {
-				return ('Contact Us & Repair Service Center Location | ' + brand + ' UAE').substring(0, 60);
-			}
-			if (lower.indexOf('about') !== -1) {
-				return ('About Us & Certified Technicians Team | ' + brand + ' UAE').substring(0, 60);
-			}
-			if (lower === 'services' || lower === 'service' || lower === 'our services' || urlLower.indexOf('/services') !== -1) {
-				return ('Certified Device Repair & Screen Services | ' + brand).substring(0, 60);
-			}
-
 			var candidates = [];
-			if (lower.indexOf('iphone') !== -1) {
+
+			if (lower === 'cart' || urlLower.indexOf('/cart') !== -1) {
 				candidates = [
-					cleaned + ' Screen & Battery Fix in Dubai' + brandSuf,
-					cleaned + ' Screen & Battery Replacement' + brandSuf,
-					cleaned + ' - Same Day Screen Repair in UAE' + brandSuf,
-					cleaned + ' - Fast Screen & Battery Fix | ' + brand + ' UAE',
-					cleaned + ' Screen & Glass Repair in Dubai | ' + brand,
-					cleaned + ' - Expert Diagnostics & Fix' + brandSuf,
-					cleaned + ' Screen & Battery Repair | ' + brand + ' UAE',
-					cleaned + ' - Certified Screen Fix in Dubai | ' + brand
+					'Your Shopping Cart & Secure Online Checkout' + brandSuf,
+					'View Your Shopping Cart & Checkout Online' + brandSuf,
+					'Secure Shopping Cart & Order Checkout' + brandSuf
 				];
-			} else if (lower.indexOf('samsung') !== -1 || lower.indexOf('galaxy') !== -1 || lower.indexOf('note') !== -1 || lower.indexOf('series') !== -1) {
+			} else if (lower === 'checkout' || urlLower.indexOf('/checkout') !== -1) {
 				candidates = [
-					cleaned + ' Screen & Glass Repair | ' + brand + ' UAE',
-					cleaned + ' Screen & Battery Fix in Dubai' + brandSuf,
-					cleaned + ' Screen & Battery Replacement' + brandSuf,
-					cleaned + ' - Fast Screen & Glass Repair' + brandSuf,
-					cleaned + ' - Genuine Screen Replacement | ' + brand,
-					cleaned + ' - Fast Repairs & Screen Fix' + brandSuf,
-					cleaned + ' Screen & Battery Fix | ' + brand + ' UAE',
-					cleaned + ' - Certified Mobile Repair | ' + brand
+					'Secure Checkout & Fast Order Confirmation' + brandSuf,
+					'Complete Your Order & Secure Online Checkout' + brandSuf,
+					'Secure Checkout & Quick Order Completion' + brandSuf
 				];
-			} else if (lower.indexOf('macbook') !== -1 || lower.indexOf('imac') !== -1 || lower.indexOf('laptop') !== -1 || lower.indexOf('surface') !== -1 || lower.indexOf('computer') !== -1) {
+			} else if (lower === 'home' || lower === 'homepage' || urlLower.indexOf('/home') !== -1) {
 				candidates = [
-					cleaned + ' & Screen Fix in Dubai | ' + brand,
-					cleaned + ' & Screen Replacement in UAE | ' + brand,
-					cleaned + ' - Fast Hardware Fix in Dubai | ' + brand,
-					cleaned + ' - Screen & Battery Fix in Dubai | ' + brand,
-					cleaned + ' & Motherboard Repair in Dubai | ' + brand,
-					cleaned + ' - Fast Diagnostics & Repair | ' + brand,
-					cleaned + ' & Hardware Repair Service | ' + brand + ' UAE',
-					cleaned + ' - Expert Screen & Battery Fix | ' + brand
+					'Welcome to Official Website & Services' + brandSuf,
+					'Official Website & Professional Solutions' + brandSuf,
+					'Home - Trusted Quality & Professional Care' + brandSuf
 				];
-			} else if (lower.indexOf('tablet') !== -1 || lower.indexOf('ipad') !== -1) {
+			} else if (lower.indexOf('contact') !== -1) {
 				candidates = [
-					cleaned + ' Screen & Battery Fix in Dubai' + brandSuf,
-					cleaned + ' Screen & Battery Fix in Dubai | ' + brand + ' UAE',
-					cleaned + ' Screen & Glass Replacement' + brandSuf,
-					cleaned + ' Screen & Battery Replacement | ' + brand,
-					cleaned + ' - Fast Certified Repair in Dubai | ' + brand,
-					cleaned + ' & Hardware Fix | ' + brand + ' UAE',
-					cleaned + ' - Same Day Screen Fix in Dubai | ' + brand,
-					cleaned + ' - Fast Screen & Glass Fix | ' + brand + ' UAE'
+					'Contact Us & Customer Support Helpdesk' + brandSuf,
+					'Get in Touch & Dedicated Customer Support' + brandSuf,
+					'Contact Our Support Team & Store Location' + brandSuf
 				];
-			} else if (lower.indexOf('repair') !== -1 || lower.indexOf('fix') !== -1 || postType === 'page') {
+			} else if (lower.indexOf('about') !== -1) {
 				candidates = [
-					cleaned + ' - Fast Certified Service in Dubai' + brandSuf,
-					cleaned + ' & Diagnostics Service in UAE' + brandSuf,
-					cleaned + ' - Expert Same Day Fix in Dubai | ' + brand,
-					cleaned + ' & Screen Replacement in Dubai | ' + brand,
-					cleaned + ' - Professional Repair in UAE | ' + brand,
-					cleaned + ' | Certified Fast Repair in Dubai'
+					'About Us, Our Company Mission & Expert Team' + brandSuf,
+					'About Us & Dedicated Professional Team' + brandSuf,
+					'About Our Company, History & Values' + brandSuf
+				];
+			} else if (lower === 'services' || lower === 'service' || lower === 'our services' || urlLower.indexOf('/services') !== -1) {
+				candidates = [
+					'Professional Services & Expert Solutions' + brandSuf,
+					'Comprehensive Services & Trusted Solutions' + brandSuf,
+					'Expert Services, Certified Quality & Care' + brandSuf
+				];
+			} else if (lower.indexOf('repair') !== -1 || lower.indexOf('fix') !== -1 || lower.indexOf('maintenance') !== -1) {
+				// Universal repair & technical coverage: screen, battery, touch, button, power, diagnostics
+				candidates = [
+					cleaned + ' - Complete Repair & Diagnostics' + brandSuf,
+					cleaned + ' - Expert Diagnostics & Full Fix' + brandSuf,
+					cleaned + ' - Fast, Certified Repair Service' + brandSuf,
+					cleaned + ' - Professional Hardware & Tech Fix' + brandSuf,
+					cleaned + ' - Trusted Diagnostics & Repair' + brandSuf,
+					cleaned + ' - Comprehensive Service & Fix' + brandSuf,
+					cleaned + ' - Complete Hardware & System Fix' + brandSuf,
+					cleaned + ' - Full Diagnostics & Hardware Fix' + brandSuf,
+					cleaned + ' - Expert Service & Diagnostics' + brandSuf,
+					cleaned + ' - Professional Certified Repair' + brandSuf,
+					cleaned + ' - Complete Multi-Point Repair' + brandSuf,
+					cleaned + ' - Fast, Reliable Repair Service' + brandSuf,
+					cleaned + ' - Same-Day Certified Repair' + brandSuf,
+					cleaned + ' - Expert Hardware Repair & Fix' + brandSuf,
+					cleaned + ' - Complete Diagnostics & Fix' + brandSuf,
+					cleaned + ' - Trusted Repair & Support' + brandSuf
+				];
+			} else if (postType === 'product' || urlLower.indexOf('/product') !== -1 || lower.indexOf('buy') !== -1 || lower.indexOf('shirt') !== -1 || lower.indexOf('shoes') !== -1 || lower.indexOf('bag') !== -1) {
+				candidates = [
+					'Buy ' + cleaned + ' Online with Warranty' + brandSuf,
+					'Original ' + cleaned + ' - Certified Quality & Deals' + brandSuf,
+					cleaned + ' - Best Online Deals & Fast Delivery' + brandSuf,
+					'Order ' + cleaned + ' Online - Guaranteed Quality' + brandSuf,
+					cleaned + ' - Specifications, Price & Warranty' + brandSuf,
+					'Buy ' + cleaned + ' Online - Best Price & Warranty' + brandSuf,
+					cleaned + ' - Premium Quality & Fast Shipping' + brandSuf
 				];
 			} else {
 				candidates = [
-					cleaned + ' - Buy Online with Warranty | ' + brand + ' UAE',
-					'Certified ' + cleaned + ' - Best Deals in UAE | ' + brand,
-					cleaned + ' — Complete Overview & Specs | ' + brand + ' UAE',
-					cleaned + ' - Fast Delivery in UAE | ' + brand,
-					cleaned + ' | Official Guide & Store | ' + brand
+					cleaned + ' — Complete Overview & Guide' + brandSuf,
+					cleaned + ' - Expert Insights & Full Overview' + brandSuf,
+					cleaned + ' - Comprehensive Guide & Details' + brandSuf,
+					cleaned + ' - Complete Information & Guide' + brandSuf,
+					cleaned + ' - Trusted Solutions & Overview' + brandSuf,
+					cleaned + ' - Professional Overview & Guide' + brandSuf,
+					cleaned + ' - Official Guide & Details' + brandSuf,
+					cleaned + ' - Trusted Insights & Guide' + brandSuf
 				];
 			}
 
@@ -679,15 +677,36 @@
 			}
 
 			var padOptions = [
-				' in Dubai & Sharjah | ' + brand,
-				' - Certified Service in Dubai | ' + brand,
-				' - Fast Same Day Fix | ' + brand + ' UAE',
-				' Screen & Battery Fix | ' + brand + ' UAE',
-				' Repair & Fix in Dubai | ' + brand,
-				' | ' + brand + ' Dubai Repair Center',
-				' | ' + brand + ' UAE',
-				' | ' + brand
+				' - Complete Comprehensive Services & Support' + brandSuf,
+				' - Professional Service & Expert Support' + brandSuf,
+				' - Complete Overview & Comprehensive Guide' + brandSuf,
+				' - Professional Solutions & Trusted Care' + brandSuf,
+				' - Expert Diagnostics & Full Solutions' + brandSuf,
+				' - Comprehensive Services & Support' + brandSuf,
+				' - Professional Service & Support' + brandSuf,
+				' - Complete Overview & Guide' + brandSuf,
+				' - Professional Services & Care' + brandSuf,
+				' - Expert Solutions & Overview' + brandSuf,
+				' - Trusted Services & Support' + brandSuf,
+				' - Complete Diagnostic Service' + brandSuf,
+				' - Professional Solutions' + brandSuf,
+				' - Expert Guide & Details' + brandSuf,
+				' - Trusted Quality & Care' + brandSuf,
+				' - Comprehensive Services' + brandSuf,
+				' - Professional Services' + brandSuf,
+				' - Official Specifications' + brandSuf,
+				' - Expert Solutions' + brandSuf,
+				' - Trusted Services' + brandSuf,
+				' - Complete Overview' + brandSuf,
+				' - Complete Guide' + brandSuf,
+				' - Full Overview' + brandSuf,
+				' - Expert Care' + brandSuf,
+				' - Solutions' + brandSuf,
+				' - Overview' + brandSuf,
+				' - Guide' + brandSuf,
+				brandSuf
 			];
+
 			for (var j = 0; j < padOptions.length; j++) {
 				var cand = cleaned + padOptions[j];
 				if (cand.length >= 48 && cand.length <= 60) return cand;
@@ -700,31 +719,32 @@
 				if (lsp > 15) sub = sub.substring(0, lsp);
 				return sub + brandSuf;
 			}
+
 			return (cleaned + brandSuf).substring(0, 60);
 		}
 
-		function generateMetaDescFromData(title, snippet, postType, url) {
+		function generateMetaDescFromData(title, snippet, postType, url, brand) {
 			title = (title || 'Page').trim();
-			var brand = getCleanBrandJS();
-			var cleaned = title.replace(new RegExp('\\s*([|\\-–—:]\\s*(' + brand + '|Official Site|WordPress|Electronics Repair|Mobile Phone)).*$', 'i'), '').trim();
+			brand = brand || getCleanBrandJS();
+			var cleaned = title.replace(new RegExp('\\s*([|\\-–—:]\\s*(' + brand + '|Official Site|WordPress)).*$', 'i'), '').trim();
 			if (!cleaned) cleaned = title;
 
 			var lower = cleaned.toLowerCase();
 			var urlLower = (url || '').toLowerCase();
 
-			if (urlLower.indexOf('/cart') !== -1 || lower === 'cart' || lower.indexOf('cart') !== -1) {
-				return 'Review items in your shopping cart at ' + brand + '. Enjoy fast, secure checkout, warranty coverage, and dedicated customer support across UAE.';
+			if (lower === 'cart' || urlLower.indexOf('/cart') !== -1) {
+				return ('Review items in your shopping cart at ' + brand + '. Enjoy fast, secure checkout, verified warranty, and dedicated support. Finish your order today!').substring(0, 155);
 			}
-			if (urlLower.indexOf('/checkout') !== -1 || lower === 'checkout' || lower.indexOf('checkout') !== -1) {
-				return 'Complete your secure order at ' + brand + '. Safe encrypted payments, verified warranties, and rapid doorstep delivery. Finish your purchase now!';
+			if (lower === 'checkout' || urlLower.indexOf('/checkout') !== -1) {
+				return ('Complete your secure order at ' + brand + '. Safe encrypted payments, verified guarantees, and fast delivery to your door. Finish your purchase now!').substring(0, 155);
 			}
-			if (urlLower.indexOf('/services') !== -1 || lower === 'services' || lower === 'service' || lower === 'our services') {
-				return 'Explore professional electronics and gadget repair services at ' + brand + '. Certified technicians, genuine parts, fast turnaround, and full warranty.';
+			if (lower === 'services' || lower === 'service' || lower === 'our services' || urlLower.indexOf('/services') !== -1) {
+				return ('Explore professional services and trusted solutions at ' + brand + '. Certified specialists, proven quality, and dedicated support. Get in touch today!').substring(0, 155);
 			}
 
-			var cand1 = 'Need expert ' + cleaned + '? ' + brand + ' provides fast same-day diagnostics, genuine parts, and warranty-backed repairs in Dubai & Sharjah. Contact us today!';
-			var cand2 = 'Professional ' + cleaned + ' at ' + brand + '. Certified technicians, genuine replacement parts, quick turnaround, and full warranty coverage across UAE. Call now!';
-			var cand3 = 'Looking for trusted ' + cleaned + '? ' + brand + ' offers certified repairs, original parts, and fast service in Dubai & Sharjah. Book your repair online today!';
+			var cand1 = 'Get complete details and professional solutions for ' + cleaned + ' at ' + brand + '. Certified expertise, verified quality, and fast assistance. Contact us today!';
+			var cand2 = 'Discover trusted ' + cleaned + ' with ' + brand + '. Certified specialists, high quality standards, reliable results, and full support. Book or order online today!';
+			var cand3 = 'Looking for expert ' + cleaned + '? ' + brand + ' provides comprehensive solutions, verified quality, and dedicated customer care. Explore our options now!';
 
 			var metas = [cand1, cand2, cand3];
 			for (var i = 0; i < metas.length; i++) {
@@ -735,12 +755,12 @@
 				var sub = cand1.substring(0, 150);
 				var lsp = sub.lastIndexOf(' ');
 				if (lsp > 100) sub = sub.substring(0, lsp);
-				var res = sub.replace(/[.,:;\s-]+$/, '') + '. Book online today!';
+				var res = sub.replace(/[.,:;\s-]+$/, '') + '. Contact us today!';
 				if (res.length <= 155) return res;
 				return sub.replace(/[.,:;\s-]+$/, '') + '.';
 			}
 			if (cand1.length < 120) {
-				return cand1.replace(/[.\s]+$/, '') + '. Contact our expert technicians today!';
+				return cand1.replace(/[.\s]+$/, '') + '. Contact our expert team today!';
 			}
 			return cand1;
 		}
@@ -1596,7 +1616,7 @@
 					// Focus Keyword & Schema Type
 					modalHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">';
 					modalHtml += '<div><label style="font-weight:600;display:block;margin-bottom:4px;">Primary Focus Keyword:</label>';
-					modalHtml += '<input type="text" id="asf-qf-keyword" class="asf-input" style="width:100%;" value="' + ASF.escapeHtml(d.focus_keyword || '') + '" placeholder="e.g. Laptop Repair Dubai" /></div>';
+					modalHtml += '<input type="text" id="asf-qf-keyword" class="asf-input" style="width:100%;" value="' + ASF.escapeHtml(d.focus_keyword || '') + '" placeholder="e.g. Primary Keyword or Service" /></div>';
 
 					modalHtml += '<div><label style="font-weight:600;display:block;margin-bottom:4px;">Schema JSON-LD Type:</label>';
 					modalHtml += '<select id="asf-qf-schema" class="asf-select" style="width:100%;">';

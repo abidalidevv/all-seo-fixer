@@ -177,7 +177,7 @@ class ASF_Admin {
 			'nonce'     => $nonce,
 			'adminUrl'  => admin_url(),
 			'siteName'    => method_exists( 'ASF_AIChatbot', 'get_clean_brand_name' ) ? ASF_AIChatbot::get_clean_brand_name() : ( get_bloginfo( 'name' ) ?: parse_url( home_url(), PHP_URL_HOST ) ),
-			'cleanBrand'  => method_exists( 'ASF_AIChatbot', 'get_clean_brand_name' ) ? ASF_AIChatbot::get_clean_brand_name() : 'eFix',
+			'cleanBrand'  => method_exists( 'ASF_AIChatbot', 'get_clean_brand_name' ) ? ASF_AIChatbot::get_clean_brand_name() : 'Brand',
 			'rawSiteName' => get_bloginfo( 'name' ) ?: parse_url( home_url(), PHP_URL_HOST ),
 			'siteDesc'    => get_bloginfo( 'description' ) ?: '',
 			'hasPsiKey'   => get_option( ASF_OPT_PSI_KEY, '' ) ? '1' : '0',
