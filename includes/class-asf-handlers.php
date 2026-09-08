@@ -1961,7 +1961,7 @@ class ASF_HealthPing {
 			$robots_resp = wp_remote_get( $robots_url, array( 'timeout' => 5, 'sslverify' => false ) );
 			if ( ! is_wp_error( $robots_resp ) && wp_remote_retrieve_response_code( $robots_resp ) === 200 ) {
 				$robots_body = wp_remote_retrieve_body( $robots_resp );
-				if ( stripos( $robots_body, 'Disallow: /' ) !== false && ! stripos( $robots_body, 'User-agent' ) ) {
+				if ( stripos( $robots_body, 'Disallow: /' ) !== false && stripos( $robots_body, 'User-agent' ) === false ) {
 					$checks['robots'] = array( 'status' => 'error', 'label' => 'Robots Blocking All' );
 					$score -= 25;
 					$issues[] = 'robots.txt is blocking all crawlers (Disallow: /).';

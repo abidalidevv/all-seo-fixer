@@ -108,6 +108,9 @@ function asf_activate() {
 		UNIQUE KEY url_idx (url(191))
 	) $charset_collate;";
 
+	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+	dbDelta( $sql );
+
 	// Trigger Setup Wizard redirect for fresh installations
 	if ( ! get_option( 'asf_setup_wizard_completed', false ) ) {
 		set_transient( 'asf_activation_redirect', true, 60 );
