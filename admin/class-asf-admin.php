@@ -176,13 +176,14 @@ class ASF_Admin {
 			'ajax'      => $ajax_url,
 			'nonce'     => $nonce,
 			'adminUrl'  => admin_url(),
-			'siteUrl'   => home_url(),
-			'siteName'  => get_bloginfo( 'name' ) ?: parse_url( home_url(), PHP_URL_HOST ),
-			'siteDesc'  => get_bloginfo( 'description' ) ?: '',
-			'hasPsiKey' => get_option( ASF_OPT_PSI_KEY, '' ) ? '1' : '0',
-			'hasAiKey'  => $has_ai,
-			'version'   => ASF_VERSION,
-			'lastAudit' => $last_audit ? $last_audit : null,
+			'siteName'    => method_exists( 'ASF_AIChatbot', 'get_clean_brand_name' ) ? ASF_AIChatbot::get_clean_brand_name() : ( get_bloginfo( 'name' ) ?: parse_url( home_url(), PHP_URL_HOST ) ),
+			'cleanBrand'  => method_exists( 'ASF_AIChatbot', 'get_clean_brand_name' ) ? ASF_AIChatbot::get_clean_brand_name() : 'eFix',
+			'rawSiteName' => get_bloginfo( 'name' ) ?: parse_url( home_url(), PHP_URL_HOST ),
+			'siteDesc'    => get_bloginfo( 'description' ) ?: '',
+			'hasPsiKey'   => get_option( ASF_OPT_PSI_KEY, '' ) ? '1' : '0',
+			'hasAiKey'    => $has_ai,
+			'version'     => ASF_VERSION,
+			'lastAudit'   => $last_audit ? $last_audit : null,
 		) );
 	}
 

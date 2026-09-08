@@ -561,106 +561,188 @@
 		});
 
 		// SMART ASSISTANT HELPERS: Generate Clean Titles & Descriptions in JS
-		function generateSmartTitleJS(pTitle, postType, url) {
-			pTitle = (pTitle || 'Page').trim();
+		function getCleanBrandJS() {
 			var data = getAsfData();
-			var site = (data.siteName || '').trim();
+			var site = (data.cleanBrand || data.siteName || '').trim();
+			['|', '—', '–', ' - ', ':', '•'].forEach(function(d) {
+				if (site.indexOf(d) !== -1) {
+					site = site.split(d)[0].trim();
+				}
+			});
 			if (!site || site.toLowerCase() === 'wordpress') {
 				site = window.location.hostname.replace(/^www\./i, '').replace(/\.[a-z]{2,6}$/i, '');
 				if (site) site = site.charAt(0).toUpperCase() + site.slice(1);
 			}
+			if (site && site.length > 15) {
+				var words = site.split(/\s+/);
+				site = words[0];
+			}
+			return site || 'eFix';
+		}
 
-			var lower = pTitle.toLowerCase();
+		function generateSmartTitleJS(pTitle, postType, url) {
+			pTitle = (pTitle || 'Page').trim();
+			var brand = getCleanBrandJS();
+			var cleaned = pTitle.replace(new RegExp('\\s*([|\\-–—:]\\s*(' + brand + '|Official Site|WordPress|Electronics Repair|Mobile Phone)).*$', 'i'), '').trim();
+			if (!cleaned) cleaned = pTitle;
+
+			var lower = cleaned.toLowerCase();
 			var urlLower = (url || '').toLowerCase();
-			var brandSuffix = site ? ' | ' + site : '';
+			var brandSuf = ' | ' + brand;
 
 			if (lower === 'cart' || urlLower.indexOf('/cart') !== -1) {
-				return ('Your Shopping Cart & Secure Checkout' + brandSuffix).substring(0, 60);
+				return ('Your Shopping Cart & Secure Online Checkout | ' + brand + ' UAE').substring(0, 60);
 			}
 			if (lower === 'checkout' || urlLower.indexOf('/checkout') !== -1) {
-				return ('Secure Checkout & Order Completion' + brandSuffix).substring(0, 60);
+				return ('Secure Checkout & Fast Order Completion in UAE | ' + brand).substring(0, 60);
 			}
-			if (lower === 'services' || lower === 'service' || urlLower.indexOf('/services') !== -1) {
-				return ('Expert Device & Gadget Repair Services' + brandSuffix).substring(0, 60);
+			if (lower === 'home' || lower === 'homepage' || urlLower.indexOf('/home') !== -1) {
+				return ('Expert Device & Electronics Repair in Dubai | ' + brand).substring(0, 60);
 			}
 			if (lower.indexOf('contact') !== -1) {
-				return ('Contact Us & Store Location Support' + brandSuffix).substring(0, 60);
+				return ('Contact Us & Repair Service Center Location | ' + brand + ' UAE').substring(0, 60);
 			}
 			if (lower.indexOf('about') !== -1) {
-				return ('About Us & Certified Technical Team' + brandSuffix).substring(0, 60);
+				return ('About Us & Certified Technicians Team | ' + brand + ' UAE').substring(0, 60);
+			}
+			if (lower === 'services' || lower === 'service' || lower === 'our services' || urlLower.indexOf('/services') !== -1) {
+				return ('Certified Device Repair & Screen Services | ' + brand).substring(0, 60);
 			}
 
-			// Repair & service pages
-			if (lower.indexOf('repair') !== -1 || lower.indexOf('fix') !== -1) {
-				var avail = 60 - (pTitle + brandSuffix).length;
-				if (avail >= 22) return pTitle + ' & Screen Replacement' + brandSuffix;
-				if (avail >= 15) return pTitle + ' - Fast Repairs' + brandSuffix;
-				if (avail >= 0) return pTitle + brandSuffix;
-				return pTitle.substring(0, 57) + '...';
+			var candidates = [];
+			if (lower.indexOf('iphone') !== -1) {
+				candidates = [
+					cleaned + ' Screen & Battery Fix in Dubai' + brandSuf,
+					cleaned + ' Screen & Battery Replacement' + brandSuf,
+					cleaned + ' - Same Day Screen Repair in UAE' + brandSuf,
+					cleaned + ' - Fast Screen & Battery Fix | ' + brand + ' UAE',
+					cleaned + ' Screen & Glass Repair in Dubai | ' + brand,
+					cleaned + ' - Expert Diagnostics & Fix' + brandSuf,
+					cleaned + ' Screen & Battery Repair | ' + brand + ' UAE',
+					cleaned + ' - Certified Screen Fix in Dubai | ' + brand
+				];
+			} else if (lower.indexOf('samsung') !== -1 || lower.indexOf('galaxy') !== -1 || lower.indexOf('note') !== -1 || lower.indexOf('series') !== -1) {
+				candidates = [
+					cleaned + ' Screen & Glass Repair | ' + brand + ' UAE',
+					cleaned + ' Screen & Battery Fix in Dubai' + brandSuf,
+					cleaned + ' Screen & Battery Replacement' + brandSuf,
+					cleaned + ' - Fast Screen & Glass Repair' + brandSuf,
+					cleaned + ' - Genuine Screen Replacement | ' + brand,
+					cleaned + ' - Fast Repairs & Screen Fix' + brandSuf,
+					cleaned + ' Screen & Battery Fix | ' + brand + ' UAE',
+					cleaned + ' - Certified Mobile Repair | ' + brand
+				];
+			} else if (lower.indexOf('macbook') !== -1 || lower.indexOf('imac') !== -1 || lower.indexOf('laptop') !== -1 || lower.indexOf('surface') !== -1 || lower.indexOf('computer') !== -1) {
+				candidates = [
+					cleaned + ' & Screen Fix in Dubai | ' + brand,
+					cleaned + ' & Screen Replacement in UAE | ' + brand,
+					cleaned + ' - Fast Hardware Fix in Dubai | ' + brand,
+					cleaned + ' - Screen & Battery Fix in Dubai | ' + brand,
+					cleaned + ' & Motherboard Repair in Dubai | ' + brand,
+					cleaned + ' - Fast Diagnostics & Repair | ' + brand,
+					cleaned + ' & Hardware Repair Service | ' + brand + ' UAE',
+					cleaned + ' - Expert Screen & Battery Fix | ' + brand
+				];
+			} else if (lower.indexOf('tablet') !== -1 || lower.indexOf('ipad') !== -1) {
+				candidates = [
+					cleaned + ' Screen & Battery Fix in Dubai' + brandSuf,
+					cleaned + ' Screen & Battery Fix in Dubai | ' + brand + ' UAE',
+					cleaned + ' Screen & Glass Replacement' + brandSuf,
+					cleaned + ' Screen & Battery Replacement | ' + brand,
+					cleaned + ' - Fast Certified Repair in Dubai | ' + brand,
+					cleaned + ' & Hardware Fix | ' + brand + ' UAE',
+					cleaned + ' - Same Day Screen Fix in Dubai | ' + brand,
+					cleaned + ' - Fast Screen & Glass Fix | ' + brand + ' UAE'
+				];
+			} else if (lower.indexOf('repair') !== -1 || lower.indexOf('fix') !== -1 || postType === 'page') {
+				candidates = [
+					cleaned + ' - Fast Certified Service in Dubai' + brandSuf,
+					cleaned + ' & Diagnostics Service in UAE' + brandSuf,
+					cleaned + ' - Expert Same Day Fix in Dubai | ' + brand,
+					cleaned + ' & Screen Replacement in Dubai | ' + brand,
+					cleaned + ' - Professional Repair in UAE | ' + brand,
+					cleaned + ' | Certified Fast Repair in Dubai'
+				];
+			} else {
+				candidates = [
+					cleaned + ' - Buy Online with Warranty | ' + brand + ' UAE',
+					'Certified ' + cleaned + ' - Best Deals in UAE | ' + brand,
+					cleaned + ' — Complete Overview & Specs | ' + brand + ' UAE',
+					cleaned + ' - Fast Delivery in UAE | ' + brand,
+					cleaned + ' | Official Guide & Store | ' + brand
+				];
 			}
 
-			// Products
-			if (postType === 'product' || urlLower.indexOf('/product') !== -1 || lower.indexOf('adapter') !== -1 || lower.indexOf('charger') !== -1) {
-				var avail = 60 - (pTitle + brandSuffix).length;
-				if (lower.indexOf('used') !== -1) {
-					if (avail >= 16) return 'Certified ' + pTitle + brandSuffix;
-					if (avail >= 0) return pTitle + brandSuffix;
-				}
-				if (avail >= 15) return 'Buy ' + pTitle + ' Online' + brandSuffix;
-				if (avail >= 0) return pTitle + brandSuffix;
-				return pTitle.substring(0, 57) + '...';
+			for (var i = 0; i < candidates.length; i++) {
+				var c = candidates[i];
+				if (c.length >= 48 && c.length <= 60) return c;
 			}
 
-			// Standard pages
-			var avail = 60 - (pTitle + brandSuffix).length;
-			if (avail >= 18) return pTitle + ' — Overview & Guide' + brandSuffix;
-			if (avail >= 0) return pTitle + brandSuffix;
-			return pTitle.substring(0, 57) + '...';
+			var padOptions = [
+				' in Dubai & Sharjah | ' + brand,
+				' - Certified Service in Dubai | ' + brand,
+				' - Fast Same Day Fix | ' + brand + ' UAE',
+				' Screen & Battery Fix | ' + brand + ' UAE',
+				' Repair & Fix in Dubai | ' + brand,
+				' | ' + brand + ' Dubai Repair Center',
+				' | ' + brand + ' UAE',
+				' | ' + brand
+			];
+			for (var j = 0; j < padOptions.length; j++) {
+				var cand = cleaned + padOptions[j];
+				if (cand.length >= 48 && cand.length <= 60) return cand;
+			}
+
+			if ((cleaned + brandSuf).length > 60) {
+				var maxBase = 60 - brandSuf.length;
+				var sub = cleaned.substring(0, maxBase);
+				var lsp = sub.lastIndexOf(' ');
+				if (lsp > 15) sub = sub.substring(0, lsp);
+				return sub + brandSuf;
+			}
+			return (cleaned + brandSuf).substring(0, 60);
 		}
 
 		function generateMetaDescFromData(title, snippet, postType, url) {
 			title = (title || 'Page').trim();
-			var data = getAsfData();
-			var site = data.siteName || (typeof document !== 'undefined' ? document.title.split('—')[0].split('|')[0].trim() : 'our store');
-			if (!site || site.toLowerCase() === 'wordpress') {
-				site = window.location.hostname.replace(/^www\./i, '').replace(/\.[a-z]{2,6}$/i, '');
-				if (site) site = site.charAt(0).toUpperCase() + site.slice(1);
-			}
+			var brand = getCleanBrandJS();
+			var cleaned = title.replace(new RegExp('\\s*([|\\-–—:]\\s*(' + brand + '|Official Site|WordPress|Electronics Repair|Mobile Phone)).*$', 'i'), '').trim();
+			if (!cleaned) cleaned = title;
 
-			var lower = title.toLowerCase();
+			var lower = cleaned.toLowerCase();
 			var urlLower = (url || '').toLowerCase();
 
 			if (urlLower.indexOf('/cart') !== -1 || lower === 'cart' || lower.indexOf('cart') !== -1) {
-				return 'Review items in your shopping cart at ' + site + '. Enjoy fast, secure checkout, warranty coverage, and dedicated customer support across UAE.';
+				return 'Review items in your shopping cart at ' + brand + '. Enjoy fast, secure checkout, warranty coverage, and dedicated customer support across UAE.';
 			}
 			if (urlLower.indexOf('/checkout') !== -1 || lower === 'checkout' || lower.indexOf('checkout') !== -1) {
-				return 'Complete your secure order at ' + site + '. Safe encrypted payments, verified warranties, and rapid doorstep delivery. Finish your purchase now!';
+				return 'Complete your secure order at ' + brand + '. Safe encrypted payments, verified warranties, and rapid doorstep delivery. Finish your purchase now!';
 			}
-			if (urlLower.indexOf('/services') !== -1 || lower === 'services' || lower === 'service') {
-				return 'Explore professional electronics and gadget repair services at ' + site + '. Certified technicians, genuine parts, fast turnaround, and full warranty.';
-			}
-			if (lower.indexOf('repair') !== -1 || lower.indexOf('fix') !== -1) {
-				return 'Need reliable ' + title + '? ' + site + ' provides expert diagnostics, certified technicians, and warranty-backed fixes. Contact our repair center today!';
-			}
-			if (postType === 'product' || urlLower.indexOf('/product') !== -1 || lower.indexOf('adapter') !== -1 || lower.indexOf('used') !== -1) {
-				if (lower.indexOf('used') !== -1) {
-					return 'Shop certified pre-owned ' + title + ' at ' + site + '. 100% tested, premium condition, warranty included, and fast nationwide delivery. Order online now!';
-				}
-				return 'Discover high-quality ' + title + ' at ' + site + '. Tested reliability, unbeatable prices, and express delivery across UAE. Order yours today!';
+			if (urlLower.indexOf('/services') !== -1 || lower === 'services' || lower === 'service' || lower === 'our services') {
+				return 'Explore professional electronics and gadget repair services at ' + brand + '. Certified technicians, genuine parts, fast turnaround, and full warranty.';
 			}
 
-			if (snippet && snippet.length >= 60) {
-				var prefix = 'Explore ' + title + ' on ' + site + '. ';
-				var targetRem = 152 - prefix.length;
-				var sub = snippet.substring(0, targetRem);
-				var sp = sub.lastIndexOf(' ');
-				if (sp > 35) sub = sub.substring(0, sp);
-				var cand = prefix + sub.replace(/[.,:;\s-]+$/, '') + '. Learn more and contact us today!';
-				if (cand.length > 155) cand = prefix + sub.replace(/[.,:;\s-]+$/, '') + '.';
-				if (cand.length >= 120) return cand;
+			var cand1 = 'Need expert ' + cleaned + '? ' + brand + ' provides fast same-day diagnostics, genuine parts, and warranty-backed repairs in Dubai & Sharjah. Contact us today!';
+			var cand2 = 'Professional ' + cleaned + ' at ' + brand + '. Certified technicians, genuine replacement parts, quick turnaround, and full warranty coverage across UAE. Call now!';
+			var cand3 = 'Looking for trusted ' + cleaned + '? ' + brand + ' offers certified repairs, original parts, and fast service in Dubai & Sharjah. Book your repair online today!';
+
+			var metas = [cand1, cand2, cand3];
+			for (var i = 0; i < metas.length; i++) {
+				if (metas[i].length >= 120 && metas[i].length <= 155) return metas[i];
 			}
 
-			return 'Get complete details, professional assistance, and trusted solutions for ' + title + ' on ' + site + '. Visit our website or contact our team today!';
+			if (cand1.length > 155) {
+				var sub = cand1.substring(0, 150);
+				var lsp = sub.lastIndexOf(' ');
+				if (lsp > 100) sub = sub.substring(0, lsp);
+				var res = sub.replace(/[.,:;\s-]+$/, '') + '. Book online today!';
+				if (res.length <= 155) return res;
+				return sub.replace(/[.,:;\s-]+$/, '') + '.';
+			}
+			if (cand1.length < 120) {
+				return cand1.replace(/[.\s]+$/, '') + '. Contact our expert technicians today!';
+			}
+			return cand1;
 		}
 
 		// SMART ASSISTANT MODAL: Fix Titles Now (AI & Site-Profile Connected)
@@ -685,7 +767,13 @@
 				bodyHtml += '<div style="max-height:420px;overflow-y:auto;"><table class="asf-table widefat striped"><thead><tr><th style="width:30%;">Page &amp; URL</th><th style="width:50%;">SEO Title Tag (48–60 chars)</th><th style="width:20%;text-align:center;">Action</th></tr></thead><tbody>';
 				pages.forEach(function (p) {
 					var pid = p.id || p.post_id;
-					var autoTitle = (p.seo_title && p.seo_title.length >= 35 && p.seo_title.indexOf('Official Site') === -1) ? p.seo_title : generateSmartTitleJS(p.title, p.post_type, p.url);
+					var isExistingTitleGood = p.seo_title &&
+						p.seo_title.length >= 45 &&
+						p.seo_title.length <= 60 &&
+						p.seo_title.indexOf('...') === -1 &&
+						p.seo_title.indexOf('Official Site') === -1 &&
+						p.seo_title.indexOf('Mobile Phone & Electronics Repair') === -1;
+					var autoTitle = isExistingTitleGood ? p.seo_title : generateSmartTitleJS(p.title, p.post_type, p.url);
 					var charCount = autoTitle.length;
 					var pillCol = (charCount >= 45 && charCount <= 60) ? '#10b981' : (charCount < 30 ? '#ef4444' : '#f59e0b');
 
@@ -733,7 +821,7 @@
 
 			ASF.request('asf_generate_single_title', { post_id: pid }).done(function (r) {
 				$b.prop('disabled', false).text('🤖 AI Generate');
-				var newTitle = (r && r.success && r.title) ? r.title : generateSmartTitleJS(pTitle, '', pUrl);
+				var newTitle = (r && r.success && r.title && r.title.length >= 45 && r.title.length <= 60 && r.title.indexOf('...') === -1) ? r.title : generateSmartTitleJS(pTitle, '', pUrl);
 				$input.val(newTitle).trigger('input');
 				$input.css('background', '#f0fdf4');
 				setTimeout(function () { $input.css('background', '#ffffff'); }, 1200);
@@ -798,7 +886,7 @@
 				$('#asf-titles-progress-fill').css('width', pct + '%');
 
 				ASF.request('asf_generate_single_title', { post_id: pid }).done(function (r) {
-					var newTitle = (r && r.success && r.title) ? r.title : generateSmartTitleJS(pTitle, '', pUrl);
+					var newTitle = (r && r.success && r.title && r.title.length >= 45 && r.title.length <= 60 && r.title.indexOf('...') === -1) ? r.title : generateSmartTitleJS(pTitle, '', pUrl);
 					$input.val(newTitle).trigger('input');
 					$input.css('background', '#f0fdf4');
 					setTimeout(function () { $input.css('background', '#ffffff'); }, 800);
@@ -867,7 +955,11 @@
 				bodyHtml += '<div style="max-height:420px;overflow-y:auto;"><table class="asf-table widefat striped"><thead><tr><th style="width:28%;">Page &amp; Content Outline</th><th style="width:52%;">Meta Description (120–155 chars)</th><th style="width:20%;text-align:center;">Action</th></tr></thead><tbody>';
 				pages.forEach(function (p) {
 					var pid = p.id || p.post_id;
-					var initialDesc = (p.meta_desc && p.meta_desc.length >= 100) ? p.meta_desc : generateMetaDescFromData(p.title, p.snippet, p.post_type, p.url);
+					var isExistingDescGood = p.meta_desc &&
+						p.meta_desc.length >= 120 &&
+						p.meta_desc.length <= 155 &&
+						p.meta_desc.indexOf('Mobile Phone & Electronics Repair') === -1;
+					var initialDesc = isExistingDescGood ? p.meta_desc : generateMetaDescFromData(p.title, p.snippet, p.post_type, p.url);
 					var charCount = initialDesc.length;
 					var pillCol = (charCount >= 120 && charCount <= 155) ? '#10b981' : (charCount < 80 ? '#ef4444' : '#f59e0b');
 
@@ -919,7 +1011,7 @@
 
 			ASF.request('asf_generate_single_meta_desc', { post_id: pid }).done(function (r) {
 				$b.prop('disabled', false).text('🤖 AI Generate');
-				var newDesc = (r && r.success && r.desc) ? r.desc : generateMetaDescFromData(title, snippet, '', pUrl);
+				var newDesc = (r && r.success && r.desc && r.desc.length >= 120 && r.desc.length <= 155) ? r.desc : generateMetaDescFromData(title, snippet, '', pUrl);
 				$input.val(newDesc).trigger('input');
 				$input.css('background', '#f0fdf4');
 				setTimeout(function () { $input.css('background', '#ffffff'); }, 1200);
@@ -985,7 +1077,7 @@
 				$('#asf-metas-progress-fill').css('width', pct + '%');
 
 				ASF.request('asf_generate_single_meta_desc', { post_id: pid }).done(function (r) {
-					var newDesc = (r && r.success && r.desc) ? r.desc : generateMetaDescFromData(pTitle, pSnippet, '', pUrl);
+					var newDesc = (r && r.success && r.desc && r.desc.length >= 120 && r.desc.length <= 155) ? r.desc : generateMetaDescFromData(pTitle, pSnippet, '', pUrl);
 					$input.val(newDesc).trigger('input');
 					$input.css('background', '#f0fdf4');
 					setTimeout(function () { $input.css('background', '#ffffff'); }, 800);
