@@ -1,147 +1,254 @@
 # 🛡️ All-in-One SEO Fixer & Auditor
 
-**Free, open-source 360° SEO Diagnostic, Console Error Doctor, Speed, Security & AI Copilot Suite for ANY WordPress website.**
+**Free, open-source 360° SEO Diagnostic, AI Copilot, Schema Studio, Smart Silo Linking, GEO SEO & Full Technical Suite for ANY WordPress website.**
 
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
-[![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue)](https://wordpress.org)
+[![WordPress](https://img.shields.io/badge/WordPress-5.8%20to%206.8-blue)](https://wordpress.org)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple)](https://php.net)
 [![Author](https://img.shields.io/badge/Author-Abid%20Ali%20Dev-indigo)](https://abidalidev.com)
-[![Version](https://img.shields.io/badge/Version-2.3.0-green)](https://github.com/abidalidevv/all-seo-fixer)
+[![Version](https://img.shields.io/badge/Version-3.0.0-green)](https://github.com/abidalidevv/all-seo-fixer)
 
 ---
 
 ## 🚀 Overview
 
-**All-in-One SEO Fixer & Auditor** is a complete, professional-grade WordPress SEO and technical diagnostic toolkit built for site owners, developers, and SEO agencies. Unlike traditional plugins that lock essential diagnostic features behind expensive subscriptions, this plugin is **100% free and open-source forever under GPL-2.0**.
+**All-in-One SEO Fixer & Auditor** is a complete, professional-grade WordPress SEO and technical diagnostic toolkit built for site owners, developers, and SEO agencies. Unlike traditional plugins that lock essential features behind expensive recurring subscriptions, artificial site limits, or aggressive upselling, this plugin is **100% free and open-source forever under GPL-2.0**.
 
 ---
 
-## 🌟 20+ Pro Modules & Key Features
+## 🌟 Feature Modules
 
-1. **🛡️ 360° SEO Audit Dashboard & Executive 4-Page PDF Reports**: One-click site diagnostic covering 24+ critical SEO parameters with a comprehensive 4-page print-ready client audit report.
-2. **🤖 Dedicated AI SEO Assistant & Copilot**: Ultra-fast **Groq LLaMA-3.3-70B AI** conversational assistant with live site audit snapshot context and 1-click Master AI Prompt JSON export & import.
-3. **💬 Global Floating AI Assistant Bubble**: Ambient pulsing AI assistant widget embedded across all plugin admin screens with slide-out chat drawer and instant prompt chips.
-4. **⚙️ Settings Hub with 7 Horizontal Tabs**: Clean WordPress native tabs for General, AI Engine, Local/GEO SEO, Robots/LLMs, System Diagnostics, Pro License, and Developer.
-5. **🩺 System Diagnostics & Email Report Dispatcher**: 16-point server environment health scanner, debug log viewer, and 1-click email report sender to developer support.
-6. **👑 Pro Licensing & Feature Tiers**: Dummy activation system ready for premium monetization while keeping all core SEO tools free.
-7. **📍 Schema JSON-LD Studio**: Visual builder for Organization, LocalBusiness, FAQ, Product, Article, and BreadcrumbList structured data.
-8. **🌐 GEO & AI Search Hub**: Generative Engine Optimization for SearchGPT, Perplexity AI & Gemini with live `/llms.txt` publisher.
-9. **🛠️ Swiss-Knife Multi-Tools (19 Live Tools)**: Complete diagnostic suite including DNS, WHOIS, SSL, Ping, Traceroute, Port Scanner, and IP Geolocation.
-10. **🩺 Console & Error Doctor**: Real-time front-end JavaScript runtime error monitor, Mixed Content auto-fixer, jQuery wrapper, and debug log solver.
-11. **🖼️ Media Scanner & Auto-Alt Generator**: Smart 120–155 character alt-text generator with visual gallery and safe orphan media trashing.
-12. **🔧 On-Page SEO Checker**: Per-page audit for title length, meta description quality, Elementor headings, and duplicate metadata resolution.
-13. **⚡ Google PageSpeed Insights & Core Web Vitals**: Google PageSpeed API v5 integration with desktop & mobile scores (LCP, TBT, CLS).
-14. **🖼️ Lazy Load Images & Media Speed Optimizer**: Native HTML5 `loading="lazy"` enforcement on all `<img>` and `<iframe>` tags with LCP Hero Guard.
-15. **🎯 Live GSC Keyword Rank Tracker**: Fetch top 50 keywords directly from Google Search Console API with rank, clicks, impressions, and CTR.
-16. **🚀 Google Indexing API v3 Integration**: Direct RS256 signed JWT OAuth 2.0 URL submission for instant indexing in Google Search Console.
-17. **🧱 Page Builder & Elementor Overhead Optimizer**: Analyzes database JSON payload (`_elementor_data` MB size) and strips unused scripts.
-18. **🧹 Speed & Database Optimizer**: 50-item batched cleanup for revisions, auto-drafts, trashed posts, and spam comments without PHP timeouts.
-19. **🔒 Security Headers & HSTS Auto-Fix**: 1-click auto-fixer for missing `Strict-Transport-Security`, `X-Frame-Options`, and `Referrer-Policy`.
-20. **🔗 Broken Link & Typo Cleaner**: Repairs malformed URL typos (`domain.comhttps://domain.com/`) in post content and Elementor metadata.
-21. **🔀 301 Redirects & 404 Monitor**: Manage permanent 301 redirects and monitor 404 hits in real-time.
+### 🧙 Setup Wizard (New in v3.0)
+Guided 5-step onboarding wizard on first activation:
+- **Step 1** — Brand Profile & Industry Niche
+- **Step 2** — Business & Local SEO (phone, address, city, GPS coordinates)
+- **Step 3** — Social & OpenGraph Branding (logo, OG image, Facebook, Instagram, Twitter, LinkedIn, YouTube, GMB)
+- **Step 4** — AI Engine Keys & Automation (Groq, Gemini, auto-schema, OG, robots)
+- **Step 5** — Completion with redirect to dashboard
+
+### 🛡️ 360° SEO Audit Dashboard
+One-click site audit covering **24+ critical SEO parameters** with weighted scoring:
+- Missing/duplicate title tags & meta descriptions
+- Missing H1/H2 headings (Elementor-aware)
+- Image alt texts
+- Schema JSON-LD & Open Graph presence
+- Robots.txt & Sitemap validation (live HTTP check)
+- E-E-A-T signals (author bio, authoritative citations)
+- Accessibility & ARIA attributes
+- Orphan media detection
+- Double-domain URL typos (`domain.comhttps://...`)
+- Intrusive popup detection
+- Downloadable **Executive 4-page PDF Audit Report**
+
+### 🤖 AI SEO Copilot
+- **Groq LLaMA-3.3-70B** primary engine (ultra-fast sub-second generation)
+- **Google Gemini Flash** secondary engine
+- **OpenRouter** failover provider
+- Global **Floating AI Assistant Bubble** on every admin screen
+- Master AI Prompt JSON export/import for ChatGPT / Claude / Gemini
+- AI-powered 1-Click title, meta description & focus keyword generation
+
+### 🔧 On-Page SEO Checker
+Per-page deep analysis for all published posts & pages:
+- Title tag: missing, too short (<30), too long (>65), **duplicate pair highlighting** (shows both original & duplicate)
+- Meta description: missing, short (<70), long (>160), duplicate
+- H1: missing, multiple, Elementor JSON detection
+- H2 structure for long content
+- Image alt text per image
+- Thin content (<300 words for posts)
+- Internal link count
+- Schema JSON-LD presence
+- Bulk AI Auto-Fix, single-page AI fix, manual edit modal
+
+### 🔗 Smart Internal Link Silo Engine
+Auto-injects contextual internal links from body text to:
+- WooCommerce product categories
+- Blog categories
+- High-value pillar service pages (via focus keywords)
+- Max 3 links per page, longest keyword matched first
+- Skips: headings, existing `<a>` tags, scripts, buttons, and self-links
+
+### 📍 Schema JSON-LD Studio
+Visual builder for:
+- Organization / LocalBusiness (with NAP, GeoCoordinates & Opening Hours)
+- Article / BlogPosting (with E-E-A-T author, datePublished, dateModified)
+- FAQ / HowTo
+- Product (WooCommerce)
+- BreadcrumbList (auto-generated)
+- WebPage / WebSite
+
+### 🌐 GEO & AI Search Hub
+- Geo meta tags: `geo.position`, `ICBM`, `geo.placename`, `geo.region`
+- OpenGraph place meta tags
+- Browser GPS auto-fill for coordinates
+- `/llms.txt` & `/llms-full.txt` live publisher for AI search engines (ChatGPT, Perplexity, Claude, Gemini)
+
+### 🎯 Google Search Console & Indexing API
+- Live GSC Keyword Rank Tracker (top 50 keywords, clicks, impressions, CTR)
+- Google Indexing API v3 (RS256 JWT OAuth 2.0 signed requests)
+- IndexNow instant ping for Bing, Yandex, Seznam & Naver
+
+### ⚡ Google PageSpeed Insights & Core Web Vitals
+- API v5 integration (desktop & mobile)
+- LCP, TBT, CLS, FCP, Speed Index metrics
+- Side-by-side benchmark comparison
+
+### 🩺 Console & Error Doctor
+- Front-end JavaScript error monitor
+- 1-click Mixed Content HTTPS rewriter
+- Safe jQuery compatibility layer
+- PHP debug.log parser with AI diagnosis
+
+### 🖼️ Lazy Load & Media Optimizer
+- Native HTML5 `loading="lazy"` on `<img>` & `<iframe>` tags
+- LCP Hero Guard (first above-the-fold image excluded to maintain optimal LCP)
+
+### 🖼️ Media Scanner & Auto-Alt Generator
+- Orphan image detection (cross-references content, Elementor JSON, featured images, logos)
+- Auto-generates 120–155 char alt text
+- Safe trash (moves to WordPress trash, never irreversible deletion)
+
+### 🛠️ Swiss-Knife Diagnostic Tools (19 Live Tools)
+DNS Lookup, WHOIS, SSL Check, IP Lookup, Reverse IP, Redirect Chain, HTTP Headers, Broken Link Scanner, Email Extractor, Page Source Viewer, Class-C IP, Blacklist Checker, Keyword Suggester, Page Size Analyzer.
+
+### 🔒 Security Module
+- Security Headers audit (HSTS, X-Frame-Options, Referrer-Policy, CSP)
+- 1-click auto-inject via `.htaccess`
+
+### 🔗 Broken Link & Typo Cleaner
+- Repairs malformed `domain.comhttps://` typos in `wp_posts` & `wp_postmeta`
+- `.com`, `.org`, `.net`, `.ae`, and custom TLD support
+
+### 🔀 301 Redirect Manager & 404 Monitor
+- DB-driven redirect engine (no `.htaccess` required)
+- Real-time 404 hit logger with dedicated indexed DB table
+
+### 🌐 W3C HTML Validator
+- Live W3C HTML Nu validation for any URL directly from the plugin dashboard
+
+### 🧹 Speed & Database Optimizer
+- Batched (50-item batches) cleanup for revisions, auto-drafts, trashed posts, and spam comments
+
+---
+
+## 🤝 Works With & Compatibility
+
+All-in-One SEO Fixer is engineered to coexist peacefully with existing plugins without collision:
+- **SEO Plugins**: Rank Math SEO, Yoast SEO, All in One SEO (AIOSEO), SEOPress (built-in conflict guards prevent duplicate tags)
+- **Page Builders**: Elementor & Elementor Pro (JSON-aware heading detection), Divi, Oxygen, Beaver Builder, Gutenberg Block Editor
+- **E-Commerce**: WooCommerce (product schema, category silo linking)
+- **WordPress**: 5.8 through 6.8+
+- **PHP**: 7.4, 8.0, 8.1, 8.2, 8.3+
 
 ---
 
 ## 📥 Installation
 
-1. Download or clone the plugin directory to `wp-content/plugins/all-seo-fixer`.
-2. In your WordPress Admin Dashboard, go to **Plugins → Installed Plugins**.
-3. Locate **All-in-One SEO Fixer & Auditor** and click **Activate**.
-4. Navigate to **All SEO Fixer** in your WordPress admin sidebar.
-5. (Optional) Add your free Google PageSpeed Insights API key, Google Search Console Service Account JSON, or Groq/Gemini API keys in **⚙️ Settings**.
+1. Download or clone this repository to `/wp-content/plugins/all-seo-fixer`
+2. Go to **Plugins → Installed Plugins** and click **Activate**
+3. The **Setup Wizard** launches automatically — complete 5 steps to configure your brand & SEO defaults
+4. Navigate to **All SEO Fixer** in the admin sidebar
+5. (Optional) Add your free Groq or Gemini API keys in **Settings → AI Engine**
 
 ---
 
-## 📂 Project Architecture
+## 🔑 Free APIs Used
+
+| Service | Purpose | Get Key |
+|---------|---------|---------|
+| Groq | AI title/meta generation (LLaMA 3.3-70B) | [console.groq.com](https://console.groq.com/keys) |
+| Google Gemini | AI fallback generation | [aistudio.google.com](https://aistudio.google.com) |
+| Google PageSpeed Insights | Core Web Vitals testing | [developers.google.com/speed](https://developers.google.com/speed/docs/insights/v5/get-started) |
+| Google Search Console | Live rank tracking & top queries | [search.google.com/search-console](https://search.google.com/search-console) |
+| Google Indexing API v3 | Instant URL submission | [console.cloud.google.com](https://console.cloud.google.com) |
+| IndexNow | Instant ping to Bing, Yandex, Seznam | Built-in auto key generation |
+| W3C Validator | Live HTML standards validation | Free public service |
+
+---
+
+## ❓ Frequently Asked Questions
+
+### Is this plugin truly free?
+Yes. 100% free and open-source under GPL-2.0. There are no "Pro" locks, no artificial limits, no ads, and no recurring fees.
+
+### Does it work with Rank Math or Yoast already installed?
+Yes. The plugin includes automatic conflict detection. When Rank Math or Yoast is active, All-in-One SEO Fixer automatically defers duplicate meta tags while still providing full access to the 360° Audit, Broken Link Cleaner, Console Error Doctor, Media Scanner, Swiss-Knife Tools, and PageSpeed suite.
+
+### Do I need an API key to use the plugin?
+No! All core diagnostics, on-page audits, schema tools, redirect managers, broken link cleaners, security headers, and lazy load features function completely without API keys. API keys are strictly optional if you want to enable AI generation (Groq/Gemini), PageSpeed benchmarking, and live GSC rank tracking.
+
+### Will the audit slow down my live website?
+No. All scans execute within the WordPress admin dashboard via asynchronous AJAX requests. There is zero impact on your front-end visitors.
+
+### Is the Broken Link Auto-Fixer safe?
+Yes. It only repairs verified double-domain syntax errors (e.g. `yourdomain.comhttps://external.com/`) and displays a before/after log of changes.
+
+### Is it safe to trash orphan images?
+Yes. Images flagged as unreferenced are moved to the standard WordPress Media Trash rather than permanently deleted, allowing for 1-click restoration if needed.
+
+---
+
+## 📁 Plugin Structure
 
 ```
 all-seo-fixer/
-├── all-seo-fixer.php              # Main bootstrap file, activation hook & table creation
-├── readme.txt                     # WordPress.org plugin directory readme
-├── README.md                      # Single Master Documentation (User + Developer Guide)
-├── documentation.html             # Full offline HTML User & Developer Manual
+├── all-seo-fixer.php              ← Bootstrap, activation, constants
+├── README.md                      ← Master documentation & quick-start
+├── DOCUMENTATION.md               ← Full technical architecture guide
+├── documentation.html             ← Standalone interactive HTML docs
 ├── assets/
-│   ├── css/admin.css              # Premium WordPress Admin Native stylesheet
-│   └── js/admin.js                # Central AJAX handlers, modal engine & UI bindings
+│   ├── css/admin.css              ← Premium admin stylesheet
+│   └── js/admin.js                ← All admin JavaScript & AJAX
 ├── includes/
-│   ├── class-asf-core.php         # Canonical tags, Discover robots meta, 404 logger & Schema/OG injector
-│   ├── class-asf-audit.php        # 360° SEO audit, E-E-A-T & Accessibility inspector
-│   ├── class-asf-error-doctor.php # Console error monitor, HTTPS rewriter, jQuery wrapper & debug log parser
-│   ├── class-asf-pagespeed.php    # Google PageSpeed Insights API handler
-│   ├── class-asf-security.php     # Security headers, HSTS auto-fixer, CDN & DNSBL handler
-│   ├── class-asf-performance.php  # 50-item batched DB optimizer & speed utilities
-│   ├── class-asf-authority.php    # On-Page Health Score & Keyword Density handler
-│   ├── class-asf-builder.php      # Page Builder & Elementor bloat optimizer
-│   ├── class-asf-gsc.php          # Google OAuth JWT bearer token & Indexing API / Rank Tracker
-│   ├── class-asf-w3c.php          # W3C Nu HTML Checker API validator
-│   └── class-asf-handlers.php     # OnPage, LinkCleaner, Media, AI Chatbot, Pinger & AutoFixers
+│   ├── class-asf-core.php         ← Always-on hooks (canonical, OG, schema, redirects)
+│   ├── class-asf-audit.php        ← 360° SEO audit engine
+│   ├── class-asf-handlers.php     ← All AJAX handlers (OnPage, Links, Media, AI, Wizard...)
+│   ├── class-asf-pagespeed.php    ← Google PageSpeed Insights API
+│   ├── class-asf-schema.php       ← Schema Studio
+│   ├── class-asf-geo.php          ← GEO SEO Hub
+│   ├── class-asf-gsc.php          ← Google Search Console
+│   ├── class-asf-security.php     ← Security Headers
+│   ├── class-asf-performance.php  ← DB Optimizer
+│   ├── class-asf-swiss-tools.php  ← Swiss-Knife 19 Tools
+│   ├── class-asf-w3c.php          ← W3C Validator
+│   ├── class-asf-error-doctor.php ← Console Error Doctor
+│   ├── class-asf-authority.php    ← Authority & Backlinks
+│   └── class-asf-builder.php      ← Page Builder Optimizer
 └── admin/
-    ├── class-asf-admin.php        # 17-Menu registration & asset enqueue controller
-    └── views/                     # 17 UI View templates (dashboard, error-doctor, onpage, etc.)
+    ├── class-asf-admin.php        ← Menu registration + asset enqueue
+    └── views/                     ← Admin page templates (20+ views)
 ```
 
 ---
 
-## 💻 Developer Guide & Security Standards
+## 🔄 Changelog
 
-### 🛡️ Security Implementation
-- **Capability Check**: Every AJAX endpoint verifies `manage_options` capability via `asf_cap_check()`.
-- **Nonce Verification**: All requests check CSRF nonces via `asf_check_nonce()`.
-- **SQL Injection Prevention**: All custom database queries use `$wpdb->prepare()` with explicit parameter placeholders (`%s`, `%d`).
-- **Input Sanitization**: User inputs are sanitized using `sanitize_text_field()`, `esc_url_raw()`, and `trim()`.
+### v3.0.0 — September 2026
+- ✅ **NEW:** One-Time Setup Wizard (5-step onboarding)
+- ✅ **NEW:** Smart Internal Link Silo Engine (auto-injects contextual links to categories & services)
+- ✅ **NEW:** W3C HTML Validator tab
+- ✅ **NEW:** Authority & Backlink Hub
+- ✅ **NEW:** GEO & AI Search Hub (`/llms.txt` publisher)
+- ✅ **NEW:** Google Indexing API v3 (RS256 JWT)
+- ✅ **NEW:** Duplicate title modal shows both pages of dup pair with visual badges
+- 🐛 **FIX:** `dbDelta()` added to activation hook — 404 log table now properly created
+- 🐛 **FIX:** Robots.txt blocking check `stripos === false` comparison
+- 🐛 **FIX:** Batch save AJAX invalidates all caches on save
+- 🐛 **FIX:** Saved title/meta fields no longer overwritten by AI auto-generate
+- ⚡ **IMPROVED:** On-Page scanner detects Elementor `_elementor_data` h1/h2 JSON
 
-### 🔄 DB Optimizer Batching
-Database optimization runs in batches of 50 records per request via `wp_delete_post()` and `wp_delete_comment()` to prevent PHP `max_execution_time` timeouts on large databases. A maximum guard limit of 50 batches (2,500 records) protects against infinite loops.
+### v2.2.0
+- Console & Error Doctor, Canonical URL Engine, BreadcrumbList Schema, E-E-A-T Article Schema, IndexNow key auto-creation
 
-### 🔑 Google OAuth JWT Caching
-Google Access Tokens generated via RS256 signed JWT assertions are cached in a site-scoped transient (`asf_gsc_token_...`) for 50 minutes to avoid hitting Google OAuth rate limits.
-
----
-
-## 🌐 Free APIs Integrated
-
-| API / Service | Cost | Function |
-|---------------|------|----------|
-| **Google Search Console API** | Free | Instant Indexing API v3 & 30-Day Keyword Rank Tracking |
-| **Google PageSpeed Insights v5** | Free (25,000 req/day) | Core Web Vitals & Lighthouse Scores |
-| **Groq AI / Gemini / OpenRouter** | Free Tiers | AI SEO Assistant, Prompt Exporter & Error Doctor |
-| **W3C Nu HTML Checker API** | Free | Real-time HTML syntax validation |
-| **IndexNow API** | Free | Instant Bing, Yandex, Naver & Seznam re-indexing |
-
----
-
-## 📝 Changelog
-
-### Version 2.2.0
-- **Console & Error Doctor Module (`asf-error-doctor`)**: Added dedicated browser console monitor, 1-click Mixed Content HTTPS rewriter, safe jQuery compatibility wrapper, and PHP debug.log inspector with AI diagnosis.
-- **Canonical URL Engine**: Added automated `<link rel="canonical">` tag generation for singular posts, pages, categories, taxonomies, archives, and homepages.
-- **Google Discover Robots Meta**: Added `<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">` to unlock Google Discover feed eligibility.
-- **BreadcrumbList Schema**: Automated hierarchical JSON-LD breadcrumb markup (Home → Category → Page).
-- **Article E-E-A-T Schema**: Enriched Article schema with `author` (Person), `datePublished`, `dateModified`, and `mainEntityOfPage`.
-- **LocalBusiness Schema Enrichment**: Added GeoCoordinates, Opening Hours, Price Range, and Social `sameAs` support.
-- **IndexNow Verification Key Auto-Creation**: Automatically generates site root `.txt` key verification file for IndexNow submissions.
-- **Accurate Schema Detection**: Refactored audit logic to evaluate postmeta rich snippet settings and auto-injected schema rather than raw post_content.
-- **Keyword Density Fix**: Resolved `$_GET` vs `$_REQUEST` parameter handling for seamless AJAX execution.
-
-### Version 2.1.0 (Product Hunt Release)
-- **Lazy Load Images & Media Speed Optimizer**: Enforces native HTML5 `loading="lazy"` on all content images (`<img>`) and video embeds (`<iframe>`) with LCP Hero Guard.
-- **1-Click Executive Audit PDF Reports**: Print-ready executive client PDF audit report generator with before & after optimization scores.
-- **AI SEO Assistant & Copilot**: Integrated Groq AI (`openai/gpt-oss-120b`) & Google Gemini AI chatbot providing instant custom SEO recommendations.
-- **Native WordPress Dashicons Design System**: Crisp vector icons across all module cards & tools.
-- **Media Scanner Upgrades**: 48x48 thumbnail image lightbox preview & intelligent fallback Alt text generator for numeric filenames (`83746874365.png`).
-- **Double-Domain Link Typo Repair**: Scans both `wp_posts.post_content` and `wp_postmeta` across `.com`, `.org`, `.net`, `.ae` TLDs.
-- **Title Synchronization**: Core `wp_update_post` title tag updates synchronized alongside Rank Math & Yoast SEO postmeta.
-
----
-
-## 📜 License
-
-Distributed under the **GPL-2.0-or-later** License. See `LICENSE` for details.
+### v2.1.0
+- Lazy Load, PDF Report, AI Copilot, Media Scanner upgrades, Broken Link Cleaner improvements
 
 ---
 
 ## 👨‍💻 Author
 
-Built with ❤️ by **Abid Ali Dev**  
-- Website: [https://abidalidev.com](https://abidalidev.com)  
-- GitHub: [@abidalidevv](https://github.com/abidalidevv)
+**Abid Ali Dev** — [abidalidev.com](https://abidalidev.com) | [@abidalidevv](https://github.com/abidalidevv)
+
+## 📄 License
+
+GPL-2.0-or-later — [GNU General Public License v2.0](https://www.gnu.org/licenses/gpl-2.0.html)

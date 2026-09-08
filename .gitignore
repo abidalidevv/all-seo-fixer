@@ -1,8 +1,8 @@
-# Ignore heavy third-party extra data
-extra/plugin extra data/
-extra/plugin\ extra\ data/
-plugin extra data/
-plugin\ extra\ data/
+# Dev artifacts — never committed
+scratch/
+extra/
+*.zip
+scratch.zip
 
 # OS and IDE files
 .DS_Store
@@ -10,4 +10,3 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
-scratch/

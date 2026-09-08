@@ -25,7 +25,6 @@
  *
  * Plugin Structure:
  * ├── all-seo-fixer.php           ← You are here (bootstrap)
- * ├── readme.txt                  ← WordPress.org readme
  * ├── README.md                   ← GitHub readme
  * ├── assets/
  * │   ├── css/admin.css           ← Premium admin stylesheet

@@ -1,6 +1,6 @@
 # 🛡️ All-in-One SEO Fixer & Auditor — Master User & Technical Guide
 
-> **Version**: 2.3.0  
+> **Version**: 3.0.0  
 > **Author**: [Abid Ali](https://abidalidev.com)  
 > **License**: GPL-2.0-or-later  
 > **Repository**: [github.com/abidalidevv/all-seo-fixer](https://github.com/abidalidevv/all-seo-fixer)  
