@@ -773,8 +773,32 @@
 			ASF.request('asf_onpage_scan')
 			.done(function (res) {
 				if (!res || !res.success) { ASF.toast('Could not scan pages.', 'error'); return; }
+
+				// Collect all pages with title issues (missing, short, long, or duplicate)
+				var dupTitlePages = res.data.filter(function (p) {
+					return p.issues.some(function (i) { return i.key === 'dup_title'; });
+				});
+
+				// For each dup page, also find its original counterpart (same seo_title, no dup_title issue)
+				var dupOriginalIds = {};
+				dupTitlePages.forEach(function (dp) {
+					res.data.forEach(function (op) {
+						if (op.id !== dp.id && op.seo_title && dp.seo_title && op.seo_title.toLowerCase().trim() === dp.seo_title.toLowerCase().trim() && !op.issues.some(function(i){return i.key==='dup_title';})) {
+							dupOriginalIds[op.id] = true;
+						}
+					});
+				});
+
 				var pages = res.data.filter(function (p) {
-					return p.issues.some(function (i) { return i.key === 'title' || i.key === 'dup_title' || i.msg.indexOf('Title') !== -1; }) || !p.has_good_title;
+					return p.issues.some(function (i) { return i.key === 'title' || i.key === 'dup_title' || i.msg.indexOf('Title') !== -1; })
+						|| !p.has_good_title
+						|| dupOriginalIds[p.id]; // also include the original of a duplicate pair
+				});
+
+				// Tag each page so modal can show why it's listed
+				pages.forEach(function(p) {
+					p._isDupOriginal = !!dupOriginalIds[p.id];
+					p._isDupFlagged  = p.issues.some(function(i){ return i.key === 'dup_title'; });
 				});
 
 				if (!pages.length) {
@@ -797,15 +821,24 @@
 					var charCount = autoTitle.length;
 					var pillCol = (charCount >= 30 && charCount <= 65) ? '#10b981' : (charCount < 30 ? '#ef4444' : '#f59e0b');
 
-					bodyHtml += '<tr data-title-row-id="' + pid + '">';
-					bodyHtml += '<td><strong>' + ASF.escapeHtml(p.title) + '</strong><br><small><a href="' + p.url + '" target="_blank" style="color:#2271b1;text-decoration:none;">' + p.url + '</a></small></td>';
+					// Build duplicate-pair badge for clarity
+					var dupBadge = '';
+					if (p._isDupFlagged) {
+						dupBadge = '<span style="display:inline-block;margin-top:4px;font-size:10px;font-weight:700;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:1px 7px;border-radius:20px;">🔁 Duplicate Title — must be unique</span>';
+					} else if (p._isDupOriginal) {
+						dupBadge = '<span style="display:inline-block;margin-top:4px;font-size:10px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;padding:1px 7px;border-radius:20px;">⚠️ Original — another page copied this title</span>';
+					}
+					var rowBg = (p._isDupFlagged || p._isDupOriginal) ? 'background:#fffbeb;' : '';
+
+					bodyHtml += '<tr data-title-row-id="' + pid + '" style="' + rowBg + '">';
+					bodyHtml += '<td><strong>' + ASF.escapeHtml(p.title) + '</strong>' + dupBadge + '<br><small><a href="' + p.url + '" target="_blank" style="color:#2271b1;text-decoration:none;">' + p.url + '</a></small></td>';
 					bodyHtml += '<td>';
-					bodyHtml += '<input type="text" class="asf-input asf-modal-title-input" data-id="' + pid + '" data-title="' + ASF.escapeHtml(p.title) + '" data-url="' + ASF.escapeHtml(p.url) + '" value="' + ASF.escapeHtml(autoTitle) + '" style="width:100%;font-size:12px;line-height:1.4;">';
+					bodyHtml += '<input type="text" class="asf-input asf-modal-title-input" data-id="' + pid + '" data-title="' + ASF.escapeHtml(p.title) + '" data-url="' + ASF.escapeHtml(p.url) + '" value="' + ASF.escapeHtml(autoTitle) + '" style="width:100%;font-size:12px;line-height:1.4;' + (p._isDupFlagged ? 'border-color:#ef4444;' : (p._isDupOriginal ? 'border-color:#f59e0b;' : '')) + '">';
 					bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-top:3px;"><span class="asf-title-counter" style="color:' + pillCol + ';font-weight:600;">' + charCount + ' / 60 chars</span><span class="asf-title-status-' + pid + '" style="font-weight:600;"></span></div>';
 					bodyHtml += '</td>';
 					bodyHtml += '<td style="vertical-align:middle;text-align:center;">';
 					bodyHtml += '<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">';
-					bodyHtml += '<button type="button" class="button button-secondary asf-modal-single-title-ai-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;" title="Generate SEO title tag using connected AI">🤖 AI Generate</button>';
+					bodyHtml += '<button type="button" class="button button-secondary asf-modal-single-title-ai-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;" title="Generate unique SEO title tag using connected AI">🤖 AI Generate</button>';
 					bodyHtml += '<button type="button" class="button button-primary asf-modal-single-title-save-btn" data-id="' + pid + '" style="font-size:11px;padding:2px 8px;width:100%;">💾 Save</button>';
 					bodyHtml += '</div>';
 					bodyHtml += '</td></tr>';
