@@ -298,9 +298,11 @@
 			$('#asf-download-report-btn').show();
 		};
 
-		// Auto-render cached audit result on load if available
-		if (dataObj.lastAudit) {
+		// Auto-render cached audit result on load if available, or trigger fresh audit if cleared
+		if (dataObj.lastAudit && dataObj.lastAudit.posts) {
 			ASF.renderAudit(dataObj.lastAudit);
+		} else if ($('#asf-dash-results').length && $('#asf-run-full-btn').length) {
+			$('#asf-run-full-btn').trigger('click');
 		}
 
 		/* =============================================================
@@ -772,10 +774,13 @@
 			.done(function (res) {
 				if (!res || !res.success) { ASF.toast('Could not scan pages.', 'error'); return; }
 				var pages = res.data.filter(function (p) {
-					return p.issues.some(function (i) { return i.msg.indexOf('Title') !== -1; }) || !p.has_good_title;
+					return p.issues.some(function (i) { return i.key === 'title' || i.key === 'dup_title' || i.msg.indexOf('Title') !== -1; }) || !p.has_good_title;
 				});
 
-				if (!pages.length) pages = res.data.slice(0, 15);
+				if (!pages.length) {
+					ASF.openModal('Page Title Tags Audit', '<div class="asf-notice asf-notice-success" style="padding:28px 20px;text-align:center;"><div style="font-size:38px;margin-bottom:12px;">🎉</div><h2 style="margin:0 0 8px;font-size:18px;">All Page Titles are Fully Optimized!</h2><p style="margin:0;color:#64748b;font-size:13px;">Every published page has a valid, high-CTR, unique title tag compliant with search engine guidelines.</p></div>', '<button type="button" class="asf-btn-secondary asf-modal-cancel-btn">Close</button>');
+					return;
+				}
 
 				var bodyHtml = '<div class="asf-notice asf-notice-success" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:12px 14px;flex-wrap:wrap;gap:10px;">';
 				bodyHtml += '<div><strong>🤖 AI Title Optimizer:</strong> Generate high-CTR, unique SEO titles (48–60 chars) using connected AI engine with site &amp; page profile context.</div>';
@@ -787,15 +792,10 @@
 				bodyHtml += '<div style="max-height:420px;overflow-y:auto;"><table class="asf-table widefat striped"><thead><tr><th style="width:30%;">Page &amp; URL</th><th style="width:50%;">SEO Title Tag (48–60 chars)</th><th style="width:20%;text-align:center;">Action</th></tr></thead><tbody>';
 				pages.forEach(function (p) {
 					var pid = p.id || p.post_id;
-					var isExistingTitleGood = p.seo_title &&
-						p.seo_title.length >= 45 &&
-						p.seo_title.length <= 60 &&
-						p.seo_title.indexOf('...') === -1 &&
-						p.seo_title.indexOf('Official Site') === -1 &&
-						p.seo_title.indexOf('Mobile Phone & Electronics Repair') === -1;
-					var autoTitle = isExistingTitleGood ? p.seo_title : generateSmartTitleJS(p.title, p.post_type, p.url);
+					// Honor existing saved title 100% without wiping or regenerating unless completely blank
+					var autoTitle = (p.seo_title && p.seo_title.trim().length > 0) ? p.seo_title : generateSmartTitleJS(p.title, p.post_type, p.url);
 					var charCount = autoTitle.length;
-					var pillCol = (charCount >= 45 && charCount <= 60) ? '#10b981' : (charCount < 30 ? '#ef4444' : '#f59e0b');
+					var pillCol = (charCount >= 30 && charCount <= 65) ? '#10b981' : (charCount < 30 ? '#ef4444' : '#f59e0b');
 
 					bodyHtml += '<tr data-title-row-id="' + pid + '">';
 					bodyHtml += '<td><strong>' + ASF.escapeHtml(p.title) + '</strong><br><small><a href="' + p.url + '" target="_blank" style="color:#2271b1;text-decoration:none;">' + p.url + '</a></small></td>';
@@ -928,29 +928,40 @@
 			var $btn = $(this);
 			$btn.prop('disabled', true).text('Saving…');
 			var inputs = $('.asf-modal-title-input');
-			var promises = [];
+			var items = [];
 
-			var saveCount = 0;
 			inputs.each(function () {
 				var pid = $(this).data('id');
 				var title = $(this).val().trim();
 				if (pid && title) {
-					saveCount++;
-					promises.push(ASF.request('asf_save_onpage_meta', { post_id: pid, title: title }));
+					items.push({ post_id: pid, title: title });
 				}
 			});
 
-			if (!promises.length) {
+			if (!items.length) {
 				alert('No titles to update.');
 				$btn.prop('disabled', false).text('💾 Save & Apply All Titles');
 				return;
 			}
 
-			$.when.apply($, promises).always(function () {
-				ASF.closeModal();
-				alert('✨ Successfully saved ' + saveCount + ' Title Tag(s) to WordPress database!');
-				$('#asf-run-full-btn').click();
-			});
+			ASF.request('asf_batch_save_onpage_meta', { items: JSON.stringify(items) })
+				.done(function (res) {
+					ASF.closeModal();
+					if (res && res.success) {
+						ASF.toast('✨ Successfully saved ' + (res.saved || items.length) + ' Title Tag(s) to WordPress database!', 'success');
+						if ($('#asf-run-full-btn').length) {
+							$('#asf-run-full-btn').trigger('click');
+						} else if ($('#asf-onpage-btn').length) {
+							$('#asf-onpage-btn').trigger('click');
+						}
+					} else {
+						ASF.toast(res ? res.message : 'Could not save titles.', 'error');
+					}
+				})
+				.fail(function () {
+					$btn.prop('disabled', false).text('💾 Save & Apply All Titles');
+					alert('Network error during batch save.');
+				});
 		});
 
 		// SMART ASSISTANT MODAL: Fix Meta Descriptions Now (AI & Site-Profile Connected)
@@ -960,10 +971,13 @@
 			.done(function (res) {
 				if (!res || !res.success) { ASF.toast('Could not scan pages.', 'error'); return; }
 				var pages = res.data.filter(function (p) {
-					return p.issues.some(function (i) { return i.msg.indexOf('Meta') !== -1; }) || !p.meta_desc || p.meta_desc.length < 80;
+					return p.issues.some(function (i) { return i.key === 'meta_desc' || i.key === 'dup_meta' || i.msg.indexOf('Meta') !== -1; }) || !p.has_meta_desc;
 				});
 
-				if (!pages.length) pages = res.data.slice(0, 15);
+				if (!pages.length) {
+					ASF.openModal('Meta Descriptions Audit', '<div class="asf-notice asf-notice-success" style="padding:28px 20px;text-align:center;"><div style="font-size:38px;margin-bottom:12px;">🎉</div><h2 style="margin:0 0 8px;font-size:18px;">All Meta Descriptions are Fully Optimized!</h2><p style="margin:0;color:#64748b;font-size:13px;">Every published page has a comprehensive, high-CTR meta description (80–160 chars) compliant with search engine guidelines.</p></div>', '<button type="button" class="asf-btn-secondary asf-modal-cancel-btn">Close</button>');
+					return;
+				}
 
 				var bodyHtml = '<div class="asf-notice asf-notice-success" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding:12px 14px;flex-wrap:wrap;gap:10px;">';
 				bodyHtml += '<div><strong>🤖 AI Meta Optimizer:</strong> Generate unique 120–155 character descriptions using connected AI engine with site &amp; page profile context.</div>';
@@ -975,13 +989,10 @@
 				bodyHtml += '<div style="max-height:420px;overflow-y:auto;"><table class="asf-table widefat striped"><thead><tr><th style="width:28%;">Page &amp; Content Outline</th><th style="width:52%;">Meta Description (120–155 chars)</th><th style="width:20%;text-align:center;">Action</th></tr></thead><tbody>';
 				pages.forEach(function (p) {
 					var pid = p.id || p.post_id;
-					var isExistingDescGood = p.meta_desc &&
-						p.meta_desc.length >= 120 &&
-						p.meta_desc.length <= 155 &&
-						p.meta_desc.indexOf('Mobile Phone & Electronics Repair') === -1;
-					var initialDesc = isExistingDescGood ? p.meta_desc : generateMetaDescFromData(p.title, p.snippet, p.post_type, p.url);
+					// Honor existing saved meta description 100% without wiping or regenerating unless completely blank
+					var initialDesc = (p.meta_desc && p.meta_desc.trim().length > 0) ? p.meta_desc : generateMetaDescFromData(p.title, p.snippet, p.post_type, p.url);
 					var charCount = initialDesc.length;
-					var pillCol = (charCount >= 120 && charCount <= 155) ? '#10b981' : (charCount < 80 ? '#ef4444' : '#f59e0b');
+					var pillCol = (charCount >= 70 && charCount <= 160) ? '#10b981' : (charCount < 70 ? '#ef4444' : '#f59e0b');
 
 					bodyHtml += '<tr data-row-id="' + pid + '">';
 					bodyHtml += '<td><strong>' + ASF.escapeHtml(p.title) + '</strong><br><small><a href="' + p.url + '" target="_blank" style="color:#2271b1;text-decoration:none;">' + p.url + '</a></small>';
@@ -1119,29 +1130,40 @@
 			var $btn = $(this);
 			$btn.prop('disabled', true).text('Saving…');
 			var inputs = $('.asf-modal-desc-input');
-			var promises = [];
+			var items = [];
 
-			var saveCount = 0;
 			inputs.each(function () {
 				var pid = $(this).data('id');
 				var desc = $(this).val().trim();
 				if (pid && desc) {
-					saveCount++;
-					promises.push(ASF.request('asf_save_onpage_meta', { post_id: pid, desc: desc }));
+					items.push({ post_id: pid, desc: desc });
 				}
 			});
 
-			if (!promises.length) {
+			if (!items.length) {
 				alert('No descriptions to update.');
 				$btn.prop('disabled', false).text('💾 Save & Apply All Descriptions');
 				return;
 			}
 
-			$.when.apply($, promises).always(function () {
-				ASF.closeModal();
-				alert('✨ Successfully saved ' + saveCount + ' Meta Description(s) to WordPress database!');
-				$('#asf-run-full-btn').click();
-			});
+			ASF.request('asf_batch_save_onpage_meta', { items: JSON.stringify(items) })
+				.done(function (res) {
+					ASF.closeModal();
+					if (res && res.success) {
+						ASF.toast('✨ Successfully saved ' + (res.saved || items.length) + ' Meta Description(s) to WordPress database!', 'success');
+						if ($('#asf-run-full-btn').length) {
+							$('#asf-run-full-btn').trigger('click');
+						} else if ($('#asf-onpage-btn').length) {
+							$('#asf-onpage-btn').trigger('click');
+						}
+					} else {
+						ASF.toast(res ? res.message : 'Could not save meta descriptions.', 'error');
+					}
+				})
+				.fail(function () {
+					$btn.prop('disabled', false).text('💾 Save & Apply All Descriptions');
+					alert('Network error during batch save.');
+				});
 		});
 
 		// SMART ASSISTANT MODAL: Sitemap Guide

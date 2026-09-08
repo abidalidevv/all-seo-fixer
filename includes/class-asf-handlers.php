@@ -49,8 +49,10 @@ class ASF_OnPage {
 			'posts_per_page' => 250,
 		) );
 
-		$results   = array();
-		$site_name = get_bloginfo( 'name' );
+		$results     = array();
+		$site_name   = get_bloginfo( 'name' );
+		$seen_titles = array();
+		$seen_metas  = array();
 
 		foreach ( $posts as $post ) {
 			$content = $post->post_content;
@@ -68,7 +70,17 @@ class ASF_OnPage {
 
 			if ( $title_len === 0 )     $issues[] = array( 'type' => 'error', 'key' => 'title', 'msg' => 'Missing Title Tag — add a unique SEO title.' );
 			elseif ( $title_len < 30 )  $issues[] = array( 'type' => 'warn',  'key' => 'title', 'msg' => 'Title too short (' . $title_len . ' chars). Aim for 50–60 characters.' );
-			elseif ( $title_len > 60 )  $issues[] = array( 'type' => 'warn',  'key' => 'title', 'msg' => 'Title too long (' . $title_len . ' chars). Keep under 60 to avoid truncation in Google.' );
+			elseif ( $title_len > 65 )  $issues[] = array( 'type' => 'warn',  'key' => 'title', 'msg' => 'Title too long (' . $title_len . ' chars). Keep under 60 to avoid truncation in Google.' );
+
+			// Duplicate Title Tag check
+			if ( ! empty( $title_clean ) ) {
+				$t_key = mb_strtolower( $title_clean );
+				if ( isset( $seen_titles[ $t_key ] ) ) {
+					$issues[] = array( 'type' => 'warn', 'key' => 'dup_title', 'msg' => 'Duplicate Title Tag — identical to another published page. Titles must be unique.' );
+				} else {
+					$seen_titles[ $t_key ] = $post->ID;
+				}
+			}
 
 			// ── Meta Description checks ───────────────────────────────
 			$raw_meta = get_post_meta( $post->ID, '_asf_meta_description', true )
@@ -80,8 +92,18 @@ class ASF_OnPage {
 			$meta_len   = mb_strlen( $meta_clean );
 
 			if ( $meta_len === 0 )      $issues[] = array( 'type' => 'error', 'key' => 'meta_desc', 'msg' => 'Missing Meta Description — write a 120–155 char summary.' );
-			elseif ( $meta_len < 80 )   $issues[] = array( 'type' => 'warn',  'key' => 'meta_desc', 'msg' => 'Meta Description too short (' . $meta_len . ' chars). Aim for 120–155.' );
+			elseif ( $meta_len < 70 )   $issues[] = array( 'type' => 'warn',  'key' => 'meta_desc', 'msg' => 'Meta Description too short (' . $meta_len . ' chars). Aim for 120–155.' );
 			elseif ( $meta_len > 160 )  $issues[] = array( 'type' => 'warn',  'key' => 'meta_desc', 'msg' => 'Meta Description too long (' . $meta_len . ' chars). Keep under 160.' );
+
+			// Duplicate Meta Description check
+			if ( ! empty( $meta_clean ) && $meta_len >= 30 ) {
+				$m_key = mb_strtolower( $meta_clean );
+				if ( isset( $seen_metas[ $m_key ] ) ) {
+					$issues[] = array( 'type' => 'warn', 'key' => 'dup_meta', 'msg' => 'Duplicate Meta Description — identical to another published page. Summaries must be unique.' );
+				} else {
+					$seen_metas[ $m_key ] = $post->ID;
+				}
+			}
 
 			// ── H1 check (checks content, Elementor JSON, theme title, and native WooCommerce single-product template) ──
 			$has_h1 = preg_match( '/<h1[\s>]/i', $content );
@@ -170,6 +192,9 @@ class ASF_OnPage {
 				$issues[] = array( 'type' => 'warn', 'key' => 'links', 'msg' => 'No internal links found — add links to related pages to improve crawlability.' );
 			}
 
+			$has_valid_meta  = ( $meta_len >= 70 && $meta_len <= 160 );
+			$has_valid_title = ( $title_len >= 30 && $title_len <= 65 );
+
 			$results[] = array(
 				'id'             => $post->ID,
 				'title'          => esc_html( get_the_title( $post->ID ) ),
@@ -182,8 +207,8 @@ class ASF_OnPage {
 				'issues'         => $issues,
 				'seo_title'      => $title_clean,
 				'meta_desc'      => $meta_clean,
-				'has_meta_desc'  => ( $meta_len > 0 ),
-				'has_good_title' => ( $title_len >= 30 && $title_len <= 65 ),
+				'has_meta_desc'  => $has_valid_meta,
+				'has_good_title' => $has_valid_title,
 			);
 		}
 
@@ -309,6 +334,10 @@ class ASF_OnPage {
 			update_post_meta( $post_id, '_yoast_wpseo_focuskw', $kw );
 		}
 
+		// Clear cached audit so fresh scan and reload immediately reflects updates
+		delete_option( 'asf_last_audit_data' );
+		delete_option( 'asf_health_score_cache' );
+
 		$p_title = get_the_title( $post_id );
 		$stats   = ASF_StatsTracker::record_fix( 'title_and_meta', 1, $p_title, 'AI 1-Click: SEO Title, Meta Description & Focus Keyword generated for "' . $p_title . '"' );
 
@@ -431,6 +460,10 @@ class ASF_OnPage {
 		update_post_meta( $post_id, '_yoast_wpseo_title', $seo_title );
 		update_post_meta( $post_id, '_yoast_wpseo_metadesc', $meta_desc );
 		update_post_meta( $post_id, '_yoast_wpseo_focuskw', $keyword );
+
+		// Clear cached audit so fresh scan and reload immediately reflects updates
+		delete_option( 'asf_last_audit_data' );
+		delete_option( 'asf_health_score_cache' );
 
 		$p_title     = get_the_title( $post_id );
 		$title_saved = ! empty( $seo_title );
@@ -1438,6 +1471,7 @@ class ASF_AutoFixer {
 		add_action( 'wp_ajax_asf_ai_batch_generate',          array( __CLASS__, 'handle_ai_batch_generate' ) );
 		add_action( 'wp_ajax_asf_autofix_titles',              array( __CLASS__, 'handle_autofix_titles' ) );
 		add_action( 'wp_ajax_asf_save_onpage_meta',            array( __CLASS__, 'handle_save_onpage_meta' ) );
+		add_action( 'wp_ajax_asf_batch_save_onpage_meta',      array( __CLASS__, 'handle_batch_save_onpage_meta' ) );
 	}
 
 	/**
@@ -1734,6 +1768,10 @@ class ASF_AutoFixer {
 			update_post_meta( $post_id, '_yoast_wpseo_metadesc', $desc );
 		}
 
+		// Invalidate cached audit so fresh scan and reload immediately reflects updates
+		delete_option( 'asf_last_audit_data' );
+		delete_option( 'asf_health_score_cache' );
+
 		$p_title = get_the_title( $post_id );
 		$type    = ( $title && $desc ) ? 'title_and_meta' : ( $title ? 'title' : 'meta' );
 		$stats   = ASF_StatsTracker::record_fix( $type, 1, $p_title, 'Updated Title & Meta Description for Post #' . $post_id );
@@ -1742,6 +1780,70 @@ class ASF_AutoFixer {
 			'success' => true,
 			'message' => '✨ Title & Meta Description updated for Post #' . $post_id . '!',
 			'stats'   => $stats,
+		) );
+	}
+
+	/**
+	 * Batch saves title and meta description for multiple posts in a single atomic request
+	 */
+	public static function handle_batch_save_onpage_meta() {
+		asf_check_nonce();
+		asf_cap_check();
+
+		$raw_items = $_REQUEST['items'] ?? array();
+		if ( is_string( $raw_items ) ) {
+			$raw_items = json_decode( stripslashes( $raw_items ), true );
+		}
+
+		if ( ! is_array( $raw_items ) || empty( $raw_items ) ) {
+			wp_send_json( array( 'success' => false, 'message' => 'No items provided to save.' ) );
+		}
+
+		$saved_count  = 0;
+		$titles_count = 0;
+		$metas_count  = 0;
+
+		foreach ( $raw_items as $item ) {
+			$post_id = isset( $item['post_id'] ) ? (int) $item['post_id'] : ( isset( $item['id'] ) ? (int) $item['id'] : 0 );
+			if ( ! $post_id ) continue;
+
+			$title = isset( $item['title'] ) ? sanitize_text_field( $item['title'] ) : '';
+			$desc  = isset( $item['desc'] ) ? sanitize_text_field( $item['desc'] ) : '';
+
+			if ( ! empty( $title ) ) {
+				update_post_meta( $post_id, '_asf_seo_title', $title );
+				update_post_meta( $post_id, 'rank_math_title', $title );
+				update_post_meta( $post_id, '_yoast_wpseo_title', $title );
+				$titles_count++;
+			}
+
+			if ( ! empty( $desc ) ) {
+				update_post_meta( $post_id, '_asf_meta_description', $desc );
+				update_post_meta( $post_id, 'rank_math_description', $desc );
+				update_post_meta( $post_id, '_yoast_wpseo_metadesc', $desc );
+				$metas_count++;
+			}
+
+			$saved_count++;
+		}
+
+		// Invalidate cached audit so fresh scan and reload immediately reflects updates
+		delete_option( 'asf_last_audit_data' );
+		delete_option( 'asf_health_score_cache' );
+
+		$stats = null;
+		if ( $titles_count > 0 || $metas_count > 0 ) {
+			$type  = ( $titles_count > 0 && $metas_count > 0 ) ? 'title_and_meta' : ( $titles_count > 0 ? 'title' : 'meta' );
+			$stats = ASF_StatsTracker::record_fix( $type, $saved_count, 'Batch Optimization', 'Saved ' . $titles_count . ' title(s) and ' . $metas_count . ' meta description(s)' );
+		}
+
+		wp_send_json( array(
+			'success' => true,
+			'saved'   => $saved_count,
+			'titles'  => $titles_count,
+			'metas'   => $metas_count,
+			'stats'   => $stats,
+			'message' => '✨ Successfully saved ' . $saved_count . ' page(s) to WordPress database!',
 		) );
 	}
 }
@@ -1776,10 +1878,22 @@ class ASF_HealthPing {
 		}
 
 		// ── Check 2: Count posts missing meta descriptions ───────────────────
+		$public_types  = array_values( get_post_types( array( 'public' => true ) ) );
+		$exclude_types = array(
+			'attachment', 'nav_menu_item', 'revision', 'custom_css', 'customize_changeset',
+			'oembed_cache', 'user_request', 'wp_block', 'wp_template', 'wp_template_part',
+			'wp_global_styles', 'wp_navigation', 'elementor_library', 'elementor_snippet',
+			'elementor_font', 'elementor_icons', 'e-landing-page', 'action_monitor'
+		);
+		$post_types = array_values( array_diff( $public_types, $exclude_types ) );
+		if ( empty( $post_types ) ) {
+			$post_types = array( 'post', 'page' );
+		}
+
 		$public_posts = get_posts( array(
-			'post_type'      => array( 'post', 'page' ),
+			'post_type'      => $post_types,
 			'post_status'    => 'publish',
-			'posts_per_page' => 100,
+			'posts_per_page' => 250,
 		) );
 
 		$missing_meta_count  = 0;
@@ -1905,16 +2019,19 @@ class ASF_HealthPing {
 			'ts'      => time(),
 		), false );
 
-		// Persist issue counts for AI chatbot context
-		update_option( 'asf_last_audit_data', array(
+		// Merge issue counts with existing audit data without wiping score, posts, or duplicates
+		$existing_audit = get_option( 'asf_last_audit_data', array() );
+		if ( ! is_array( $existing_audit ) ) {
+			$existing_audit = array();
+		}
+		$merged_audit = array_merge( $existing_audit, array(
 			'missing_titles' => $missing_title_count,
 			'bad_metas'      => $missing_meta_count,
 			'missing_h1'     => $missing_h1_count,
 			'missing_alts'   => $missing_alt,
-			'comhttps'       => 0,
-			'orphans'        => 0,
 			'robots_ok'      => isset( $checks['robots'] ) && $checks['robots']['status'] === 'ok',
-		), false );
+		) );
+		update_option( 'asf_last_audit_data', $merged_audit, false );
 
 		wp_send_json( array(
 			'success' => true,

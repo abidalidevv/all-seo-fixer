@@ -19,6 +19,8 @@ class ASF_Core {
 		add_action( 'wp_head',           array( __CLASS__, 'inject_title_and_description_meta' ), 3 );
 		add_action( 'wp_head',           array( __CLASS__, 'inject_geo_seo_meta_tags' ), 4 );
 		add_filter( 'the_content',       array( __CLASS__, 'filter_lazy_load_content' ), 99 );
+		add_filter( 'pre_get_document_title',              array( __CLASS__, 'filter_pre_get_document_title' ), 99 );
+		add_filter( 'document_title_parts',                array( __CLASS__, 'filter_document_title_parts' ), 99 );
 		add_filter( 'rank_math/sitemap/exclude_post_type', array( __CLASS__, 'exclude_builder_cpts_from_sitemap' ), 10, 2 );
 		add_filter( 'wpseo_sitemap_exclude_post_type',     array( __CLASS__, 'exclude_builder_cpts_from_sitemap' ), 10, 2 );
 		add_filter( 'robots_txt',                          array( __CLASS__, 'filter_robots_txt' ), 99, 2 );
@@ -266,6 +268,34 @@ class ASF_Core {
 			$desc_clean = esc_attr( trim( preg_replace( '/\s+/', ' ', strip_tags( (string) $desc ) ) ) );
 			echo '<meta name="description" content="' . $desc_clean . '" />' . "\n";
 		}
+	}
+
+	/**
+	 * Overrides standard WordPress document title tag with saved SEO title
+	 */
+	public static function filter_pre_get_document_title( $title ) {
+		if ( is_singular() ) {
+			$post_id   = get_the_ID();
+			$seo_title = get_post_meta( $post_id, '_asf_seo_title', true );
+			if ( ! empty( $seo_title ) ) {
+				return esc_html( $seo_title );
+			}
+		}
+		return $title;
+	}
+
+	/**
+	 * Filters document title parts for themes supporting native WordPress title-tag
+	 */
+	public static function filter_document_title_parts( $parts ) {
+		if ( is_singular() ) {
+			$post_id   = get_the_ID();
+			$seo_title = get_post_meta( $post_id, '_asf_seo_title', true );
+			if ( ! empty( $seo_title ) ) {
+				$parts['title'] = esc_html( $seo_title );
+			}
+		}
+		return $parts;
 	}
 
 	/**

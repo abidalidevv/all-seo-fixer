@@ -35,14 +35,27 @@ class ASF_Audit {
 		global $wpdb;
 
 		// ── 1. Fetch all published posts & pages ─────────────────────────
+		$public_types  = array_values( get_post_types( array( 'public' => true ) ) );
+		$exclude_types = array(
+			'attachment', 'nav_menu_item', 'revision', 'custom_css', 'customize_changeset',
+			'oembed_cache', 'user_request', 'wp_block', 'wp_template', 'wp_template_part',
+			'wp_global_styles', 'wp_navigation', 'elementor_library', 'elementor_snippet',
+			'elementor_font', 'elementor_icons', 'e-landing-page', 'action_monitor'
+		);
+		$post_types = array_values( array_diff( $public_types, $exclude_types ) );
+		if ( empty( $post_types ) ) {
+			$post_types = array( 'post', 'page' );
+		}
+
 		$posts = get_posts( array(
-			'post_type'      => array( 'post', 'page' ),
+			'post_type'      => $post_types,
 			'post_status'    => 'publish',
 			'posts_per_page' => -1,
 		) );
 		$total = count( $posts );
 
 		// ── 2. Per-page checks ────────────────────────────────────────────
+		$site_name            = get_bloginfo( 'name' );
 		$missing_titles       = 0;
 		$bad_metas            = 0;
 		$missing_h1           = 0;
@@ -66,34 +79,42 @@ class ASF_Audit {
 				?: ( get_post_meta( $post->ID, 'rank_math_title', true )
 				?: ( get_post_meta( $post->ID, '_yoast_wpseo_title', true )
 				?: get_the_title( $post->ID ) ) );
-			$title_clean = trim( strip_tags( $title ) );
+			$title_clean = str_replace( array( '%title%', '%%title%%', '%sitename%', '%%sitename%%', '%sep%', '%%sep%%' ), array( get_the_title( $post->ID ), get_the_title( $post->ID ), $site_name, $site_name, '-', '-' ), (string) $title );
+			$title_clean = trim( strip_tags( $title_clean ) );
 			$title_len   = mb_strlen( $title_clean );
 
 			if ( $title_len === 0 ) {
 				$missing_titles++;
 			}
-			// Duplicate title check
-			if ( $title_clean && in_array( $title_clean, $seen_titles, true ) ) {
-				$dup_titles++;
-			} elseif ( $title_clean ) {
-				$seen_titles[] = $title_clean;
+			// Duplicate title check (normalized)
+			if ( ! empty( $title_clean ) ) {
+				$t_key = mb_strtolower( $title_clean );
+				if ( in_array( $t_key, $seen_titles, true ) ) {
+					$dup_titles++;
+				} else {
+					$seen_titles[] = $t_key;
+				}
 			}
 
 			// --- Meta Description ---
 			$meta = get_post_meta( $post->ID, '_asf_meta_description', true )
 				?: ( get_post_meta( $post->ID, 'rank_math_description', true )
 				?: get_post_meta( $post->ID, '_yoast_wpseo_metadesc', true ) );
-			$meta_clean = trim( strip_tags( (string) $meta ) );
+			$meta_clean = str_replace( array( '%excerpt%', '%%excerpt%%', '%title%', '%%title%%', '%sitename%', '%%sitename%%' ), array( '', '', get_the_title( $post->ID ), get_the_title( $post->ID ), $site_name, $site_name ), (string) $meta );
+			$meta_clean = trim( strip_tags( (string) $meta_clean ) );
 			$meta_len   = mb_strlen( $meta_clean );
 
-			if ( $meta_len < 50 ) {
+			if ( $meta_len < 70 ) {
 				$bad_metas++;
 			}
-			// Duplicate meta check
-			if ( $meta_clean && in_array( $meta_clean, $seen_metas, true ) ) {
-				$dup_metas++;
-			} elseif ( $meta_clean ) {
-				$seen_metas[] = $meta_clean;
+			// Duplicate meta check (only check if length >= 30 so empty descriptions don't trigger duplicate errors)
+			if ( ! empty( $meta_clean ) && $meta_len >= 30 ) {
+				$m_key = mb_strtolower( $meta_clean );
+				if ( in_array( $m_key, $seen_metas, true ) ) {
+					$dup_metas++;
+				} else {
+					$seen_metas[] = $m_key;
+				}
 			}
 
 			// --- H1 ---
@@ -141,7 +162,7 @@ class ASF_Audit {
 			}
 
 			// --- E-E-A-T Signals (Author bio & Authoritative citations) ---
-			$has_author_bio = strpos( strtolower( $content ), 'author-bio' ) !== false || strpos( strtolower( $content ), 'about the author' ) !== false || get_the_author_meta( 'description', $post->post_author );
+			$has_author_bio = strpos( strtolower( $content ), 'author-bio' ) !== false || strpos( strtolower( $content ), 'about the author' ) !== false || ( ! empty( $post->post_author ) && get_the_author_meta( 'description', $post->post_author ) );
 			if ( ! $has_author_bio ) {
 				$eeat_author_missing++;
 			}
@@ -260,6 +281,37 @@ class ASF_Audit {
 		);
 
 		update_option( 'asf_last_audit_data', $audit_data );
+
+		// Synchronize smart health banner cache
+		if ( $seo_score >= 90 )      $grade = 'A';
+		elseif ( $seo_score >= 75 )  $grade = 'B';
+		elseif ( $seo_score >= 60 )  $grade = 'C';
+		elseif ( $seo_score >= 45 )  $grade = 'D';
+		else                         $grade = 'F';
+
+		$health_issues = array();
+		if ( $missing_titles > 0 ) $health_issues[] = "{$missing_titles} pages missing title tags.";
+		if ( $bad_metas > 0 )      $health_issues[] = "{$bad_metas} pages missing or short meta descriptions.";
+		if ( $missing_h1 > 0 )     $health_issues[] = "{$missing_h1} pages missing H1 headings.";
+		if ( $missing_alts > 0 )   $health_issues[] = "{$missing_alts} images missing alt text.";
+		if ( $dup_titles > 0 )     $health_issues[] = "{$dup_titles} duplicate title tags detected.";
+		if ( $dup_metas > 0 )      $health_issues[] = "{$dup_metas} duplicate meta descriptions detected.";
+		if ( $comhttps > 0 )       $health_issues[] = "{$comhttps} broken URL typos in database.";
+
+		update_option( 'asf_health_score_cache', array(
+			'score'   => $seo_score,
+			'grade'   => $grade,
+			'checks'  => array(
+				'title'  => array( 'status' => ( $missing_titles === 0 ? 'ok' : 'error' ), 'label' => ( $missing_titles === 0 ? 'Title Tags OK' : "{$missing_titles} Missing Titles" ) ),
+				'meta'   => array( 'status' => ( $bad_metas === 0 ? 'ok' : 'warn' ),       'label' => ( $bad_metas === 0 ? 'Meta Descriptions OK' : "{$bad_metas} Bad Metas" ) ),
+				'h1'     => array( 'status' => ( $missing_h1 === 0 ? 'ok' : 'warn' ),     'label' => ( $missing_h1 === 0 ? 'H1 Headings OK' : "{$missing_h1} Missing H1s" ) ),
+				'alts'   => array( 'status' => ( $missing_alts === 0 ? 'ok' : 'warn' ),   'label' => ( $missing_alts === 0 ? 'Image Alt Texts OK' : "{$missing_alts} Missing Alts" ) ),
+				'robots' => array( 'status' => ( $robots_ok ? 'ok' : 'error' ),            'label' => ( $robots_ok ? 'Robots.txt OK' : 'Robots.txt Missing' ) ),
+				'schema' => array( 'status' => ( $schema_count > 0 ? 'ok' : 'warn' ),     'label' => ( $schema_count > 0 ? 'Schema JSON-LD Active' : 'No Schema' ) ),
+			),
+			'issues'  => $health_issues,
+			'ts'      => time(),
+		), false );
 
 		wp_send_json( array(
 			'success' => true,
